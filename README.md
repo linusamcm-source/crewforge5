@@ -114,14 +114,29 @@ bash "$CREWFORGE_ROOT/scripts/sprint_init.sh" uninstall   # remove the links
 before anything is linked — a rule of yours saying "stage with `git add -A`"
 against `bash-guard`'s denial of exactly that, for instance.
 
+## Trimming your CLAUDE.md safely
+
+`context-hygiene` will help you cut a bloated `CLAUDE.md`, but a trim is judged
+by how much shorter it got — and the lines costing the most tokens are usually
+the ones worth keeping. Check any proposal before you apply it:
+
+```bash
+bash "$CREWFORGE_ROOT/scripts/retention_gate.sh" CLAUDE.md proposed.md
+```
+
+It fails if any `never`/`always`/`must` line, backticked command, path, pinned
+version or quoted error string stopped appearing anywhere in the proposal.
+Reorganising passes; losing does not. It reads two files and prints a verdict —
+it cannot edit anything, so applying stays your decision.
+
 ## Tests
 
-664 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
+677 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
 them on Ubuntu and macOS, plus four gates and a degradation job:
 
 ```bash
 bash skills/team-sprint/scripts/tests/run-all.sh   # 654 — the toolchain
-bats scripts/tests/                                #  10 — the rules installer
+bats scripts/tests/                                #  23 — installer + retention gate
 bash scripts/budget_check.sh       # always-loaded context budget
 bash scripts/name_check.sh         # frontmatter name matches path
 bash scripts/validate_all.sh       # every skill and agent passes its own validator
