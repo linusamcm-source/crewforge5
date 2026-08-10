@@ -114,7 +114,7 @@ the AC: in a repo whose indexed languages include `.sh` for graphify and not for
 **Phase 0 precondition — flip `graphify: auto`.** The sprint config sets `graphify: off`
 (`$CLAUDE_CONFIG_DIR/team-sprint.config.yaml:32`), which skips phase-0 step 9a entirely and
 would leave every graphify-served intent fixture-only with no live verification at all. That is
-needless here: verified 2026-07-28, graphify is installed at `/Users/linus/.local/bin/graphify`
+needless here: verified 2026-07-28, graphify is installed at `~/.local/bin/graphify`
 and `graphify-out/graph.json` is present and fresh — 2,763,824 bytes, 3453 nodes, rebuilt
 2026-07-28 05:58 — so live verification is free. Set `graphify: auto`
 before Phase 0 — under `auto` a graphify failure WARNs and sets `state.json.graphify_degraded=true`
@@ -481,7 +481,7 @@ uninitialised, codegraph falls back to the same `mtime_epoch`-based `fresh`/`sta
 graphify and repomix use.
 
 **graphify freshness has a live producer; only `live` is stub-bound.** Verified 2026-07-28:
-graphify is installed at `/Users/linus/.local/bin/graphify` and this repo's
+graphify is installed at `~/.local/bin/graphify` and this repo's
 `graphify-out/graph.json` is present and fresh — 2,763,824 bytes, 3453 nodes, rebuilt 2026-07-28
 05:58 — so `fresh` and `stale:<n>m` are asserted against a real index, once the Design's Phase 0
 precondition flips the live config's `graphify: off`

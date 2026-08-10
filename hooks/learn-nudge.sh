@@ -17,8 +17,12 @@ set -uo pipefail
 
 exec 2>/dev/null
 
+# OFF BY DEFAULT, like every opinionated hook this plugin ships. CREWFORGE_HOOKS=1.
+[ "${CREWFORGE_HOOKS:-0}" = "1" ] || exit 0
+
 THRESHOLD="${LEARN_NUDGE_THRESHOLD:-5}"
-ROOT="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+# Same resolution as ledger.sh — state dir, not config dir, when nothing is set.
+ROOT="${CLAUDE_CONFIG_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge}"
 DIR="$ROOT/ledger"
 
 [ -d "$DIR" ] || exit 0

@@ -1,4 +1,4 @@
-# Add Surf-Seer Offline Cache
+# Add Offline Cache
 
 A single-story plan: no `## Story` headings, so the whole file is one implicit
 node keyed by the filename stem, with `depends_on: []`.

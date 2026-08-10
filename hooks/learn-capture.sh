@@ -15,7 +15,10 @@ set -uo pipefail
 
 exec 2>/dev/null
 
-ROOT="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+# OFF BY DEFAULT, like every opinionated hook this plugin ships. CREWFORGE_HOOKS=1.
+[ "${CREWFORGE_HOOKS:-0}" = "1" ] || exit 0
+
+ROOT="${CLAUDE_PLUGIN_ROOT:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}}"
 LEDGER="$ROOT/skills/self-improve/scripts/ledger.sh"
 [ -x "$LEDGER" ] || exit 0
 

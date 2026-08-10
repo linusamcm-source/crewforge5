@@ -47,7 +47,7 @@ Every stack claim baked into a generated agent must trace to the stack profile o
 | Role | enabled | reuse if present | tools to grant generated agent | role layer focus |
 |------|---------|------------------|-------------------------------|------------------|
 | developer (base) | yes | `python-pro`/`golang-pro`/`typescript-pro`/`rn-engineer`/`powershell-engineer` | Read, Write, Edit, Bash, Glob, Grep | built in Phase 2 — seed for all others |
-| architect | yes | `architect-review` | Read, Glob, Grep, Bash | layering, module boundaries, dep direction, SOLID, idiomatic project layout |
+| architect | yes | `architect-reviewer` | Read, Glob, Grep, Bash | layering, module boundaries, dep direction, SOLID, idiomatic project layout |
 | tester | yes | `go-svelte-test`/`rn-test` | Read, Write, Edit, Glob, Grep, Bash | framework, fixtures, mocking, RED-phase TDD, coverage cmd + threshold from profile |
 | profiler | yes | `go-svelte-performance`/`rn-optimizer` | Read, Write, Edit, Bash, Glob, Grep | hot-path + memory, lang profiler from profile, benchmark harness |
 | security | yes | `api-security-audit` | Read, Grep, Glob, Bash | lang vuln classes + SAST tool from profile; anti-fabrication on findings |

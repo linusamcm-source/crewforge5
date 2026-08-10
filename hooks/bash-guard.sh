@@ -13,7 +13,12 @@
 # FAIL OPEN. A guard that cannot parse its input must not block the session:
 # every unexpected condition exits 0 silently. A missed denial is recoverable,
 # a wedged shell is not.
+#
+# OFF BY DEFAULT. Denying `git add -A` on a stranger's machine, unannounced, is
+# a bad first impression for a plugin. Opt in with CREWFORGE_HOOKS=1.
 set -u
+
+[ "${CREWFORGE_HOOKS:-0}" = "1" ] || exit 0
 
 payload="$(cat 2>/dev/null)" || exit 0
 [ -n "$payload" ] || exit 0

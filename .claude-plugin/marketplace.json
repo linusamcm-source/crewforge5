@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "crewforge",
+  "description": "CrewForge — agent crews as a managed resource: generate them into the repo, execute plans with them, keep them from rotting.",
+  "owner": {
+    "name": "Linus McManamey",
+    "url": "https://github.com/linusmcmanamey"
+  },
+  "plugins": [
+    {
+      "name": "crewforge",
+      "description": "Generates a language-matched agent crew into your repo, executes a plan with it, and stops the generated artefacts rotting.",
+      "source": "./",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": [
+        "agents",
+        "sprint",
+        "code-review",
+        "tdd",
+        "orchestration"
+      ]
+    }
+  ]
+}

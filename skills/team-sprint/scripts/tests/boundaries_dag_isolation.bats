@@ -28,7 +28,7 @@ teardown() { rm -rf "$TMP"; }
 
 write_plan() { # $1 = target path, $2 = "with" | "without"
   local extra=""
-  [ "$2" = "with" ] && extra='### Boundaries: services/lambdas/auth/pre_token.py (produces custom:tier), packages/infra-consolidated/lib/config/dev.ts (decides which env runs this), ~/Development/surf-seer/src/services/spotConfigApiService.ts (the real caller)'
+  [ "$2" = "with" ] && extra='### Boundaries: services/lambdas/auth/pre_token.py (produces custom:tier), packages/infra-consolidated/lib/config/dev.ts (decides which env runs this), ~/Development/other-app/src/services/spotConfigApiService.ts (the real caller)'
   cat > "$1" <<EOF
 # Plan
 

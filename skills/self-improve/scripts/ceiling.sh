@@ -22,7 +22,11 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+# Targets are resolved under ROOT. Default to the tree this script ships in —
+# the plugin root — so the gate measures the bundle it belongs to and needs no
+# ~/.claude to exist. CLAUDE_CONFIG_DIR still wins when it is set, which is how
+# the tests point it at a fixture and how a config repo keeps using it in place.
+ROOT="${CLAUDE_CONFIG_DIR:-$(cd "$HERE/../../.." && pwd)}"
 CEILINGS="$HERE/../data/ceilings.json"
 MODE="${1:-report}"
 shift || true

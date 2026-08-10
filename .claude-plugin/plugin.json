@@ -1,0 +1,18 @@
+{
+  "name": "crewforge",
+  "version": "0.1.0",
+  "description": "Generates a language-matched agent crew into your repo, executes a plan with it, and stops the generated artefacts rotting.",
+  "author": {
+    "name": "Linus McManamey",
+    "email": "linus.a.mcm@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "sprint",
+    "code-review",
+    "tdd",
+    "orchestration"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

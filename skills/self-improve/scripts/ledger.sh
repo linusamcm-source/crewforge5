@@ -15,7 +15,9 @@
 # something broke, a user entry is a judgement about what should change.
 set -euo pipefail
 
-ROOT="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+# Runtime state, not config: with no CLAUDE_CONFIG_DIR the ledger lands in the
+# user's state dir rather than assuming a ~/.claude exists to write into.
+ROOT="${CLAUDE_CONFIG_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge}"
 DIR="$ROOT/ledger"
 CMD="${1:-list}"
 shift || true

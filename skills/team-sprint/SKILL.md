@@ -112,7 +112,7 @@ even though the story never edits them:
 ### Touches: services/gateway/internal/server/spotconfig_cap.go
 ### Boundaries: services/lambdas/auth/pre_token.py (produces custom:tier),
                 packages/infra-consolidated/lib/config/dev.ts (decides which env runs this),
-                ~/Development/surf-seer/src/services/spotConfigApiService.ts (the real caller)
+                ~/Development/other-app/src/services/spotConfigApiService.ts (the real caller)
 ```
 
 It is a **review-scope directive only**. It MUST NOT reach the dependency DAG: `### Touches:`

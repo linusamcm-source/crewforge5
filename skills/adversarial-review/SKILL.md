@@ -158,7 +158,7 @@ satisfy a gate is worse than the gap the gate was protecting against.
 **Cross-repo evidence is legitimate.** The repomix pack is repo-root-scoped, so a
 companion repository is *physically unreachable* through it no matter how diligent
 the reviewer. Read those paths live with `Read`/`Grep` using absolute paths —
-`~/Development/surf-seer/src/...` is valid review evidence, and Q2 usually cannot
+`~/Development/other-app/src/...` is valid review evidence, and Q2 usually cannot
 be answered without it. Read-only, and only paths the plan's `Boundaries:` section
 names or that Step 2a identifies as producers; this is not licence to roam the
 filesystem.
