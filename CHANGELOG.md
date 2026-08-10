@@ -71,9 +71,37 @@ this is the half of it that is general, extracted so it installs anywhere.
 - No `ceilings.json` and no `team-sprint.config.yaml`: both are one machine's
   state. Generated on first use.
 
+### Verified this release
+
+- **`paths:`-scoped rules load only on a matching read** —
+  `scripts/verify_rule_scoping.sh`. Two headless sessions against an
+  `InstructionsLoaded` hook: reading a non-matching file produced 0 load events,
+  reading a matching one produced 1, `memory_type=Project
+  load_reason=path_glob_match`. This is the AC of P0.1 and P3.1 and nothing in
+  the tree asserted it before now.
+- **The bundle degrades instead of dying** — `scripts/verify_degradation.sh`.
+  On the base set alone, with rtk, just, repomix, graphify, codegraph, shellcheck
+  and bats all unreachable: `detect_language` STATUS=OK, `crew_check`
+  STATUS=REBUILD, `recon` STATUS=DEGRADED REASON=not-installed, both gates PASS,
+  and ledger/ceiling work with no user config directory.
+- **`sprint_init.sh` now has tests** — ten cases, including both contradiction
+  directions. They found a real bug: `uninstall` exited non-zero when it
+  correctly spared a rule file that was not ours.
+
 ### Known gaps
 
 - Not yet run end to end on a repo the author has never seen (plan P4.3).
+- **`ci.yml` has never executed on a runner.** The repo has no remote, so every
+  "green on Ubuntu" statement above describes code that was read and locally
+  simulated, not a job that passed. Publishing is what converts them.
+- **`team-sprint/SKILL.md` is 13,923 bytes against a 12,288 target.** Going lower
+  breaks contracts the suite pins to that file: `recon_distribution.bats` AC12
+  requires the four recon keys in its config block in a fixed column format, and
+  `wa3_demotion.bats` requires literal `### Phase N` sections naming their
+  workflow files. Both were attempted and both went red. The target was set
+  against the 25 KB file without enumerating what the tests hold there.
+- **P3.4 (CLAUDE.md slimming retention gate) is unimplemented.** Nothing claims
+  otherwise in the README — it is a plan item, not a shipped promise.
 - Ubuntu is now in CI but has not yet run against a real GitHub remote. The
   `stat -f` audit is done: all 10 sites carry GNU fallbacks, and there are no
   `sed -i ''` invocations left.

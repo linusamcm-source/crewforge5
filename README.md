@@ -116,15 +116,29 @@ against `bash-guard`'s denial of exactly that, for instance.
 
 ## Tests
 
-654 bats cases cover the shell toolchain, and four gates run in CI on Ubuntu
-and macOS:
+664 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
+them on Ubuntu and macOS, plus four gates and a degradation job:
 
 ```bash
-bash skills/team-sprint/scripts/tests/run-all.sh
-bash scripts/budget_check.sh     # always-loaded context budget
-bash scripts/name_check.sh       # frontmatter name matches path
-bash scripts/validate_all.sh     # every skill and agent passes its own validator
+bash skills/team-sprint/scripts/tests/run-all.sh   # 654 — the toolchain
+bats scripts/tests/                                #  10 — the rules installer
+bash scripts/budget_check.sh       # always-loaded context budget
+bash scripts/name_check.sh         # frontmatter name matches path
+bash scripts/validate_all.sh       # every skill and agent passes its own validator
+bash scripts/verify_degradation.sh # every entry point survives the base set alone
 ```
+
+Two claims cannot be tested without a real session, so they ship as probes you
+run by hand rather than as sentences you have to take on trust:
+
+```bash
+bash scripts/verify_rule_scoping.sh   # a paths:-scoped rule loads ONLY on a matching read
+```
+
+That one is the assertion the whole rules design rests on. It runs two headless
+sessions against an `InstructionsLoaded` hook and checks both directions — a
+rule that loads when it shouldn't costs every unrelated session its whole body,
+and one that never loads is a convention the model never sees.
 
 ## Support
 
