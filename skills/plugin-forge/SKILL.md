@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 ## Purpose
 
-Build and manage Claude Code plugins with correct structure, manifests, and marketplace integration. Includes workflows, automation scripts, and reference docs.
+Build and manage Claude Code plugins with correct structure, manifests, and marketplace integration.
 
 ## When to Use
 
@@ -24,33 +24,15 @@ Build and manage Claude Code plugins with correct structure, manifests, and mark
 
 ### Create New Plugin
 
-Use `create_plugin.py` to generate plugin structure:
-
-```bash
-python scripts/create_plugin.py plugin-name \
-  --marketplace-root /path/to/marketplace \
-  --author-name "Your Name" \
-  --author-email "your.email@example.com" \
-  --description "Plugin description" \
-  --keywords "keyword1,keyword2" \
-  --category "productivity"
-```
-
-This automatically:
-
-- Creates plugin directory structure
-- Generates `plugin.json` manifest
-- Creates README template
-- Updates `marketplace.json`
+Follow the Development Workflow below — directory structure, then
+`plugin.json`, then the marketplace entry. `claude plugin init <name>` scaffolds
+a starting point if you would rather not write the manifest by hand, and
+`claude plugin validate <path>` checks it before you publish.
 
 ### Bump Version
 
-Use `bump_version.py` to update versions in both manifests:
-
-```bash
-python scripts/bump_version.py plugin-name major|minor|patch \
-  --marketplace-root /path/to/marketplace
-```
+Edit the version in **both** manifests and keep them equal — `claude plugin tag`
+validates exactly that agreement before cutting a release tag.
 
 Semantic versioning:
 
@@ -62,7 +44,7 @@ Semantic versioning:
 
 ### 1. Create Structure
 
-Manual approach (if not using script):
+
 
 ```bash
 mkdir -p plugins/plugin-name/.claude-plugin
@@ -195,7 +177,8 @@ Examples:
 1. `plugins/<name>/.claude-plugin/plugin.json`
 2. `.claude-plugin/marketplace.json`
 
-Use `bump_version.py` to automate.
+`claude plugin tag` fails when they disagree, so a mismatch is caught at release
+rather than by an installer.
 
 ## Git Commits
 
@@ -207,20 +190,3 @@ git commit -m "fix: correct plugin manifest"
 git commit -m "docs: update plugin README"
 git commit -m "feat!: breaking change"
 ```
-
-## Reference Docs
-
-Detailed documentation included:
-
-| Reference                          | Content                                          |
-| ---------------------------------- | ------------------------------------------------ |
-| `references/plugin-structure.md`   | Directory structure, manifest schema, components |
-| `references/marketplace-schema.md` | Marketplace format, plugin entries, distribution |
-| `references/workflows.md`          | Step-by-step workflows, patterns, publishing     |
-
-### Scripts
-
-| Script                     | Purpose             |
-| -------------------------- | ------------------- |
-| `scripts/create_plugin.py` | Scaffold new plugin |
-| `scripts/bump_version.py`  | Update versions     |

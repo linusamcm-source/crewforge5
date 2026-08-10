@@ -21,11 +21,8 @@ Includes automated code analysis, best-practice checking, security scanning, and
 
 1. **Scope.** Identify what to review: a diff (`git diff`, PR), a file, a directory, or staged changes (`git diff --cached`). When in doubt, ask the user.
 2. **Read with context.** Read the file(s) and their immediate dependencies before forming an opinion. Reviewing in isolation produces shallow findings.
-3. **Run the checklist.** Use `references/code_review_checklist.md` as the structured pass — it covers correctness, design, security, performance, testing, accessibility, and docs.
-4. **Run the optional scripts.** Where applicable, run the helper scripts under `scripts/` for analyzer output to ground claims:
-   - `scripts/pr_analyzer.py` — diff-aware analysis
-   - `scripts/code_quality_checker.py` — quality metrics
-   - `scripts/review_report_generator.py` — formatted report builder
+3. **Run the checklist.** One pass per dimension, in this order: correctness, design, security, performance, testing, accessibility, docs. A pass that finds nothing is reported as such — silence reads as "not looked at".
+4. **Ground the claims in tool output.** Run whatever the repo already has — its linter, type checker, test suite, `git diff --stat` — and cite what they printed. A finding backed by a command someone else can re-run survives disagreement; an assertion does not.
 5. **Categorise findings.** Severity-tag every finding:
    - `CRITICAL` — security vuln, data loss, crash, broken contract
    - `HIGH` — likely bug, broken edge case, missing test, perf regression
@@ -89,22 +86,6 @@ Ground every finding in the source that fits the question — the repomix pack i
 - **`claude-mem`** (optional): decisions, conventions, and known issues recorded across past sessions. Recall via the `mem-search` skill or `memory_search`/`observation_search` → `get_observations`; record a durable new finding with `observation_add`/`memory_add` (≤500-token summary).
 
 Evidence rules: when these sources and the live tree disagree, the **live tree wins**; freshness-check any snapshot before citing it; `claude-mem` grounds *intent/history* claims, never *current-code* claims — verify those with repomix grep. `graphify` and `claude-mem` are both optional and **fail-soft**: if their tools aren't loaded, work from the repomix pack + the live tree.
-
-## Reference Documentation
-
-| File | Content |
-|------|---------|
-| `references/code_review_checklist.md` | Full review checklist with examples |
-| `references/coding_standards.md` | Standards reference per language |
-| `references/common_antipatterns.md` | Anti-patterns and what to do instead |
-
-## Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/pr_analyzer.py` | Diff-aware static analysis |
-| `scripts/code_quality_checker.py` | Project-wide quality scan |
-| `scripts/review_report_generator.py` | Format findings into a report |
 
 ## Anti-patterns to Avoid in Your Own Review
 

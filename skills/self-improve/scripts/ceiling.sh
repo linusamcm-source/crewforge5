@@ -6,8 +6,9 @@
 #   ceiling.sh report            print budget vs actual, widest overrun first
 #
 # A target is a skill slug (skills/<slug>/SKILL.md) or an agent name
-# (agents/<name>.md, or agents-parked/*/<name>.md). Budgets live in
-# data/ceilings.json next to this script.
+# (agents/<name>.md, or agents-parked/*/<name>.md). Budgets live beside the
+# ledger, in the state directory resolved below — never inside the tree being
+# measured, which an update replaces.
 #
 # Why a ceiling at all: a learning loop that may only ever append converges on
 # a rulebook nobody reads and every session pays for. Holding the budget flat
@@ -24,7 +25,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Targets are resolved under ROOT. Default to the tree this script ships in —
 # the plugin root — so the gate measures the bundle it belongs to and needs no
-# ~/.claude to exist. CLAUDE_CONFIG_DIR still wins when it is set, which is how
+# user config directory to exist. CLAUDE_CONFIG_DIR still wins when set, which is how
 # the tests point it at a fixture and how a config repo keeps using it in place.
 ROOT="${CLAUDE_CONFIG_DIR:-$(cd "$HERE/../../.." && pwd)}"
 # Recorded budgets are runtime state, not shipped content: they are one tree's

@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # The suite is developed on macOS and shipped to whoever installs it, so
+  # Linux is not a nice-to-have here — `stat -f`, `sed -i ''` and BSD flag order
+  # are exactly the things that pass at home and fail on a stranger's machine.
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the declared base tooling
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq bats jq shellcheck
+          else
+            brew install bats-core jq shellcheck
+          fi
+          bats --version; jq --version; shellcheck --version | head -3
+
+      - name: Shell toolchain suite
+        run: bash skills/team-sprint/scripts/tests/run-all.sh
+
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The release gate the Definition of Done names: always-loaded context.
+      # A commit that adds an unhidden skill without paying for it fails here.
+      - name: Context budget
+        run: bash scripts/budget_check.sh --verbose
+
+      - name: Names match paths
+        run: bash scripts/name_check.sh
+
+      - name: Structural self-validation
+        run: bash scripts/validate_all.sh
+
+      - name: Manifests parse and agree on version
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, sys
+          plugin = json.load(open(".claude-plugin/plugin.json"))
+          market = json.load(open(".claude-plugin/marketplace.json"))
+          entries = [p for p in market["plugins"] if p["name"] == plugin["name"]]
+          if not entries:
+              sys.exit(f"marketplace.json has no entry for {plugin['name']}")
+          entry = entries[0]
+          if entry.get("version") != plugin.get("version"):
+              sys.exit(f"version mismatch: plugin.json {plugin.get('version')} "
+                       f"vs marketplace entry {entry.get('version')}")
+          print(f"ok {plugin['name']} {plugin['version']}")
+          PY
+
+      - name: No path coupling to one machine
+        run: |
+          set -euo pipefail
+          if grep -rl -e '~/\.claude' -e '/Users/' skills/ agents/ hooks/ rules/ 2>/dev/null; then
+            echo "the files above hardcode one machine's paths"
+            exit 1
+          fi
+          echo "ok — no hardcoded config paths"
