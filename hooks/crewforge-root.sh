@@ -28,6 +28,6 @@ import json, sys
 print(json.dumps({"hookSpecificOutput":{
   "hookEventName":"SessionStart",
   "additionalContext":
-    f"CrewForge root: {sys.argv[1]} — expand $CREWFORGE_ROOT to it in this plugin's commands."}}))
+    f"CREWFORGE_ROOT={sys.argv[1]}"}}))
 ' "$ROOT"
 exit 0

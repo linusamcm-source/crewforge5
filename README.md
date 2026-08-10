@@ -28,11 +28,19 @@ them. That is the plugin's rent, and it is measured rather than asserted:
 bash "$CREWFORGE_ROOT/scripts/budget_check.sh" --verbose
 ```
 
-The bundle is **~1,124 tokens** always-loaded across 25 descriptions, against a
-budget of **1,200**. Seven of the largest skills carry
-`disable-model-invocation: true`, so they cost nothing until you call them by
-name. That discipline is the only reason a bundle this size is affordable, and
-`budget_check.sh` fails the build over the budget rather than moving it.
+The bundle is **~1,141 tokens** always-loaded across 24 catalogue entries,
+against a budget of **1,200**. Ten skills carry
+`disable-model-invocation: true` — `team-sprint`, `token-slim`,
+`context-hygiene`, `master_plan`, `self-improve`, `team-feature`,
+`tech-debt-audit`, `grill-me`, `plugin-forge`, `claude-config` — so they cost
+nothing until you call them by name (`/crewforge:team-sprint`). That discipline
+is the only reason a bundle this size is affordable, and `budget_check.sh` fails
+the build over the budget rather than moving it.
+
+`claude plugin details crewforge` reports a larger always-on number because its
+projection charges hidden skills too. Verified against a live session, the ten
+hidden skills do not appear in the catalogue at all; `budget_check.sh` measures
+what the session actually carries, including the one line the root hook prints.
 
 ## `$CREWFORGE_ROOT`
 

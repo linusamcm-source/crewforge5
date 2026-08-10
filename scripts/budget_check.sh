@@ -9,9 +9,14 @@
 # pays no rent, which is why hiding one is how a new skill gets paid for.
 #
 # This is `ceiling.sh`'s measurement applied once to the whole bundle instead of
-# per target: sum the description characters, divide by 4 for tokens, fail over
-# budget. The number moves in a reviewed diff or not at all — a bundle that
-# grows by relaxing its own gate has no gate.
+# per target, with one correction: the catalogue renders `- <name>: <desc>` per
+# entry, so the NAME is always-loaded too. Measuring descriptions alone
+# understated this bundle by ~116 tokens — enough to hide a breach.
+#
+# `claude plugin details` reports a larger always-on figure because it charges
+# hidden skills as well; verified against a live session, the seven (now nine)
+# skills carrying `disable-model-invocation: true` do not appear in the skills
+# catalogue at all. This gate measures what the session actually carries.
 #
 # Exits 0 within budget, 1 over it.
 set -uo pipefail
@@ -56,14 +61,26 @@ for skill in sorted((root / "skills").iterdir()):
     if field(fm, "disable-model-invocation").lower() == "true":
         rows.append(("skill", skill.name, 0, "hidden"))
         continue
-    n = len(field(fm, "description"))
+    n = len(f"- {skill.name}: {field(fm, 'description')}\n")
     total += n
     rows.append(("skill", skill.name, n, ""))
 
 for agent in sorted((root / "agents").glob("*.md")):
-    n = len(field(frontmatter(agent), "description"))
+    n = len(f"- {agent.stem}: {field(frontmatter(agent), 'description')}\n")
     total += n
     rows.append(("agent", agent.stem, n, ""))
+
+for cmd in sorted((root / "commands").glob("*.md")) if (root / "commands").is_dir() else []:
+    n = len(f"- {cmd.stem}: {field(frontmatter(cmd), 'description')}\n")
+    total += n
+    rows.append(("cmd", cmd.stem, n, ""))
+
+# The SessionStart root hook prints one line into every session. It is rent like
+# any other always-loaded string, so it is counted here rather than quietly
+# excluded because it is not a description.
+HOOK_LINE = "CREWFORGE_ROOT=/Users/someone/.claude/plugins/cache/crewforge/crewforge/0.1.0"
+total += len(HOOK_LINE)
+rows.append(("hook", "crewforge-root (SessionStart line)", len(HOOK_LINE), ""))
 
 tokens = round(total / 4)
 if verbose:

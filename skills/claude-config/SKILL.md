@@ -2,6 +2,7 @@
 name: claude-config
 model: opus
 description: House rules for editing a Claude config repo — .gitignore whitelist, skill and agent frontmatter, size budgets. Use when adding or editing a skill, agent, hook, command, or settings.json
+disable-model-invocation: true
 ---
 
 # Editing this Claude config

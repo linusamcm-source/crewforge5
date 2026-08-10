@@ -2,6 +2,7 @@
 name: plugin-forge
 model: sonnet
 description: Create and manage Claude Code plugins. Use when creating plugins for a marketplace, adding components (commands, agents, hooks), bumping plugin versions, or editing plugin.json/marketplace.json
+disable-model-invocation: true
 ---
 
 # CC Plugin Forge

@@ -14,7 +14,10 @@ this is the half of it that is general, extracted so it installs anywhere.
   `/crewforge:sprint-init`, by symlink, only when asked. Nothing is ever written
   to your `CLAUDE.md`.
 - `scripts/budget_check.sh` — release gate on always-loaded context. The bundle
-  measures ~1,124 tokens against a 1,200 budget.
+  measures ~1,141 tokens against a 1,200 budget. Three skills were hidden behind
+  `disable-model-invocation` to pay for the entries the plan's estimate missed:
+  the catalogue renders the component *name* alongside the description, and the
+  root hook's line is rent too. Both are now counted.
 - `scripts/name_check.sh` — every shipped skill and agent is invocable under the
   name its path implies.
 - `scripts/sprint_init.sh` — report / install / uninstall for the rule files,

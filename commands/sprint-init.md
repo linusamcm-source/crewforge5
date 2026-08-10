@@ -1,5 +1,5 @@
 ---
-description: Install CrewForge's rule files into this repo (or your user config) by symlink, after reporting what exists and what contradicts.
+description: Install CrewForge's rule files into this repo or user config, after reporting conflicts.
 argument-hint: "[report|install|uninstall] [--user]"
 ---
 
