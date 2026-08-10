@@ -814,7 +814,13 @@ _out_lines()    { printf '%s\n' "$output" | grep -c . || true; }
   _install_stub graphify
   cp "$FIX/codegraph-status-initialized.txt" "$STUB/codegraph.status"
   _stub_exit codegraph 1
-  _stub_out graphify "$FIX/graphify-explain.txt"
+  # A fixture whose rows SURVIVE the callees keep-filter. graphify-explain.txt
+  # carries only `[defines]` on `-->` and `[imports_from]` on `<--`, so every row
+  # is filtered out for this intent and the adapter correctly returns the
+  # advance-the-chain sentinel — meaning graphify never answers and the assertions
+  # below could not hold. The test is about chain advancement, so it needs a
+  # provider that genuinely answers.
+  _stub_out graphify "$FIX/graphify-explain-calls.txt"
   _write_caps \
     "$(_caps_provider codegraph true true '["bash"]')" \
     "$(_caps_provider graphify  true true '["bash"]')" \
