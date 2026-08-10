@@ -173,7 +173,13 @@ smoke_test() {
   # the `graphify query` CLI may be unavailable, with a NetworkX fallback).
   if [[ -f "$GRAPH_JSON" ]]; then
     if command -v graphify >/dev/null 2>&1; then
-      out="$(cd "$TARGET_DIR" && graphify query 'overview of this codebase' 2>/dev/null || true)"
+      # Kept inside the subshell so the `cd` cannot leak into the caller. The
+      # earlier `cd … && query || true` one-liner read as if-then-else and was
+      # not (shellcheck SC2015): a failed `cd` fell through to `|| true` and was
+      # indistinguishable from a query that ran and returned nothing. Both still
+      # yield an empty `out`, which the caller treats the same — but the code no
+      # longer claims otherwise, and shellcheck 0.11 stops failing the suite.
+      out="$(cd "$TARGET_DIR" 2>/dev/null && graphify query 'overview of this codebase' 2>/dev/null)" || out=""
       [[ -n "$out" ]] && return 0
     fi
     # Path via argv, never interpolated into the source: a project path holding

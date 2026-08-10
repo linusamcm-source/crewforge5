@@ -279,6 +279,37 @@ write_project_agent() { write_agent_at "$TMP/.claude/agents" "$1"; }
   printf '%s' "$out" | grep -q 'STATUS=CACHED'
 }
 
+@test "a plugin-shipped agent resolves when neither project nor user has it" {
+  # THE COLD-INSTALL CASE, asserted against the agent this plugin really ships.
+  # crew-factory is required to name `boundary-reviewer` and forbidden to
+  # generate it, so if the plugin's own agents/ is missing from the resolution
+  # chain the manifest can never reach CACHED on a fresh machine — every Phase 0
+  # re-triggers a ~470s-per-agent rebuild for a file that was in the bundle all
+  # along. It regressed once precisely because the dev machine carried a personal
+  # copy in its user catalogue, which masked it. The user catalogue here is an
+  # empty temp dir, so nothing can mask it again.
+  local plugin_root
+  plugin_root="$(cd "$SCRIPTS/../../.." && pwd)"
+  [ -f "$plugin_root/agents/boundary-reviewer.md" ] \
+    || skip "this tree ships no agents/boundary-reviewer.md"
+
+  cat > "$TMP/.claude/crews/bash.json" <<'MANIFEST'
+{
+  "language": "bash",
+  "stack_profile": ".claude/crews/bash.profile.md",
+  "commands": {},
+  "crew": { "developer": "bash-developer", "boundary_reviewer": "boundary-reviewer" },
+  "validation": {},
+  "generated": ["bash-developer"],
+  "reused": ["boundary-reviewer"]
+}
+MANIFEST
+  write_project_agent bash-developer
+  out="$(D check bash)"
+  printf '%s' "$out" | grep -q 'STATUS=CACHED'
+  printf '%s' "$out" | grep -qv 'unresolved:boundary-reviewer'
+}
+
 @test "project agent wins over a user agent of the same name" {
   write_manifest
   write_project_agent bash-developer

@@ -63,6 +63,13 @@ usage() {
 
 MODE="" LANG_ARG="" PROJECT_DIR="$PWD" AGENTS_DIR="" MAX_AGE_DAYS=5
 USER_AGENTS_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/agents"
+# Agents shipped by the plugin this script lives in. Without this tier, a crew
+# manifest naming a registry agent — `boundary-reviewer`, which crew-factory is
+# REQUIRED to reference and FORBIDDEN to generate — never resolves on a cold
+# install, and every Phase 0 re-triggers a full rebuild (~470s per agent) for a
+# file that was sitting in the bundle the whole time. It resolved here only
+# because this machine happens to carry a personal copy in its user catalogue.
+PLUGIN_AGENTS_DIR="$(cd "$SCRIPTS/../../.." 2>/dev/null && pwd)/agents"
 ROLES=()
 
 parse_args() {
@@ -93,6 +100,10 @@ agent_file() {
     printf '%s/%s.md' "$AGENTS_DIR" "$name"
   elif [[ -f "$USER_AGENTS_DIR/$name.md" ]]; then
     printf '%s/%s.md' "$USER_AGENTS_DIR" "$name"
+  elif [[ -f "$PLUGIN_AGENTS_DIR/$name.md" ]]; then
+    # Last, deliberately: a project or user agent of the same name still wins,
+    # so this only ever adds resolutions that would otherwise have failed.
+    printf '%s/%s.md' "$PLUGIN_AGENTS_DIR" "$name"
   fi
 }
 
