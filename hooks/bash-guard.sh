@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# bash-guard.sh — PreToolUse(Bash) deny guard for the shell rules in CLAUDE.md.
+# bash-guard.sh — PreToolUse(Bash) deny guard for the shell rules in rules/git-hygiene.md.
 #
-# CLAUDE.md states two shell rules that a model can read and still forget:
+# That rule file states two shell rules a model can read and still forget:
 # stage explicit paths rather than `git add -A`, and never run `find` from /
 # or ~. Prose asks; this enforces. The rules stay documented there for the
 # reasoning; the denial happens here so a lapse costs a retry, not a mess.
@@ -50,13 +50,13 @@ bare="$(printf '%s' "$cmd" | sed -e "s/'[^']*'/''/g" -e 's/"[^"]*"/""/g')"
 # 1. Wholesale staging. `git add .gitignore` and `git add -Ax` must NOT match,
 #    so `.` and `-A` are anchored to a word end.
 if printf '%s' "$bare" | grep -qE '(^|[;&|]|&&|\|\|)[[:space:]]*git[[:space:]]+add[[:space:]]+([^;&|]*[[:space:]])?(-A|--all|\.)([[:space:]]|$)'; then
-  deny 'CLAUDE.md: stage explicit paths — `git add <file>`, never `git add -A` / `git add .`. Name the files this change touched. If you genuinely want everything, the user has to ask for it.'
+  deny 'CrewForge git-hygiene rule: stage explicit paths — `git add <file>`, never `git add -A` / `git add .`. Name the files this change touched. If you genuinely want everything, the user has to ask for it.'
 fi
 
 # 2. Unscoped find. Scoped roots (., ./x, "$REPO", relative paths) are fine;
 #    only / and the home directory are refused.
 if printf '%s' "$bare" | grep -qE '(^|[;&|]|&&|\|\|)[[:space:]]*(sudo[[:space:]]+)?find[[:space:]]+(/|~|\$HOME)([[:space:]]|$)'; then
-  deny 'CLAUDE.md: never run `find` from / or ~ — scope it to the project tree. Use the repo root, or Glob, which is faster and already scoped.'
+  deny 'CrewForge git-hygiene rule: never run `find` from / or ~ — scope it to the project tree. Use the repo root, or Glob, which is faster and already scoped.'
 fi
 
 exit 0

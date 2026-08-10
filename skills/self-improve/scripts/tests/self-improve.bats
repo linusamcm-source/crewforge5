@@ -23,15 +23,13 @@ description: A demo agent
 ---
 Agent body.
 EOF
-  # ceilings.json lives next to the script, so isolate it per test
-  CEILDATA="$SCRIPTS/../data/ceilings.json"
-  BACKUP="$TMP/ceilings.backup.json"
-  [ -f "$CEILDATA" ] && cp "$CEILDATA" "$BACKUP"
+  # ceilings.json follows CLAUDE_CONFIG_DIR, which is $TMP here — so each test
+  # gets its own, and no backup dance is needed to keep a shared file intact.
+  CEILDATA="$CLAUDE_CONFIG_DIR/ceilings.json"
   echo '{}' > "$CEILDATA"
 }
 
 teardown() {
-  [ -f "$BACKUP" ] && cp "$BACKUP" "$SCRIPTS/../data/ceilings.json"
   rm -rf "$TMP"
 }
 

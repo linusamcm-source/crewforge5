@@ -27,7 +27,10 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ~/.claude to exist. CLAUDE_CONFIG_DIR still wins when it is set, which is how
 # the tests point it at a fixture and how a config repo keeps using it in place.
 ROOT="${CLAUDE_CONFIG_DIR:-$(cd "$HERE/../../.." && pwd)}"
-CEILINGS="$HERE/../data/ceilings.json"
+# Recorded budgets are runtime state, not shipped content: they are one tree's
+# byte sizes, and a plugin update replaces the install directory. They live with
+# the ledger, beside it, wherever that is.
+CEILINGS="${CLAUDE_CONFIG_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge}/ceilings.json"
 MODE="${1:-report}"
 shift || true
 
