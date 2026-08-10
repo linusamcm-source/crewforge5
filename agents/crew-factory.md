@@ -116,10 +116,33 @@ so there is no per-language variant to build.
 ```
 `commands` copied verbatim from the verified profile. `crew` maps each role to the agent name team-sprint should spawn (generated or reused). Omit `accessibility` if the stack is not frontend. `validation` grades every crew member except registry reuses: freshly generated agents get the grade earned this run; prior-run crew agents carry their recorded grade. `boundary_reviewer` is always `"boundary-reviewer"` (registry, reused verbatim, never generated) — it is language-agnostic by design. The key is provenance only: no consumer reads it today (team-sprint's phases never resolve it, and team-sprint-planner hardcodes the registry `boundary-reviewer` in its review workflow) — it records crew composition and reserves the override point. `skills` records each generated role's assigned skills (omit roles with none) — provenance for refreshes; the operative copy is the `## Skills` section inside each agent.
 
+## Phase 5 — Stack rule file
+
+9. Write `.claude/rules/<lang>.md`, the house conventions for this stack:
+
+```bash
+bash "${CREWFORGE_ROOT}/skills/team-sprint/scripts/rule_emit.sh" <lang> --project-dir <repo>
+```
+
+`STATUS=WROTE` gives you a skeleton with `paths:` frontmatter already scoped to
+the stack's extensions; fill the three sections from the verified profile — the
+tooling actually installed with its verified versions, the non-obvious
+conventions only, and the exact commands that were run and passed. `paths:` is
+what makes this affordable: the body loads only when a file of that stack is
+read, so it may be as long as it needs to be. `STATUS=EXISTS` means someone has
+edited it — read it, update it in place, never overwrite it.
+
+**A missing rule file is not a stale crew.** `crew_check.sh check` reports
+`RULE_FILE=missing` the same way it reports `STALE` — informational, never
+gating. When you meet an existing crew in that state, emit the rule file and
+stop. Do not regenerate a single agent for it: every crew that predates rule
+files is in exactly this state, and rebuilding them all costs ~470s apiece to
+produce one document that can be written in place.
+
 ## Output
 
-Return the manifest JSON as your final message, plus a one-line summary: how many agents generated, how many reused, and confirmation every generated agent reached grade A.
+Return the manifest JSON as your final message, plus a one-line summary: how many agents generated, how many reused, whether the stack rule file was written, and confirmation every generated agent reached grade A.
 
 ## Completion gate
 
-Do not report done until ALL hold: (1) the senior-developer agent exists and reached grade A, (2) every generated role agent reached grade A — if any is stuck below A, stop and escalate rather than shipping it, (3) `.claude/crews/<lang>.json` exists on disk with `commands` copied verbatim from the verified profile and every enabled role mapped to a real agent name, (4) the `validation` map records grade A for each generated agent, (5) every skill named in `skills` (and in any generated agent's `## Skills` section) passed the loadability probe. If any fails, keep working.
+Do not report done until ALL hold: (1) the senior-developer agent exists and reached grade A, (2) every generated role agent reached grade A — if any is stuck below A, stop and escalate rather than shipping it, (3) `.claude/crews/<lang>.json` exists on disk with `commands` copied verbatim from the verified profile and every enabled role mapped to a real agent name, (4) the `validation` map records grade A for each generated agent, (5) every skill named in `skills` (and in any generated agent's `## Skills` section) passed the loadability probe, (6) `.claude/rules/<lang>.md` exists — written this run or already present and reviewed. If any fails, keep working.

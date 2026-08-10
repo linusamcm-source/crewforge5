@@ -65,6 +65,18 @@ wrong plan and discarded every finding). Two checks, in order:
    cd "$WORKTREE_PATH"
    ```
 
+   **Carry the crew in too.** A worktree cut from a base ref older than the
+   crew commit has no `.claude/agents/` — and that does not fail here, it fails
+   at spawn. One way, main tree authoritative:
+
+   ```bash
+   bash "$SCRIPTS/crew_copy.sh" "$MAIN_TREE" "$WORKTREE_PATH"   # STATUS=OK|NO_CREW
+   ```
+
+   `STATUS=NO_CREW` is normal before `crew-factory` has ever run; it is not a
+   stop condition. The scheduler repeats this per node worktree — see
+   `phases/phase-execute.md` step 3.
+
    Persist:
 
    ```bash

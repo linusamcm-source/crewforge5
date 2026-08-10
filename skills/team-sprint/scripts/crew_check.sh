@@ -32,6 +32,10 @@
 #   STALE=true|false|unknown  profile 'Verified YYYY-MM-DD' stamp older than
 #                   --max-age-days (default 5). Informational only — never
 #                   gates; the factory surfaces it as a --verify suggestion.
+#   RULE_FILE=present|missing  is there a .claude/rules/<lang>.md carrying the
+#                   stack's house conventions? Informational only, same as
+#                   STALE — the factory writes a missing one in place, without
+#                   regenerating a single agent.
 #
 # verify — do the manifest's verified commands still pass?
 #   One 'CMD <name> PASS|FAIL' line per non-empty commands.* entry, then
@@ -93,6 +97,7 @@ agent_file() {
 }
 
 manifest_path() { printf '%s/.claude/crews/%s.json' "$PROJECT_DIR" "$LANG_ARG"; }
+rule_path()     { printf '%s/.claude/rules/%s.md'    "$PROJECT_DIR" "$LANG_ARG"; }
 
 # Pure-jq schema validation, same pattern as state.sh _validate_state.
 # crews.schema.json is the human-readable statement of this shape.
@@ -203,7 +208,13 @@ do_check() {
   fi
 
   stale="$(profile_staleness "$manifest")"
-  printf 'STATUS=CACHED\nSTALE=%s\n' "$stale"
+  # RULE_FILE follows the STALE precedent exactly: informational, never gating.
+  # Every crew that predates rule generation lacks one, and returning REBUILD
+  # for that would regenerate every existing crew at ~470s apiece to produce a
+  # file the factory can write in place without touching a single agent.
+  rule="missing"
+  [[ -f "$(rule_path)" ]] && rule="present"
+  printf 'STATUS=CACHED\nSTALE=%s\nRULE_FILE=%s\n' "$stale" "$rule"
 }
 
 do_verify() {
