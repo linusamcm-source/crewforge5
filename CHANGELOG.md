@@ -88,12 +88,40 @@ this is the half of it that is general, extracted so it installs anywhere.
   directions. They found a real bug: `uninstall` exited non-zero when it
   correctly spared a rule file that was not ours.
 
+### Portability — five defects found only by publishing
+
+CI's first real runs found five bugs, every one invisible on the development
+machine. They are listed because the pattern matters more than any single fix:
+each looked correct locally, and four were unfalsifiable on macOS by
+construction.
+
+- **The BSD/GNU `stat` fallback was inverted everywhere.** `stat -f %m ||
+  stat -c %Y` reads as "BSD, else GNU" and is neither: GNU takes `-f` as
+  `--file-system` and `%m` as the mount point, EXITS 0, and the fallback never
+  runs. The mount point reaches `$(( ))`, bash parses its leading word as a
+  variable, and `set -u` kills the script frames away. One root cause, 80 failing
+  tests on ubuntu-latest, zero on macOS. Fixed in 4 shipped scripts and 5 bats
+  files; `mtime_epoch` now validates the result is an integer.
+- **SC2015 under shellcheck 0.9**, which Ubuntu's apt ships and Homebrew's 0.11
+  does not flag. The repo declares `shellcheck >=0.9`, so the code is now clean
+  under both rather than CI being pinned newer to hide it.
+- **A no-python3 fixture leaked python3 back in on merged-usr Linux**, where
+  `/bin` IS `/usr/bin`, so a "link everything from /bin" sweep undid itself.
+- **`mapfile` in a CI step** — bash 4+, and macOS runners are bash 3.2.
+- **A heredoc's `@test` registered a phantom test** in the enclosing file. Older
+  bats aborted that file: 655 of 656 tests ran, zero failures reported, exit 1.
+
 ### Known gaps
 
 - Not yet run end to end on a repo the author has never seen (plan P4.3).
 - **`ci.yml` has never executed on a runner.** The repo has no remote, so every
   "green on Ubuntu" statement above describes code that was read and locally
   simulated, not a job that passed. Publishing is what converts them.
+- **Local `bats` is less strict than CI's.** bats 1.14 does not fail a test when
+  a mid-body `[[ ]]` returns false; bare `[ ]` and failing commands do fail
+  correctly. 295 assertions are affected. All 295 were verified to pass under
+  enforcement, so nothing is hiding behind them — but a future regression in one
+  would be invisible locally. `run-all.sh` probes its own strictness and warns.
 - **`team-sprint/SKILL.md` is 13,923 bytes against a 12,288 target.** Going lower
   breaks contracts the suite pins to that file: `recon_distribution.bats` AC12
   requires the four recon keys in its config block in a fixed column format, and

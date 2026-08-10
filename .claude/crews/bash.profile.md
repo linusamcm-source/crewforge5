@@ -13,7 +13,7 @@ run is marked explicitly as *not verified*; nothing here is recalled.
 | Interpreter on PATH | GNU bash 3.2.57(1) arm64-apple-darwin26 at `/bin/bash` | `bash --version` |
 | Shebang convention | `#!/usr/bin/env bash` in 23 of 23 scripts | `head -1 skills/team-sprint/scripts/*.sh` |
 | Shell scripts | 62 `*.sh` | `find . -name '*.sh'` |
-| Test files | 42 `*.bats` | `find . -name '*.bats'` |
+| Test files | 44 `*.bats` | `find . -name '*.bats'` |
 | Skills | 25 | `ls skills/` |
 
 macOS ships bash 3.2 — no associative arrays, no `${var^^}`, no `mapfile`.
@@ -39,7 +39,7 @@ neither. Do not invent one.
 Run and observed this session:
 
 ```bash
-# Tests — 654 passing, 0 failing
+# Tests — 655 passing, 0 failing
 bats skills/team-sprint/scripts/tests/*.bats
 
 # Lint — clean, exit 0, both script trees
@@ -66,7 +66,7 @@ PASS: 59 tok of headroom
 bash skills/team-sprint/scripts/tests/run-all.sh   # exited 1 at commit 1fa2245
 ```
 
-Steps 1 (shellcheck) and 2 (bats, 654/654) passed; step 3 failed because
+Steps 1 (shellcheck) and 2 (bats, 654/654 at survey time) passed; step 3 failed because
 `SKILL.md` cited `$REF/config-reference.md`, a file that had been created and
 then removed during a slim while the citation stayed behind. `lint_skill.sh`
 check2 caught it.
