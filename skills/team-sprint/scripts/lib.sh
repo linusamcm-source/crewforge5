@@ -103,7 +103,12 @@ art_dir() {
   root="$(repo_root)"
   local sprint_dir=""
   local plan_dir
-  plan_dir="$(cd "$(dirname "$plan_path")" 2>/dev/null && pwd -P || true)"
+  # `cd … && pwd -P || true` inside the substitution is the SC2015 shape: it
+  # reads as if-then-else and is not. Moving the fallback outside keeps the
+  # behaviour — an unresolvable plan dir yields "" and the branch below fails
+  # over to the default — while saying so honestly. shellcheck 0.9, the declared
+  # minimum and what CI installs, flags the old form; 0.11 does not.
+  plan_dir="$(cd "$(dirname "$plan_path")" 2>/dev/null && pwd -P)" || plan_dir=""
   if [[ "$(dirname "$plan_dir")" == */.team-sprint/sprints \
         && "$(basename "$plan_dir")" == sprint-* ]]; then
     sprint_dir=".team-sprint/sprints/$(basename "$plan_dir")"

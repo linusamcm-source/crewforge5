@@ -27,6 +27,11 @@ jobs:
           else
             brew install bats-core jq shellcheck
           fi
+          # Print the versions. shellcheck matters most: Ubuntu's apt ships
+          # 0.9.0 and Homebrew ships 0.11.0, and 0.9 flags SC2015 on
+          # `cd … && x || true` where 0.11 does not. The repo declares
+          # `shellcheck >=0.9`, so 0.9 is supported and the code must be clean
+          # under it — CI installing the older one is the point, not a problem.
           bats --version; jq --version; shellcheck --version | head -3
 
       - name: Shell toolchain suite
