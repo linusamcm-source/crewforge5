@@ -13,6 +13,5 @@
     "code-review",
     "tdd",
     "orchestration"
-  ],
-  "hooks": "./hooks/hooks.json"
+  ]
 }
