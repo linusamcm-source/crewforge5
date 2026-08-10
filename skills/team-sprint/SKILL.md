@@ -67,10 +67,7 @@ ui_loop: ui-validation-loop
 push_on_merge: false
 ```
 
-The fields sprints actually override. Every remaining field and its default —
-recon, graphify, adversarial and review-loop caps, subskill hooks, agent
-overrides — is in `$REF/config-reference.md`, with the per-field reasoning in
-`team-sprint.config.yaml.example` at the skill root.
+Resolution order: inline argument > `team-sprint.config.yaml` at the repo root > the default above.
 
 Omitted `commands.*` are inferred from the repo (`package.json`, `justfile`, `Makefile`, `pyproject.toml`, `Cargo.toml`); coexisting stacks → ask the user. `commands.coverage: "true"` skips the coverage gate (`gate_status: disabled`). Full per-field docs: `team-sprint.config.yaml.example` at the skill root. The `subskill_hooks` + `TS_*` env contract: `$REF/subskill-hooks.md`.
 

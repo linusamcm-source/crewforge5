@@ -60,27 +60,26 @@ budget: 1200 tok
 PASS: 59 tok of headroom
 ```
 
-### The aggregate suite is currently RED — pre-existing
+### The aggregate suite was RED at survey time — since fixed
 
 ```bash
-bash skills/team-sprint/scripts/tests/run-all.sh   # exits 1 at commit 1fa2245
+bash skills/team-sprint/scripts/tests/run-all.sh   # exited 1 at commit 1fa2245
 ```
 
-Step 1 (shellcheck) and step 2 (bats, 654/654) pass. Step 3 fails:
+Steps 1 (shellcheck) and 2 (bats, 654/654) passed; step 3 failed because
+`SKILL.md` cited `$REF/config-reference.md`, a file that had been created and
+then removed during a slim while the citation stayed behind. `lint_skill.sh`
+check2 caught it.
 
-```
-[check2] SKILL.md mentions $REF/config-reference.md but no such file under
-         /Users/linus/Development/crewforge/skills/team-sprint/reference/
-lint_skill.sh failed
-```
+**Worth knowing why it survived as long as it did:** the bats cases all pass and
+only `lint_skill.sh` fails, *after* them — so anyone counting `ok` / `not ok`
+lines sees a green suite. `run-all.sh`'s exit code is the only honest signal.
+Check `$?`, not the tally.
 
-`skills/team-sprint/SKILL.md:72` references `$REF/config-reference.md`; that
-file is not on disk and not committed at HEAD. This predates the crew and is
-unrelated to it. Treat a red `run-all.sh` as expected until that reference is
-resolved — and re-check before blaming your own change.
+Fixed at the next commit; the citation is gone and `run-all.sh` exits 0.
 
 Note also that `lint_skill.sh` re-runs the **entire** bats suite nested inside
-step 3, so `run-all.sh` executes the 654 tests twice and takes several minutes.
+step 3, so `run-all.sh` executes the suite twice and takes several minutes.
 Prefer running `bats` directly during a tight loop.
 
 ## No coverage, no typecheck

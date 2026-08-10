@@ -13,7 +13,7 @@ detect stack → crew-factory generates the crew INTO the repo
 ## Install
 
 ```bash
-claude plugin marketplace add linusmcmanamey/crewforge   # or a local path
+claude plugin marketplace add linusamcm-source/crewforge   # or a local path
 claude plugin install crewforge@crewforge
 ```
 
@@ -133,6 +133,11 @@ it cannot edit anything, so applying stays your decision.
 
 677 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
 them on Ubuntu and macOS, plus four gates and a degradation job:
+
+**Check the exit code, not the tally.** `run-all.sh` runs shellcheck, then bats,
+then `lint_skill.sh` — and only the middle step prints `ok` / `not ok` lines. A
+green-looking count with a red suite is exactly how a dangling `$REF` citation
+survived a full review here. `echo $?` is the signal.
 
 ```bash
 bash skills/team-sprint/scripts/tests/run-all.sh   # 654 — the toolchain
