@@ -41,3 +41,29 @@ else
   fail "plan-path validation failed — STOP; surface the script's stderr reason to the user"
 fi
 ```
+
+### Plan format
+
+Markdown. Auto-detect multi-story (one `## Story <id>: <title>` heading per story, each carrying `### Acceptance Criteria` + `### Definition of Done`) vs single-story (no `## Story` headings — entire plan = one implicit story keyed by filename). Phases 3–6 iterate once per story (one commit each); Phase 7 runs once at sprint end.
+
+**`### Boundaries:` — cross-boundary review scope (optional per story).** Lists the
+cross-language, cross-repo, and deployment artifacts a story's **correctness** depends on
+even though the story never edits them:
+
+```markdown
+### Touches: services/gateway/internal/server/spotconfig_cap.go
+### Boundaries: services/lambdas/auth/pre_token.py (produces custom:tier),
+                packages/infra-consolidated/lib/config/dev.ts (decides which env runs this),
+                ~/Development/other-app/src/services/spotConfigApiService.ts (the real caller)
+```
+
+It is a **review-scope directive only**. It MUST NOT reach the dependency DAG: `### Touches:`
+feeds inferred edges (`dependency_source: hybrid`, `infer_from_touches: true`), so a boundary
+path landing in `touches[]` would invent phantom edges and corrupt Phase 2 scheduling.
+`parse_stories.sh` ignores the section by construction — `classify()` recognises only
+ac/dod/deps/touches — and `scripts/tests/boundaries_dag_isolation.bats` pins byte-identical
+graph output with and against it.
+
+Phase 1 reviewers must cite every `Boundaries:` entry or state why it is irrelevant, and may
+**add** boundaries the plan omitted — the section is authored by the same person whose blind
+spot produced the gap, so treat it as a floor, never a ceiling.

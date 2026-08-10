@@ -32,6 +32,15 @@ jobs:
       - name: Shell toolchain suite
         run: bash skills/team-sprint/scripts/tests/run-all.sh
 
+      # The plugin's own scripts live outside the team-sprint tree, so run-all.sh
+      # never sees them. sprint_init.sh writes into a stranger's repo and is the
+      # first thing they run — it does not get to be the untested one.
+      - name: Plugin scripts — shellcheck and bats
+        run: |
+          set -euo pipefail
+          shellcheck scripts/*.sh
+          bats scripts/tests/
+
   gates:
     runs-on: ubuntu-latest
     steps:

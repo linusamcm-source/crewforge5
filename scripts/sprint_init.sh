@@ -137,7 +137,13 @@ case "$MODE" in
         echo "  left      $n (not ours)"
       fi
     done
-    rmdir "$DEST" 2>/dev/null && echo "  removed   $DEST (empty)"
+    # A directory still holding someone else's rule is the CORRECT outcome, not a
+    # failure — so rmdir's non-zero exit must not become the script's. Without the
+    # `|| true` this is the last command in the branch and a successful uninstall
+    # that spared a foreign file reports failure.
+    if rmdir "$DEST" 2>/dev/null; then
+      echo "  removed   $DEST (empty)"
+    fi
     ;;
 
   *)
