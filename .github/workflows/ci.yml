@@ -41,6 +41,25 @@ jobs:
           shellcheck scripts/*.sh
           bats scripts/tests/
 
+  # P2.3 — the story is "optional tooling degrades visibly". The `tests` job above
+  # installs bats, jq and shellcheck on every runner, so it proves the opposite:
+  # every optional tool present, every time. This job is the actual condition —
+  # ONLY the declared base set (bash, git, python3, jq), with every optional tool
+  # made unreachable, asserting the scripts reach a verdict instead of dying at a
+  # `require_*`.
+  #
+  # jq stays because it is NOT optional: crew_check.sh, coverage_check.sh,
+  # detect_language.sh and preflight_subskills.sh all hard-require it. Claiming
+  # otherwise in the README would be the lie this job exists to prevent.
+  degradation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ONLY the declared base set
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Every entry point reaches a verdict without the optional tools
+        run: bash scripts/verify_degradation.sh
+
   gates:
     runs-on: ubuntu-latest
     steps:
