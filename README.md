@@ -116,12 +116,14 @@ against `bash-guard`'s denial of exactly that, for instance.
 
 ## Tests
 
-641 bats cases cover the shell toolchain:
+654 bats cases cover the shell toolchain, and four gates run in CI on Ubuntu
+and macOS:
 
 ```bash
 bash skills/team-sprint/scripts/tests/run-all.sh
 bash scripts/budget_check.sh     # always-loaded context budget
 bash scripts/name_check.sh       # frontmatter name matches path
+bash scripts/validate_all.sh     # every skill and agent passes its own validator
 ```
 
 ## Support

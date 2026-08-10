@@ -25,6 +25,20 @@ this is the half of it that is general, extracted so it installs anywhere.
 - `hooks/crewforge-root.sh` — publishes the install path once per session as
   `$CREWFORGE_ROOT`, because `${CLAUDE_PLUGIN_ROOT}` is not visible to the Bash
   tool.
+- `crew_copy.sh` — carries `.claude/agents/` and `.claude/crews/` into **each**
+  worktree at node start. A sprint that generates its crew after a node worktree
+  was cut used to fail at spawn, per node; a copy made once at setup does not fix
+  it, because `worktree_strategy: per-node` is the default. One way, and it
+  refuses to overwrite a newer in-worktree agent.
+- `rule_emit.sh` — writes `.claude/rules/<lang>.md` with `paths:` frontmatter
+  scoped to the stack, so the body loads only when a file of that stack is read.
+  `crew_check.sh` now reports `RULE_FILE=present|missing` the way it reports
+  `STALE`: informational, never gating. A missing rule file must not mean
+  REBUILD — every crew that predates rule files lacks one, and rebuilding them
+  all costs ~470s apiece to produce a document written in place.
+- `scripts/validate_all.sh` and `.github/workflows/ci.yml` — the suite runs on
+  Ubuntu and macOS; the budget, name, structural-validator and path-coupling
+  gates run on every push.
 
 ### Changed
 
@@ -38,6 +52,13 @@ this is the half of it that is general, extracted so it installs anywhere.
 - Tests that were anchored to the originating repo's git history now skip
   outside it, rather than failing; `recon_config.bats` skips when no
   machine-local `team-sprint.config.yaml` exists.
+
+### Fixed
+
+- `code-reviewer` and `plugin-forge` both failed the plugin's own
+  `skill-validator`: their SKILL.md cited reference files and scripts that were
+  never in the tree. A bundle whose pitch is "stops your agents rotting" cannot
+  ship components that fail its own gate.
 
 ### Not shipped
 
@@ -53,7 +74,9 @@ this is the half of it that is general, extracted so it installs anywhere.
 ### Known gaps
 
 - Not yet run end to end on a repo the author has never seen (plan P4.3).
-- Ubuntu CI is unproven; `stat -f` fallbacks exist in the four shipped scripts
-  but the bats files are unaudited (plan P4.1).
-- `skill-validator` / `agent-validator` grade-A sweep across the whole bundle is
-  not yet a CI gate (plan P4.2).
+- Ubuntu is now in CI but has not yet run against a real GitHub remote. The
+  `stat -f` audit is done: all 10 sites carry GNU fallbacks, and there are no
+  `sed -i ''` invocations left.
+- The `skill-validator` / `agent-validator` **behavioural** grade is not in CI —
+  it needs a model. The structural half runs on every push
+  (`scripts/validate_all.sh`, 32 components clean).
