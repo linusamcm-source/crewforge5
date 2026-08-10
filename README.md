@@ -131,7 +131,7 @@ it cannot edit anything, so applying stays your decision.
 
 ## Tests
 
-677 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
+678 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
 them on Ubuntu and macOS, plus four gates and a degradation job:
 
 **Check the exit code, not the tally.** `run-all.sh` runs shellcheck, then bats,
@@ -140,7 +140,7 @@ green-looking count with a red suite is exactly how a dangling `$REF` citation
 survived a full review here. `echo $?` is the signal.
 
 ```bash
-bash skills/team-sprint/scripts/tests/run-all.sh   # 654 — the toolchain
+bash skills/team-sprint/scripts/tests/run-all.sh   # 655 — the toolchain
 bats scripts/tests/                                #  23 — installer + retention gate
 bash scripts/budget_check.sh       # always-loaded context budget
 bash scripts/name_check.sh         # frontmatter name matches path
@@ -159,6 +159,20 @@ That one is the assertion the whole rules design rests on. It runs two headless
 sessions against an `InstructionsLoaded` hook and checks both directions — a
 rule that loads when it shouldn't costs every unrelated session its whole body,
 and one that never loads is a convention the model never sees.
+
+On a Mac, also run this before you trust a green suite:
+
+```bash
+bash scripts/verify_gnu_portability.sh   # the suite under GNU-semantics stat
+```
+
+`stat` is the richest source of works-on-my-Mac bugs here, and it fails
+silently. `stat -f %m "$f" || stat -c %Y "$f"` reads as "BSD, else GNU" and is
+neither: GNU takes `-f` as `--file-system` and `%m` as the mount point, exits 0,
+and the fallback never runs. That one inversion cost 80 failing tests on
+ubuntu-latest and zero on macOS. The shim reproduces it in seconds. It models
+`stat` only — merged-usr `/bin`, `sed -i`, and flag ordering still need the
+Linux CI job.
 
 ## Support
 
