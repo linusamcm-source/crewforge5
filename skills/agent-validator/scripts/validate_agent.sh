@@ -170,7 +170,7 @@ fi
 # --- Skill references consistency ---
 SKILL_REFS=$(grep -oE '/[a-z][a-z0-9-]+' "$AGENT_FILE" 2>/dev/null | sort -u | grep -vE '^/(dev|tmp|usr|etc|var|home|Users|bin|opt)' || true)
 if [ -n "$SKILL_REFS" ]; then
-  emit "$(result INFO "skill_references" "Skill references found: $(echo $SKILL_REFS | tr '\n' ' ')")"
+  emit "$(result INFO "skill_references" "Skill references found: $(echo "$SKILL_REFS" | tr '\n' ' ')")"
 fi
 
 # --- Tool usage vs declaration coherence ---

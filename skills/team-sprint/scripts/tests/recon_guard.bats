@@ -230,6 +230,12 @@ _bin_without_python3() {
     n="$(basename "$f")"
     if [ "$n" != python3 ]; then ln -sf "$f" "$d/$n"; fi
   done
+  # On a merged-usr Linux (Ubuntu, and every current distro) /bin IS /usr/bin,
+  # so the `/bin/*` sweep above links python3 straight back in. macOS keeps them
+  # separate and has no python3 in /bin, which is why this fixture looked correct
+  # for years and failed on the first Linux runner. Sweep the interpreter out
+  # after the fact rather than trying to predict which directory it came from.
+  rm -f "$d"/python3 "$d"/python3.* "$d"/python
   if [ -n "$(PATH="$d" command -v python3 2>/dev/null || true)" ]; then
     echo "fixture error: python3 still resolvable from $d"
     false

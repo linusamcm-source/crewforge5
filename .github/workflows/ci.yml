@@ -46,6 +46,17 @@ jobs:
           shellcheck scripts/*.sh
           bats scripts/tests/
 
+      # run-all.sh lints only skills/team-sprint/scripts, and the step above only
+      # scripts/. That left 27 shipped scripts across nine other skills linted by
+      # nothing — in a plugin whose pitch is that it stops generated artefacts
+      # rotting. Everything it ships gets checked.
+      - name: Every other shipped script
+        run: |
+          set -euo pipefail
+          mapfile -t others < <(find skills -name '*.sh' -not -path 'skills/team-sprint/scripts/*' | sort)
+          printf 'linting %d scripts outside the two main trees\n' "${#others[@]}"
+          shellcheck "${others[@]}"
+
   # P2.3 — the story is "optional tooling degrades visibly". The `tests` job above
   # installs bats, jq and shellcheck on every runner, so it proves the opposite:
   # every optional tool present, every time. This job is the actual condition —
