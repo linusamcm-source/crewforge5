@@ -1,0 +1,50 @@
+{
+  "language": "bash",
+  "stack_profile": ".claude/crews/bash.profile.md",
+  "commands": {
+    "test": "bats skills/team-sprint/scripts/tests/*.bats",
+    "coverage": "",
+    "lint": "shellcheck skills/team-sprint/scripts/*.sh scripts/*.sh",
+    "typecheck": "",
+    "build": ""
+  },
+  "crew": {
+    "architect": "bash-architect",
+    "developer": "bash-developer",
+    "tester": "bash-tester",
+    "profiler": "bash-profiler",
+    "security": "bash-security",
+    "code_reviewer": "bash-code-reviewer",
+    "simplifier": "bash-simplifier",
+    "docs_writer": "bash-docs-writer",
+    "dependency_auditor": "bash-dependency-auditor",
+    "boundary_reviewer": "boundary-reviewer"
+  },
+  "validation": {
+    "bash-developer": "A",
+    "bash-architect": "A",
+    "bash-tester": "A",
+    "bash-profiler": "A",
+    "bash-security": "A",
+    "bash-code-reviewer": "A",
+    "bash-simplifier": "A",
+    "bash-docs-writer": "A",
+    "bash-dependency-auditor": "A"
+  },
+  "skills": {
+    "architect": ["use-repo-code"],
+    "simplifier": ["use-repo-code"]
+  },
+  "generated": [
+    "bash-developer",
+    "bash-architect",
+    "bash-tester",
+    "bash-profiler",
+    "bash-security",
+    "bash-code-reviewer",
+    "bash-simplifier",
+    "bash-docs-writer",
+    "bash-dependency-auditor"
+  ],
+  "reused": ["boundary-reviewer"]
+}
