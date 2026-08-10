@@ -34,16 +34,22 @@ printf 'ok\n'
 SH
   chmod +x "$root/scripts/dummy.sh"
 
-  cat > "$root/scripts/tests/dummy.bats" <<'BATS'
-#!/usr/bin/env bats
-source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.sh"
-
-@test "dummy script prints ok" {
-  run bash "$BATS_TEST_DIRNAME/../dummy.sh"
-  [ "$status" -eq 0 ]
-  [ "$output" = "ok" ]
-}
-BATS
+  # The `@test` token is assembled rather than written literally. bats discovers
+  # tests by scanning a .bats file for `@test` at the start of a line, and some
+  # versions scan the OUTER file without understanding that this one sits inside
+  # a quoted heredoc. Those versions register a phantom "dummy script prints ok"
+  # in THIS file, then abort it with `bats: unknown test name` — 655 of 656 tests
+  # executed, no failure reported, one file silently skipped. Ubuntu's bats does
+  # this; the newer one on macOS does not, so it was invisible locally.
+  {
+    printf '#!/usr/bin/env bats\n'
+    printf 'source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.sh"\n\n'
+    printf '%s "dummy script prints ok" {\n' '@test'
+    printf '  run bash "$BATS_TEST_DIRNAME/../dummy.sh"\n'
+    printf '  [ "$status" -eq 0 ]\n'
+    printf '  [ "$output" = "ok" ]\n'
+    printf '}\n'
+  } > "$root/scripts/tests/dummy.bats"
 
   # One reference doc — content doesn't matter, just existence + back-reference.
   cat > "$root/reference/example.md" <<'REF'
