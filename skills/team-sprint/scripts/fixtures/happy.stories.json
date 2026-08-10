@@ -1,0 +1,6 @@
+[
+  { "story_id": "9",  "title": "root node",          "acceptance_criteria": ["root ac"], "definition_of_done": ["root dod"], "depends_on": [],     "touches": [] },
+  { "story_id": "11", "title": "depends on 9",        "acceptance_criteria": ["ac 11"],   "definition_of_done": ["dod 11"],   "depends_on": ["9"],  "touches": [] },
+  { "story_id": "12", "title": "depends on 11",       "acceptance_criteria": ["ac 12"],   "definition_of_done": ["dod 12"],   "depends_on": ["11"], "touches": [] },
+  { "story_id": "13", "title": "also depends on 9",   "acceptance_criteria": ["ac 13"],   "definition_of_done": ["dod 13"],   "depends_on": ["9"],  "touches": [] }
+]

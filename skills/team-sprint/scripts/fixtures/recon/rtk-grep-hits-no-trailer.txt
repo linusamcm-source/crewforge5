@@ -1,0 +1,2 @@
+10:alpha_marker() {
+19:beta_marker appears on source line 4 of beta/two.md

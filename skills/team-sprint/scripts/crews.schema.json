@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anthropic.com/skills/team-sprint/crews.schema.json",
+  "title": "crew-factory manifest .claude/crews/<lang>.json",
+  "$comment": "Machine schema for the crew manifest crew-factory writes and team-sprint phase-0 step 10a consumes. scripts/crew_check.sh validate_manifest checks these constraints in pure jq on every `check`/`verify` call; this file is the human-readable statement of the same shape. The `skills` map is optional (older manifests predate it); `accessibility` is omitted from `crew` for non-frontend stacks and `boundary_reviewer` is provenance-only — no consumer resolves it.",
+  "type": "object",
+  "required": ["language", "stack_profile", "commands", "crew", "validation", "generated", "reused"],
+  "additionalProperties": true,
+  "properties": {
+    "language": { "type": "string", "minLength": 1 },
+    "stack_profile": { "type": "string", "minLength": 1 },
+    "commands": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "crew": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "generated": { "type": "array", "items": { "type": "string" } },
+    "reused": { "type": "array", "items": { "type": "string" } }
+  }
+}

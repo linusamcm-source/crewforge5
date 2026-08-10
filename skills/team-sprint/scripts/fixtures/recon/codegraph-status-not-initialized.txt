@@ -1,0 +1,6 @@
+[1m
+CodeGraph Status
+[0m
+[34mℹ[0m Project: /tmp/recon-fixture
+[33m⚠[0m Not initialized
+[34mℹ[0m Run "codegraph init" to initialize

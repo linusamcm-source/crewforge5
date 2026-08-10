@@ -1,0 +1,24 @@
+**Explore: token parsing**
+
+**`src/auth/session.ts`** — parseToken, authenticate · focused (the methods you named in full, the rest as signatures — codegraph_explore a signature by name for its body; do NOT Read)
+
+```ts
+40	export function parseToken(raw: string): Token {
+41	  const SECRET_SAUCE = decodeBase64Payload(raw);
+42	  return { sub: SECRET_SAUCE.sub, exp: SECRET_SAUCE.exp };
+43	}
+```
+
+**`src/auth/refresh.ts`** — refreshSession · skeleton (signatures only — codegraph_explore a name for its full body; do NOT Read)
+
+```ts
+17	export async function refreshSession(id: string): Promise<Session> {
+18	  const CANARY_BODY_TEXT = await store.load(id);
+19	  return renew(CANARY_BODY_TEXT);
+20	}
+```
+
+**Blast radius — what depends on these (update/verify before editing)**
+
+- `parseToken` (src/auth/session.ts:40) — 2 callers in `src/auth/refresh.ts`; ⚠️ no covering tests found
+- `refreshSession` (src/auth/refresh.ts:17) — 1 caller in `src/api/handlers.ts`; tests: `test/refresh.spec.ts`

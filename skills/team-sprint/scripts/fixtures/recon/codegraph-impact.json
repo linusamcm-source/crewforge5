@@ -1,0 +1,26 @@
+{
+  "symbol": "parseToken",
+  "depth": 2,
+  "nodeCount": 3,
+  "edgeCount": 3,
+  "affected": [
+    {
+      "name": "parseToken",
+      "kind": "function",
+      "filePath": "src/auth/session.js",
+      "startLine": 1
+    },
+    {
+      "name": "authenticate",
+      "kind": "function",
+      "filePath": "src/auth/session.js",
+      "startLine": 2
+    },
+    {
+      "name": "session.test.js",
+      "kind": "file",
+      "filePath": "test/auth/session.test.js",
+      "startLine": 1
+    }
+  ]
+}

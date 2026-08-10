@@ -1,0 +1,19 @@
+# macOS noise
+.DS_Store
+
+# Sprint runtime state (per-sprint artifact dirs)
+.team-sprint/
+
+# Claude Code session sidecar (created when Claude operates inside this repo)
+.claude/
+
+# Repomix output (regenerated per sprint)
+.repomix-output.xml
+
+# Graphify knowledge-graph output (regenerated via /graphify)
+graphify-out/
+
+# Editor scratch
+*.swp
+*~
+

@@ -1,0 +1,53 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+================================================================
+Files
+================================================================
+
+<file path="alpha/one.sh">
+#!/usr/bin/env bash
+alpha_marker_01() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_02() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_03() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_04() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_05() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_06() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_07() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_08() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_09() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_10() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_11() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_12() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_13() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_14() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_15() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_16() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_17() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_18() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_19() { printf 'padding payload so rtk truncates this result set'; }
+alpha_marker_20() { printf 'padding payload so rtk truncates this result set'; }
+</file>
+
+<file path="beta/two.md">
+---
+beta_marker_01 appears with padding payload so rtk truncates this result set
+beta_marker_02 appears with padding payload so rtk truncates this result set
+beta_marker_03 appears with padding payload so rtk truncates this result set
+beta_marker_04 appears with padding payload so rtk truncates this result set
+beta_marker_05 appears with padding payload so rtk truncates this result set
+beta_marker_06 appears with padding payload so rtk truncates this result set
+beta_marker_07 appears with padding payload so rtk truncates this result set
+beta_marker_08 appears with padding payload so rtk truncates this result set
+beta_marker_09 appears with padding payload so rtk truncates this result set
+beta_marker_10 appears with padding payload so rtk truncates this result set
+beta_marker_11 appears with padding payload so rtk truncates this result set
+beta_marker_12 appears with padding payload so rtk truncates this result set
+beta_marker_13 appears with padding payload so rtk truncates this result set
+beta_marker_14 appears with padding payload so rtk truncates this result set
+beta_marker_15 appears with padding payload so rtk truncates this result set
+beta_marker_16 appears with padding payload so rtk truncates this result set
+beta_marker_17 appears with padding payload so rtk truncates this result set
+beta_marker_18 appears with padding payload so rtk truncates this result set
+beta_marker_19 appears with padding payload so rtk truncates this result set
+beta_marker_20 appears with padding payload so rtk truncates this result set
+</file>

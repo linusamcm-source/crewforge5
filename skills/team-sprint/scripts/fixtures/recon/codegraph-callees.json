@@ -1,0 +1,11 @@
+{
+  "symbol": "authenticate",
+  "callees": [
+    {
+      "name": "parseToken",
+      "kind": "function",
+      "filePath": "src/auth/session.js",
+      "startLine": 1
+    }
+  ]
+}

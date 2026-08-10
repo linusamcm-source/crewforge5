@@ -1,0 +1,28 @@
+40 matches in 1 files:
+
+9:alpha_marker_01() { printf 'padding payload so rtk truncates this result set'; }
+10:alpha_marker_02() { printf 'padding payload so rtk truncates this result set'; }
+11:alpha_marker_03() { printf 'padding payload so rtk truncates this result set'; }
+12:alpha_marker_04() { printf 'padding payload so rtk truncates this result set'; }
+13:alpha_marker_05() { printf 'padding payload so rtk truncates this result set'; }
+14:alpha_marker_06() { printf 'padding payload so rtk truncates this result set'; }
+15:alpha_marker_07() { printf 'padding payload so rtk truncates this result set'; }
+16:alpha_marker_08() { printf 'padding payload so rtk truncates this result set'; }
+17:alpha_marker_09() { printf 'padding payload so rtk truncates this result set'; }
+18:alpha_marker_10() { printf 'padding payload so rtk truncates this result set'; }
+19:alpha_marker_11() { printf 'padding payload so rtk truncates this result set'; }
+20:alpha_marker_12() { printf 'padding payload so rtk truncates this result set'; }
+21:alpha_marker_13() { printf 'padding payload so rtk truncates this result set'; }
+22:alpha_marker_14() { printf 'padding payload so rtk truncates this result set'; }
+23:alpha_marker_15() { printf 'padding payload so rtk truncates this result set'; }
+24:alpha_marker_16() { printf 'padding payload so rtk truncates this result set'; }
+25:alpha_marker_17() { printf 'padding payload so rtk truncates this result set'; }
+26:alpha_marker_18() { printf 'padding payload so rtk truncates this result set'; }
+27:alpha_marker_19() { printf 'padding payload so rtk truncates this result set'; }
+28:alpha_marker_20() { printf 'padding payload so rtk truncates this result set'; }
+33:beta_marker_01 appears with padding payload so rtk truncates this result set
+34:beta_marker_02 appears with padding payload so rtk truncates this result set
+35:beta_marker_03 appears with padding payload so rtk truncates this result set
+36:beta_marker_04 appears with padding payload so rtk truncates this result set
+37:beta_marker_05 appears with padding payload so rtk truncates this result set
+  +15 more in fixtures/recon/pack-truncated.xml [see remaining: tail -n +26 ~/Library/Application Support/rtk/tee/1785198120_grep_0_ixtures_recon_pack_truncated_xml.log]

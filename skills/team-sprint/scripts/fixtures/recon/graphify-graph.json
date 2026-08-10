@@ -1,0 +1,33 @@
+{
+  "directed": true,
+  "nodes": [
+    {
+      "id": "skills_team_sprint_scripts_lib",
+      "label": "lib.sh",
+      "source_file": "skills/team-sprint/scripts/lib.sh",
+      "file_type": "code",
+      "metadata": { "language": "bash" }
+    },
+    {
+      "id": "skills_team_sprint_scripts_state",
+      "label": "state.sh",
+      "source_file": "skills/team-sprint/scripts/state.sh",
+      "file_type": "code",
+      "metadata": { "language": "bash" }
+    },
+    {
+      "id": "readme",
+      "label": "README.md",
+      "source_file": "README.md",
+      "file_type": "document",
+      "metadata": { "language": "markdown" }
+    }
+  ],
+  "edges": [
+    {
+      "source": "skills_team_sprint_scripts_state",
+      "target": "skills_team_sprint_scripts_lib",
+      "relation": "imports_from"
+    }
+  ]
+}

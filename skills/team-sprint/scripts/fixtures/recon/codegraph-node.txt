@@ -1,0 +1,16 @@
+## parseToken
+
+**Location:** src/auth/session.ts:40
+**Signature:** `function parseToken(raw: string): Token`
+
+Decodes a bearer token into its claims.
+
+**Callers:** authenticate (src/auth/session.ts:58), refreshSession (src/auth/refresh.ts:17)
+**Callees:** decodeBase64Payload (src/auth/codec.ts:9)
+
+```ts
+40	export function parseToken(raw: string): Token {
+41	  const SECRET_SAUCE = decodeBase64Payload(raw);
+42	  return { sub: SECRET_SAUCE.sub, exp: SECRET_SAUCE.exp };
+43	}
+```

@@ -1,0 +1,7 @@
+# Conventional .gitignore: an explicit deny-list, no rule of which matches
+# `.recon/`. `git check-ignore -q .recon/` exits non-zero against this file, so
+# RH4's conditional append must ADD the line here.
+node_modules/
+*.log
+.DS_Store
+dist/

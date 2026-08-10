@@ -1,0 +1,19 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+================================================================
+Files
+================================================================
+
+## File: alpha/one.sh
+#!/usr/bin/env bash
+# one.sh — first fixture file in this pack
+alpha_marker() {
+  printf 'alpha\n'
+}
+
+
+## File: beta/two.md
+---
+name: beta-doc
+---
+beta_marker appears on source line 4 of beta/two.md

@@ -1,0 +1,374 @@
+# team-sprint.config.yaml — fully-documented example
+#
+# Drop this file at your repo root as `team-sprint.config.yaml` to override
+# skill defaults. Every field below is OPTIONAL except `plan_path` (which is
+# normally passed on the CLI, not here). Delete any line and the default in
+# parentheses applies.
+#
+# This file is the v1.0 reference surface created by mech-12. mech-15 extends
+# it with example `subskill_hooks` entries; mech-14 lints its existence.
+
+# ----------------------------------------------------------------------------
+# Required at invocation (CLI arg or here)
+# ----------------------------------------------------------------------------
+
+# plan_path                                  type: string   default: <required>
+# Markdown plan path, relative to repo root.
+# Override: always — required input.
+plan_path: docs/plans/sprint-my-feature.md
+
+# ----------------------------------------------------------------------------
+# Branch / worktree
+# ----------------------------------------------------------------------------
+
+# target_branch                              type: string   default: develop
+# Branch the sprint merges into at Phase 7.
+# Override when: your project uses `main`, `trunk`, or a release branch.
+target_branch: develop
+
+# worktree_name                              type: string   default: sprint-<auto-slug-from-plan>
+# Sibling-directory name for the sprint worktree. Full path becomes
+# `../<repo>-<worktree_name>`. The auto-slug carries the story id so multiple
+# concurrent sprints don't collide.
+# Override when: you want a short, memorable name.
+# worktree_name: sprint-my-feature
+
+# ----------------------------------------------------------------------------
+# Quality gates
+# ----------------------------------------------------------------------------
+
+# coverage_threshold                         type: int (0-100)   default: 80
+# Hard new-code coverage gate. `0` disables the gate (useful for bash-only
+# repos or refactor-only sprints).
+# Override when: project has no coverage tool, or threshold is project policy.
+coverage_threshold: 80
+
+# coverage_mode                              type: enum   default: new
+# Alternatives: new | whole
+#   new   — gate only counts files touched in this story's diff (recommended).
+#   whole — gate counts whole-repo coverage (legacy projects with a fixed bar).
+# Override when: project policy demands whole-repo coverage.
+coverage_mode: new
+
+# scheduling                                 type: enum   default: graph
+# Alternatives: graph | sequential
+#   graph      — synthesise a dependency DAG in Phase 2 and run stories in
+#                parallel dependency-respecting waves (default).
+#   sequential — run one story at a time in a single shared worktree (pairs
+#                with worktree_strategy: single); the pre-graph behaviour.
+# Override when: a plan's stories are strictly linear or you want the simpler
+# single-worktree flow.
+scheduling: graph
+
+# worktree_strategy                          type: enum   default: per-node
+# Alternatives: per-node | single
+#   per-node — each graph node gets its own worktree + branch (default, graph).
+#   single   — one shared worktree for the whole sprint (sequential mode).
+# Override when: you set scheduling: sequential (use single).
+worktree_strategy: per-node
+
+# dependency_source                          type: enum   default: hybrid
+# Alternatives: declared | inferred | hybrid
+#   declared — edges only from each story's `### Depends On:` list.
+#   inferred — edges only from `### Touches:` glob overlap (needs
+#              infer_from_touches: true).
+#   hybrid   — declared edges are authoritative, PLUS inferred conflict-ordering
+#              edges from Touches overlap where no declared edge exists (default).
+# Override when: your plan declares all edges explicitly (declared) or none
+# (inferred).
+dependency_source: hybrid
+
+# infer_from_touches                         type: bool   default: true
+# Whether `### Touches:` glob overlap contributes inferred conflict-ordering
+# edges. Always on under hybrid; this is the enabling toggle for pure
+# `inferred` mode.
+# Override when: Touches globs are too broad and over-serialise independent
+# stories (set false and rely on declared edges).
+infer_from_touches: true
+
+# NOTE: the Phase 2 graph-hardening adversarial review is HARD-WIRED under
+# scheduling: graph (no toggle; it never runs under scheduling: sequential).
+# The former graph_adversarial_review field is retired — a value here is
+# ignored with an INFO log line at Phase 0.
+
+# max_parallel_agents                        type: int   default: 4
+# Cap on concurrently-executing node worktrees in the graph wave loop
+# (schedule.sh `next` honours it).
+# Override when: machine resources or spend budget call for fewer/more.
+max_parallel_agents: 4
+
+# adversarial_iterations                     type: int   default: 3
+# Soft cap on Phase 2 graph-review rounds (the graph-hardening review is
+# hard-wired under scheduling: graph). The loop continues until zero
+# findings of any severity remain OR this cap is reached (per-finding user
+# override). Plan-level adversarial review runs in team-sprint-planner, not
+# here — Phase 1 only verifies its provenance stamp.
+# Override when: a large or high-risk graph warrants more rounds.
+adversarial_iterations: 3
+
+# adversarial_model                          type: enum   default: inherit
+# Model used by the Phase 2 graph-reviewer spawn (when enabled).
+#   inherit (default) — omit the `model:` arg on the spawn so it uses the
+#                       CURRENT SESSION DEFAULT model. Pin nothing; track upgrades.
+#   <alias|id>        — e.g. `opus`/`sonnet` or a full model id; passed through
+#                       verbatim as `model:`.
+# Override when: you want to pin a specific model for review.
+adversarial_model: inherit
+
+# review_fix_iterations                      type: int   default: 3
+# Max review → fix → re-review rounds before STOP. Applies twice: per story in
+# Phase 5 (AC-reviewer fix loop) and per sprint in Phase 7 (fleet fix loop).
+# Override when: codebase has known noisy reviewers (raise) or strict policy (lower).
+review_fix_iterations: 3
+
+# ----------------------------------------------------------------------------
+# Sprint duration / freshness budgets
+# ----------------------------------------------------------------------------
+
+# max_wall_clock_minutes                     type: int (minutes)   default: 240
+# Soft sprint-duration budget. When exceeded, sprint-watchdog raises a WARN
+# with the current phase + remaining work; the user decides extend or abort.
+# NOT a hard kill — state persists either way.
+# Override when: large multi-story plans (raise) or short single-story (lower).
+max_wall_clock_minutes: 240
+
+# repomix_max_age_minutes                    type: int (minutes)   default: 240
+# Max age of `.repomix-output.xml` before Phase 2 refreshes it inside the
+# worktree. Phase 0 always refreshes if older than 1 hour at start; this
+# governs the worktree-local refresh policy.
+# Override when: very fast-moving codebase (lower) or stable lib (raise).
+repomix_max_age_minutes: 240
+
+# ----------------------------------------------------------------------------
+# Optional integrations
+# ----------------------------------------------------------------------------
+
+# graphify                                   type: enum   default: off
+# Alternatives: off | auto | on
+# Knowledge-graph codebase intelligence (graphify-out/graph.json). AUGMENTS,
+# never replaces, repomix/use-repo-code: repomix is fast text grep; graphify
+# answers relationship/coupling questions (`graphify query "what calls X"`,
+# `graphify path A B`, `graphify explain N`). Used by Phase 1 plan reviewers,
+# the Phase 2 false-independence graph check, and the Phase 4 AC reviewer.
+#   off  — graphify is not installed, built, or queried at all.
+#   auto — Phase 0 step 9a ensures graphify is installed (installs the
+#          `graphifyy` package if missing), builds/refreshes graphify-out/
+#          graph.json via the /graphify skill, and smoke-verifies it runs. Any
+#          failure logs a WARN and sets state.json.graphify_degraded=true — the
+#          sprint continues on repomix alone (fail-soft; never blocks).
+#   on   — same as `auto` but the ensure+build+verify is a HARD Phase 0 gate:
+#          an install/build/verify failure aborts Phase 0. Use when the graph is
+#          project-mandatory for reviews.
+# Requires: `uv` or `python3 -m pip` to install graphifyy; the `/graphify` skill
+# installed for the build step. Override when: opt out (off) on a tiny repo, or
+# make it mandatory (on) where coupling review depends on the graph.
+graphify: off
+
+# graphify_max_age_minutes                   type: int (minutes)   default: 240
+# Max age of graphify-out/graph.json before Phase 0 step 9a rebuilds it via the
+# /graphify skill. A fresher graph than this is reused as-is. Ignored when
+# graphify: off.
+# Override when: fast-moving codebase (lower) or stable tree (raise).
+graphify_max_age_minutes: 240
+
+# recon                                      type: enum   default: auto
+# Alternatives: off | auto | on
+# The capability router `scripts/recon.sh`: it collapses the code-knowledge
+# instruments (codegraph, graphify, repomix/rtk, tokensave) to 10 intents and
+# answers *where*, never *what*.
+#   off  — the router is never invoked; callers go straight to the instruments
+#          themselves (`rtk grep` over the repomix pack for text, `graphify
+#          query` / `path` / `explain` for structure, live `Read` to verify).
+#          Every intent answers STATUS=SKIP REASON=disabled and exits 0.
+#   auto — probe, use whatever is present, and report absence rather than
+#          hiding it: with no provider at all the router answers
+#          STATUS=DEGRADED and the sprint proceeds (fail-soft, mirroring
+#          graphify_degraded). No recon tool ever blocks a sprint under `auto`.
+#   on   — same as `auto` but Phase 0's `recon.sh --probe` becomes a HARD gate:
+#          with NOT ONE provider available it exits non-zero. A partial set is
+#          still a reported degradation. Use where recon is project-mandatory.
+# Override when: opt out (off) on a tiny repo, or make it mandatory (on).
+recon: auto
+
+# recon_min_files                            type: int    default: 20
+# Small-repo cost floor. Below this many tracked files a structural intent
+# answers STATUS=SKIP REASON=small-repo FILES=<n> without touching a provider —
+# under about 20 files an agent can read everything directly. `text` is exempt
+# at any repo size; 0 disables the guard entirely.
+# Override when: a repo of many tiny files (raise) or a graph-heavy small one
+# (lower, or 0).
+recon_min_files: 20
+
+# recon_providers                            type: list (space-separated)   default: codegraph graphify repomix tokensave
+# The provider allow-list, and the ONLY provider opt-out: a name dropped from it
+# is skipped exactly as an absent binary is. Deliberately a space-separated
+# SCALAR and not a YAML sequence — read_config_scalar parses a top-level scalar
+# and nothing else, and a flow sequence comes back as the literal `[a, b]`. An
+# EMPTY value is indistinguishable from an absent key, so it resolves to the
+# default chain above; the way to run no providers at all is `recon: off`.
+# `gitnexus` is not a valid value: it is licensed PolyForm-Noncommercial and
+# naming it is a config error the router refuses to run under.
+# Override when: retiring a provider that never wins a chain.
+recon_providers: codegraph graphify repomix tokensave
+
+# recon_log                                  type: enum   default: on
+# Alternatives: off | on
+# Append one JSON line per intent invocation to <repo-root>/.recon/calls.jsonl —
+# the evidence base for retiring a provider that never wins a chain. It records
+# the ROUTE taken, never the answer's content. --probe and --explain append
+# nothing. Logging is an observer, never a gate.
+# Override when: an unwritable or noisy workspace (off).
+recon_log: on
+
+# recon_max_lines                            type: int    default: 50
+# Result-line cap per answer. Beyond it the router emits a single
+# TRUNCATED=<emitted>/<total> marker and COUNT= still reports the
+# pre-truncation total. RECON_MAX_LINES in the environment overrides this for a
+# single invocation.
+# Override when: wide fan-out questions need more rows (raise).
+recon_max_lines: 50
+
+# recon_probe_max_age_minutes                type: int (minutes)   default: 1440
+# TTL of the capability cache .recon/capabilities.json, revalidated on EVERY
+# path including a bare intent. A cache trusted past its TTL keeps a newly
+# installed, newly indexed provider invisible and reports that silence as a
+# confident not-installed — the worst answer this router can give.
+# Override when: providers are installed/indexed mid-sprint (lower).
+recon_probe_max_age_minutes: 1440
+
+# integration_diagram                        type: enum   default: off
+# Alternatives: off | auto | on
+#   off  — no integration-diagram hooks are added.
+#   auto — Phase 0 probes for the `integration-diagram` skill; if present,
+#          its hook spec is auto-prepended to subskill_hooks.phase-{0,2,3,4,6,7};
+#          if absent, logs `auto → off` at INFO and continues (graceful degrade,
+#          never aborts Phase 0).
+#   on   — same as `auto` but a probe miss is treated as a `required` failure
+#          and aborts Phase 0. Use when the diagram skill is project-mandatory.
+# Override when: opt into integration diagrams for this sprint.
+integration_diagram: off
+
+# subskill_hooks                             type: map<phase, list>   default: all empty
+# Per-phase user-declared sub-skill hooks. Each entry is:
+#   { skill: <name>, command: <cli>, required?: bool }
+#   - `skill`    — metadata label + preflight probe target.
+#   - `command`  — shell line that is ALWAYS executed when the hook fires.
+#                  (command is authoritative; `skill` is the discovery hint.)
+#   - `required` — default `false`. When `true` and the probe fails at Phase 0
+#                  preflight, the sprint ABORTs at Phase 0. When `false`, a
+#                  failed probe logs a WARN and the hook still attempts to run.
+# Reserved phases: phase-1 and phase-5 are RESERVED — not active in v1.0.
+# Entries under those keys are silently ignored with an INFO log line.
+# Full contract: see `$REF/subskill-hooks.md` (added in mech-15).
+# Override when: you have project-specific pre/post-phase steps to chain in.
+subskill_hooks:
+  phase-0: []
+  phase-2: []
+  phase-3: []
+  phase-4: []
+  # Example: run a project-specific reporter after each per-story commit.
+  # `command` is always executed when the hook fires; `skill` is metadata
+  # (preflight probe target + log label). `required: false` (default) means a
+  # preflight miss logs a WARN but doesn't abort Phase 0.
+  phase-6:
+    - skill: my-skill
+      command: 'bash $CLAUDE_CONFIG_DIR/skills/my-skill/run.sh'
+      required: false
+  phase-7: []
+
+# ----------------------------------------------------------------------------
+# Project commands (auto-detected when omitted)
+# ----------------------------------------------------------------------------
+
+# commands.{typecheck,lint,test,coverage}    type: string   default: auto-detected
+# Override when: detection picks the wrong runner, or you want a non-default
+# script (e.g. `pnpm typecheck:ci` instead of `pnpm typecheck`). If omitted,
+# detection inspects `package.json`, `justfile`, `Makefile`, `pyproject.toml`,
+# `Cargo.toml` and picks the closest match. Multiple stacks → user is asked.
+#
+# commands.coverage skip sentinel: set coverage to the literal string "true" to
+# SKIP the coverage gate entirely — the documented escape for stacks with no
+# line-coverage tooling (e.g. bash/bats). coverage_check.sh treats
+# commands.coverage == "true" as gate_status: disabled (a pass), not a command.
+#
+# commands.coverage_report_path              type: string   default: auto-detected
+# Explicit path to the coverage report (cobertura XML or lcov). When omitted,
+# coverage_check.sh autodetects common locations (e.g. target/*/cobertura.xml,
+# coverage/lcov.info). Override when the report lands in a non-standard path.
+# commands:
+#   typecheck: "pnpm typecheck"
+#   lint: "pnpm lint"
+#   test: "pnpm test"
+#   coverage: "pnpm coverage"           # or "true" to skip the gate (bash/bats)
+#   coverage_report_path: "coverage/cobertura.xml"
+
+# ----------------------------------------------------------------------------
+# Agents
+# ----------------------------------------------------------------------------
+
+# domain_agents                              type: list<string>   default: []
+# Extra domain specialist agents to make available to the sprint. Project-
+# specific (e.g. `senior-data-engineer`, `rn-ui-designer`).
+domain_agents: []
+
+# crew                                        type: enum(auto|off)   default: auto
+# auto: Phase 0 detects the repo language and resolves/builds a stack-matched
+#   agent crew (stack-surveyor + crew-factory), writing .claude/crews/<lang>.json;
+#   phases 3-4 spawn each role from that manifest (state.json.crew). This is what
+#   keeps a Python repo from running React-Native agents.
+# off:  ignore the crew; use the static *_agent fields below verbatim.
+crew: auto
+
+# test_writer_agent                          type: string   default: auto
+# Agent that writes RED tests in Phase 3.
+# auto -> crew.tester from the manifest. Set an explicit agent name to override
+# the crew (e.g. pin `general-purpose`, or force `rn-test` when crew: off).
+test_writer_agent: auto
+
+# engineer_agent                             type: string   default: auto
+# Agent that drives RED → GREEN in Phase 3.
+# auto -> crew.developer from the manifest. Set an explicit name to override.
+engineer_agent: auto
+
+# security_agent / performance_agent / simplifier_agent / consistency_agent
+#                                            type: string   default: auto
+# The four Phase 7 review-fleet lanes over the sprint diff.
+# auto -> resolve from the crew manifest where a role exists:
+#   security_agent    <- crew.security
+#   performance_agent <- crew key `profiler` (the manifest has NO `performance`
+#                        key — the profiler role is the performance lane)
+#   simplifier_agent  <- crew.simplifier
+#   consistency_agent has NO crew tier and no agent file anywhere; its review
+#                        charter lives entirely in the lane's prompt, so auto
+#                        falls straight to the static default.
+# Consequence: under `crew: off` all four lanes fall to `general-purpose`
+# unless an explicit agent name is pinned here — and Phase 7 is the sprint's
+# ONLY security/perf review, so off-mode users should pin real names (e.g.
+# `bash-security`, `bash-profiler`, `bash-simplifier` on a bash repo) rather
+# than leave `auto`.
+security_agent: auto
+performance_agent: auto
+simplifier_agent: auto
+consistency_agent: auto
+
+# teammate_model                             type: enum   default: inherit
+# Model for the per-node teammate spawned in Phase Execute (each teammate runs
+# Phases 3–6 in its own worktree). Same semantics as adversarial_model:
+#   inherit (default) — omit the `model:` arg → use the CURRENT SESSION DEFAULT.
+#   <alias|id>        — passed through verbatim as `model:`.
+# Override when: you want node teammates pinned to a specific model.
+teammate_model: inherit
+
+# ui_loop                                    type: string   default: ui-validation-loop
+# UI verification skill invoked in Phase 4 when the diff touches JSX/TSX/CSS.
+# Override when: no UI in this sprint, set to `none` (skip UI validator).
+ui_loop: ui-validation-loop
+
+# ----------------------------------------------------------------------------
+# Merge / push
+# ----------------------------------------------------------------------------
+
+# push_on_merge                              type: bool   default: false
+# Push to remote after the Phase 7 merge succeeds.
+# Override when: your team's policy expects the sprint runner to push.
+push_on_merge: false

@@ -1,0 +1,14 @@
+Node: lib.sh
+  ID:        skills_team_sprint_scripts_lib
+  Source:    skills/team-sprint/scripts/lib.sh L1
+  Type:      code
+  Community: lib.sh
+  Degree:    27
+
+Connections (27):
+  <-- state.sh [imports_from] [INFERRED] skills/team-sprint/scripts/state.sh:L8
+  <-- run_subskill_hooks.sh [imports_from] [INFERRED] skills/team-sprint/scripts/run_subskill_hooks.sh:L35
+  --> fail() [defines] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L21
+  --> require_jq() [defines] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L30
+  --> log() [defines] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L18
+  --> art_dir() [defines] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L88

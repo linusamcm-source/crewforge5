@@ -1,0 +1,6 @@
+# A .gitignore whose LAST LINE CARRIES NO TRAILING NEWLINE — the shape a bare
+# `printf ".recon/\n" >>` corrupts: the appended rule is concatenated onto the
+# last one, producing `node_modules.recon/`, which ignores neither. No rule
+# here matches `.recon/`, so RH4's conditional append must ADD the line.
+build/
+node_modules

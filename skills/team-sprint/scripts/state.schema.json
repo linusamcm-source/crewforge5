@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anthropic.com/skills/team-sprint/state.schema.json",
+  "title": "team-sprint state.json",
+  "$comment": "Machine schema for state.json and the single source of truth for its shape. scripts/state.sh _validate_state checks a subset of these constraints (presence + top-level types + iteration sub-fields) as a fast smoke-check on write — it does NOT enforce inner item shapes of subskill_hooks / story_commits / gates. No other consumer validates against this file (lint_skill.sh only greps SKILL.md for dangling anchors).",
+  "type": "object",
+  "required": [
+    "plan_path",
+    "plan_slug",
+    "worktree_name",
+    "target_branch",
+    "worktree_path",
+    "artifact_dir",
+    "started_at",
+    "current_phase",
+    "iterations",
+    "repo_root"
+  ],
+  "additionalProperties": true,
+  "if": {
+    "properties": { "scheduling": { "const": "graph" } },
+    "required": ["scheduling"]
+  },
+  "then": {
+    "required": ["graph_path", "sprint_branch"]
+  },
+  "properties": {
+    "plan_path":     { "type": "string" },
+    "plan_slug":     { "type": "string" },
+    "worktree_name": { "type": "string" },
+    "target_branch": { "type": "string" },
+    "worktree_path": { "type": "string" },
+    "artifact_dir":  { "type": "string" },
+    "started_at":    { "type": "string" },
+    "current_phase": { "oneOf": [ { "type": "integer", "minimum": 0 }, { "const": "execute" } ] },
+    "repo_root":     { "type": "string" },
+    "scheduling":        { "type": "string" },
+    "worktree_strategy": { "type": "string" },
+    "graph_path":        { "type": "string" },
+    "iterations": {
+      "type": "object",
+      "required": ["adversarial", "coverage", "review_fix"],
+      "properties": {
+        "adversarial": { "type": "integer", "minimum": 0 },
+        "coverage":    { "type": "integer", "minimum": 0 },
+        "review_fix":  { "type": "integer", "minimum": 0 }
+      }
+    },
+    "crew":          { "type": "object" },
+    "crew_commands": { "type": "object" },
+    "subskill_hooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill", "command", "required", "phase", "source"],
+        "properties": {
+          "skill":    { "type": "string" },
+          "command":  { "type": "string" },
+          "required": { "type": "boolean" },
+          "phase":    { "type": "string" },
+          "source":   { "type": "string", "enum": ["user", "auto"] }
+        }
+      }
+    },
+    "story_commits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["story_id", "sha"],
+        "properties": {
+          "story_id": { "type": "string" },
+          "sha":      { "type": "string" }
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["coverage_gate", "reason", "story_id"],
+        "properties": {
+          "coverage_gate": { "type": "string" },
+          "reason":        { "type": "string" },
+          "story_id":      { "type": "string" }
+        }
+      }
+    },
+    "plan_of_record": {
+      "$comment": "FL6 plan-of-record gate: written by state.sh record-plan at Phase 1 promotion, checked by state.sh check-plan at the Phase 2 entry. Named explicitly — additionalProperties:true would otherwise let it pass silently.",
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path":   { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "workflow_runs": {
+      "$comment": "WA4 workflow-run recording: keyed phase-<n>, written by state.sh record-workflow — the Workflow run id that executed that phase (string; latest run wins).",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "done":               { "type": "boolean" },
+    "finalised_at":       { "type": "string" },
+    "sprint_branch":      { "type": "string" },
+    "current_story_id":   { "type": "string" },
+    "supersedes_plan":    { "type": "string" },
+    "plan_final":         { "type": "string" },
+    "graphify_degraded":  { "type": "boolean" },
+    "recon_degraded":     { "type": "boolean" }
+  }
+}

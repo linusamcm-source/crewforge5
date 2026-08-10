@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+.repomix-output.xml
+repomix/
+graphify-out/
+.team-sprint/
+ceilings.json
+ledger/
+team-sprint.config.yaml

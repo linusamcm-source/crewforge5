@@ -1,0 +1,13 @@
+Node: require_jq()
+  ID:        skills_team_sprint_scripts_lib_require_jq
+  Source:    skills/team-sprint/scripts/lib.sh L30
+  Type:      code
+  Community: lib.sh
+  Degree:    5
+
+Connections (5):
+  <-- lib.sh [defines] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L30
+  <-- preflight_subskills.sh script [calls] [EXTRACTED] skills/team-sprint/scripts/preflight_subskills.sh:L132
+  <-- _cache_lookup() [calls] [EXTRACTED] skills/team-sprint/scripts/preflight_subskills.sh:L81
+  <-- run_subskill_hooks.sh script [calls] [EXTRACTED] skills/team-sprint/scripts/run_subskill_hooks.sh:L80
+  --> _hint_jq() [calls] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L30

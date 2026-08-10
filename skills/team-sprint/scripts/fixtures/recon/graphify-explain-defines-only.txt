@@ -1,0 +1,9 @@
+Node: repo_root()
+  ID:        skills_team_sprint_scripts_lib_repo_root
+  Source:    skills/team-sprint/scripts/lib.sh L71
+  Type:      code
+  Community: lib.sh
+  Degree:    1
+
+Connections (1):
+  <-- lib.sh [defines] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L71

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "nodes": [
+    {
+      "id": "n1",
+      "label": "parseToken",
+      "file": "src/auth/session.js",
+      "line": 1
+    }
+  ]
+}

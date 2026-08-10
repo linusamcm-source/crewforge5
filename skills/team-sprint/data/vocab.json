@@ -1,0 +1,51 @@
+{
+  "_comment": "Single source of truth for team-sprint vocabularies. Prose docs, bash scripts, the PostToolUse guard, and workflow schemas all derive from this file — never restate these lists inline. Drift here is the failure mode that made three enforcement layers disagree.",
+
+  "severities": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNVERIFIED"],
+  "gating_severities": ["CRITICAL", "HIGH"],
+
+  "roles": {
+    "implementation": [
+      "go-engineer",
+      "ui-engineer",
+      "fullstack-eng",
+      "test-writer",
+      "engineer",
+      "developer"
+    ],
+    "review": [
+      "reviewer",
+      "perf-auditor",
+      "security-check",
+      "spec-reviewer",
+      "ui-architect",
+      "ui-designer",
+      "code-reviewer"
+    ]
+  },
+
+  "review_task_name_pattern": "^QG:|review|audit|critique",
+
+  "test_file_patterns": [
+    "*_test.go",
+    "*.test.ts",
+    "*.test.tsx",
+    "*.spec.ts",
+    "*.spec.tsx",
+    "*_test.py",
+    "test_*.py",
+    "*.bats"
+  ],
+
+  "violation_kinds": {
+    "impl_no_source_files": "task completed without declaring metadata.sourceFiles",
+    "impl_missing_source_files": "declared sourceFiles do not exist on disk",
+    "impl_test_writer_scope_creep": "test-writer modified a non-test file (RED phase is test-only)",
+    "review_no_artifact": "reviewer findings never reached the reviews-<story>-round-<N>.md artifact"
+  },
+
+  "artifact_patterns": {
+    "review": "reviews-<story_id>-round-<N>.md",
+    "sprints_root": ".team-sprint/sprints"
+  }
+}

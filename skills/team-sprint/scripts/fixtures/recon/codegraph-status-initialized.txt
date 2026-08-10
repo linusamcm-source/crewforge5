@@ -1,0 +1,23 @@
+[1m
+CodeGraph Status
+[0m
+[36mProject:[0m /private/tmp/recon-fixture-cap
+
+[1mIndex Statistics:[0m
+  Files:     2
+  Nodes:     5
+  Edges:     4
+  DB Size:   0.15 MB
+  Backend:   [32mnode:sqlite — built-in (full WAL)[0m
+  Journal:   [32mwal[0m
+
+[1mNodes by Kind:[0m
+  function        3
+  file            2
+
+[1mFiles by Language:[0m
+  python          1
+  typescript      1
+
+[32m✓[0m Index is up to date
+

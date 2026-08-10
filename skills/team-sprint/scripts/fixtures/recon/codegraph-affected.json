@@ -1,0 +1,9 @@
+{
+  "changedFiles": [
+    "src/auth/session.js"
+  ],
+  "affectedTests": [
+    "test/auth/session.test.js"
+  ],
+  "totalDependentsTraversed": 1
+}

@@ -1,0 +1,17 @@
+{
+  "symbol": "parseToken",
+  "callers": [
+    {
+      "name": "authenticate",
+      "kind": "function",
+      "filePath": "src/auth/session.ts",
+      "startLine": 58
+    },
+    {
+      "name": "refreshSession",
+      "kind": "method",
+      "filePath": "src/auth/refresh.ts",
+      "startLine": 17
+    }
+  ]
+}
