@@ -143,8 +143,11 @@ _caps_provider() {
   fi
   if [ "$avail" = true ] && [ -x "$BIN/$binname" ]; then
     bin="$BIN/$binname"
-    mt="$(stat -f %m "$bin" 2>/dev/null || stat -c %Y "$bin")"
-    sz="$(stat -f %z "$bin" 2>/dev/null || stat -c %s "$bin")"
+    # GNU first: GNU reads `-f` as --file-system and EXITS 0 with unrelated
+    # output, so the BSD-first form never falls through on Linux and feeds
+    # a mount point into arithmetic. BSD has no `-c` and fails cleanly.
+    mt="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin")"
+    sz="$(stat -c %s "$bin" 2>/dev/null || stat -f %z "$bin")"
   fi
   jq -n --arg n "$name" --argjson a "$avail" --argjson i "$indexed" \
         --argjson l "$langs" --arg b "$bin" --argjson m "$mt" --argjson s "$sz" \

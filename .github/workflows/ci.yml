@@ -53,9 +53,12 @@ jobs:
       - name: Every other shipped script
         run: |
           set -euo pipefail
-          mapfile -t others < <(find skills -name '*.sh' -not -path 'skills/team-sprint/scripts/*' | sort)
-          printf 'linting %d scripts outside the two main trees\n' "${#others[@]}"
-          shellcheck "${others[@]}"
+          # `find -exec … +`, not mapfile: macOS runners are bash 3.2, where
+          # mapfile does not exist. The repo's own stack profile records that
+          # constraint and this step broke it on the first macOS run.
+          n="$(find skills -name '*.sh' -not -path 'skills/team-sprint/scripts/*' | wc -l | tr -d ' ')"
+          printf 'linting %s scripts outside the two main trees\n' "$n"
+          find skills -name '*.sh' -not -path 'skills/team-sprint/scripts/*' -exec shellcheck {} +
 
   # P2.3 — the story is "optional tooling degrades visibly". The `tests` job above
   # installs bats, jq and shellcheck on every runner, so it proves the opposite:

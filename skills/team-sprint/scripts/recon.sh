@@ -264,7 +264,11 @@ recon_root() {
 }
 
 _file_size() {
-  stat -f %z "$1" 2>/dev/null || stat -c %s "$1"
+  # GNU first: `-f %z` on GNU is a FILE-SYSTEM field, not the file size,
+  # and it exits 0 — so the BSD-first form returned the wrong number on
+  # Linux instead of falling through. BSD has no `-c`, so this order is
+  # correct on both.
+  stat -c %s "$1" 2>/dev/null || stat -f %z "$1"
 }
 
 # _json_array <newline-list> — the list as a sorted, de-duplicated JSON array.

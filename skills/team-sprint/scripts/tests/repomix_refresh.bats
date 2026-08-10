@@ -83,15 +83,16 @@ EOF
   mkdir -p "$PROJECT"
   printf 'KEEPME\n' > "$PROJECT/.repomix-output.xml"
 
-  # Capture mtime before. `stat -f %m` (BSD) or `stat -c %Y` (GNU).
-  if mtime_before="$(stat -f %m "$PROJECT/.repomix-output.xml" 2>/dev/null)"; then :
-  else mtime_before="$(stat -c %Y "$PROJECT/.repomix-output.xml")"; fi
+  # GNU `stat -c %Y` first: GNU treats `-f` as --file-system and succeeds with
+  # unrelated output, so probing BSD-first never falls through on Linux.
+  if ! mtime_before="$(stat -c %Y "$PROJECT/.repomix-output.xml" 2>/dev/null)"; then
+    mtime_before="$(stat -f %m "$PROJECT/.repomix-output.xml")"; fi
 
   PATH="$BIN:/usr/bin:/bin" run "$RR_SH" --target-dir "$PROJECT" --max-age-minutes 60
   [ "$status" -eq 0 ]
 
-  if mtime_after="$(stat -f %m "$PROJECT/.repomix-output.xml" 2>/dev/null)"; then :
-  else mtime_after="$(stat -c %Y "$PROJECT/.repomix-output.xml")"; fi
+  if ! mtime_after="$(stat -c %Y "$PROJECT/.repomix-output.xml" 2>/dev/null)"; then
+    mtime_after="$(stat -f %m "$PROJECT/.repomix-output.xml")"; fi
 
   [ "$mtime_before" = "$mtime_after" ]
   # File contents preserved -> proves we did NOT call the fake repomix.
