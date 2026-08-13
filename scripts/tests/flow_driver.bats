@@ -149,22 +149,83 @@ orphans() { find "$TMP" -name 'state.json.tmp.*' 2>/dev/null | wc -l | tr -d ' '
   [ "$(orphans)" = "0" ]
 }
 
-@test "trap logic: an in-flight tmp registered in _FLOW_TMP is removed" {
-  lockdir="$TMP/l.lock"; mkdir -p "$lockdir"
-  _FLOW_TMP="$TMP/state.json.tmp.INFLIGHT"; printf 'partial' > "$_FLOW_TMP"
-  # Verbatim body of the EXIT trap installed by flow_state.sh's lock wrapper.
-  eval 'rmdir "$lockdir" 2>/dev/null || true; [ -n "${_FLOW_TMP:-}" ] && rm -f "$_FLOW_TMP"; true'
-  [ ! -f "$TMP/state.json.tmp.INFLIGHT" ]
-  [ ! -d "$lockdir" ]
+# The AC is "an interrupt between mktemp and mv leaves no orphan
+# state.json.tmp.*", so the proof has to interrupt the real script at exactly
+# that point rather than re-enact the trap body in the test file. A `jq` shim on
+# PATH SIGTERMs its parent — flow_state.sh — on the write pass, which is the one
+# jq call that happens after mktemp and before mv.
+#
+# Both lock branches get their own case, because they are different code paths
+# and CI runs both hosts: ubuntu-latest takes the flock branch, macos-latest the
+# mkdir mutex. A trap installed on only one of them is a leak on the other, and
+# that is the shape of the bug this pins.
+
+_killer_jq_dir() {
+  local d="$TMP/shim" real
+  real="$(command -v jq)"
+  mkdir -p "$d"
+  cat > "$d/jq" <<SHIM
+#!/usr/bin/env bash
+# Real jq everywhere except the write pass — the only call carrying setpath —
+# where it kills flow_state.sh while its tmp is in flight.
+for a in "\$@"; do
+  case "\$a" in
+    *setpath*) kill -TERM "\$PPID"; exit 1 ;;
+  esac
+done
+exec "$real" "\$@"
+SHIM
+  chmod +x "$d/jq"
+  printf '%s\n' "$d"
 }
 
-@test "trap logic: removes only the registered path, never a glob" {
-  # A glob would race a concurrent writer's in-flight tmp.
-  _FLOW_TMP="$TMP/state.json.tmp.MINE"; printf 'mine'  > "$_FLOW_TMP"
-  decoy="$TMP/state.json.tmp.OTHERPROC";  printf 'other' > "$decoy"
-  eval '[ -n "${_FLOW_TMP:-}" ] && rm -f "$_FLOW_TMP"; true'
-  [ ! -f "$TMP/state.json.tmp.MINE" ]
-  [ "$(cat "$decoy")" = "other" ]
+# A PATH carrying every command flow_state.sh shells out to, minus flock, so a
+# host that has flock still exercises the mkdir-mutex branch.
+_path_without_flock() {
+  local d="$TMP/noflock" t p
+  mkdir -p "$d"
+  for t in bash git date mktemp mv rm rmdir sleep dirname mkdir sed; do
+    p="$(command -v "$t")" || return 1
+    ln -sf "$p" "$d/$t"
+  done
+  printf '%s\n' "$d"
+}
+
+# The decoy stands in for a concurrent writer's in-flight tmp: cleanup must
+# remove this process's registered path and never a glob.
+_interrupted_set() { # $1 = PATH to run the interrupted write under
+  bash "$FLOW_STATE" init set phase.0.status seed
+  DECOY="$(dirname "$STATE")/state.json.tmp.OTHERPROC"
+  printf 'other' > "$DECOY"
+  RC=0
+  PATH="$1" bash "$FLOW_STATE" init set phase.1.status boom >"$OUT" 2>"$ERR" || RC=$?
+}
+
+_orphans_beside_decoy() {
+  find "$TMP" -name 'state.json.tmp.*' ! -name '*OTHERPROC' 2>/dev/null | wc -l | tr -d ' '
+}
+
+@test "an interrupt between mktemp and mv leaves no orphan on the flock path" {
+  command -v flock >/dev/null 2>&1 || skip "no flock here; the mkdir-mutex case covers this host"
+  _interrupted_set "$(_killer_jq_dir):$PATH"
+  [ "$RC" -ne 0 ]
+  [ "$(_orphans_beside_decoy)" = "0" ]
+  [ "$(cat "$DECOY")" = "other" ]
+}
+
+@test "an interrupt between mktemp and mv leaves no orphan on the mkdir-mutex path" {
+  nf="$(_path_without_flock)" || skip "cannot build a flock-free PATH on this host"
+  # Guard the guard: if flock were still reachable this would silently be a
+  # second copy of the test above. Spelled as an if/return rather than `! cmd`,
+  # which under bats does not fail a test (SC2314).
+  if PATH="$nf" command -v flock >/dev/null 2>&1; then
+    printf 'flock is still reachable on the sandboxed PATH\n' >&2
+    return 1
+  fi
+  _interrupted_set "$(_killer_jq_dir):$nf"
+  [ "$RC" -ne 0 ]
+  [ "$(_orphans_beside_decoy)" = "0" ]
+  [ "$(cat "$DECOY")" = "other" ]
 }
 
 @test "wiring: every mktemp registers _FLOW_TMP and every mv deregisters it" {

@@ -21,12 +21,13 @@
 # never has to quote JSON into an argv slot to write "ok". The schema below
 # enforces it, so a typed field cannot appear by accident and rot the contract.
 #
-# The tmp/lock handling is the one part worth reading twice: the three write
-# paths mktemp a "${state}.tmp.XXXXXX" and mv it into place, and an interrupt
-# BETWEEN those two steps used to leave a 0-byte orphan next to state.json
-# because the EXIT trap cleared only the lockdir. _FLOW_TMP is deliberately NOT
-# `local`, so the trap can see it, and holds this process's path only — never a
-# glob, which would race a concurrent writer's tmp.
+# The tmp/lock handling is the one part worth reading twice: the write paths
+# mktemp a "${state}.tmp.XXXXXX" and mv it into place, and an interrupt BETWEEN
+# those two steps leaves a 0-byte orphan next to state.json unless an EXIT trap
+# clears it. The trap therefore goes in above the flock/mkdir branch — inside
+# either branch it would cover only one of the two CI hosts. _FLOW_TMP is
+# deliberately NOT `local`, so the trap can see it, and holds this process's
+# path only — never a glob, which would race a concurrent writer's tmp.
 #
 # Exit codes: 0 success, 1 error (schema violation, unset key, jq missing),
 # 2 usage.
@@ -84,12 +85,18 @@ _with_lock() {
   local lockfile="$1"; shift
   local lockdir="${lockfile}.d"
   mkdir -p "$(dirname "$lockfile")"
+  # Installed ABOVE the branch, not inside one: both lock paths mktemp, so a
+  # trap that only one of them reaches leaks a 0-byte orphan on the other host
+  # (flock is Linux/CI, the mkdir mutex is macOS). `rmdir` on the lockdir the
+  # flock path never creates is a silent no-op, so one trap body serves both.
+  trap 'rmdir "$lockdir" 2>/dev/null || true; [ -n "${_FLOW_TMP:-}" ] && rm -f "$_FLOW_TMP"; true' EXIT
   if command -v flock >/dev/null 2>&1; then
     exec 9>"$lockfile"
     flock 9
     "$@"
     local rc=$?
     exec 9>&-
+    trap - EXIT
     return $rc
   fi
   local waited=0
@@ -100,7 +107,6 @@ _with_lock() {
       fail "flow_state.sh: timed out waiting for lock $lockdir"
     fi
   done
-  trap 'rmdir "$lockdir" 2>/dev/null || true; [ -n "${_FLOW_TMP:-}" ] && rm -f "$_FLOW_TMP"; true' EXIT
   "$@"
   local rc=$?
   rmdir "$lockdir" 2>/dev/null || true
