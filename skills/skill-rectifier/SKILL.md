@@ -2,6 +2,7 @@
 name: skill-rectifier
 model: sonnet
 description: Use when a skill-validator report shows failures, or on "fix this skill", "rectify the validation failures", "apply the recommended fixes" — repairs and re-validates in a loop until grade A
+disable-model-invocation: true
 ---
 
 # Skill Rectifier

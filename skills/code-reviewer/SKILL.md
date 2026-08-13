@@ -2,6 +2,7 @@
 name: code-reviewer
 model: opus
 description: Code review for TypeScript, JavaScript, Python, Swift, Kotlin, Go — use when reviewing a pull request, diff, or staged changes, giving code feedback, or security scanning before merge
+disable-model-invocation: true
 ---
 
 # Code Reviewer

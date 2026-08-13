@@ -4,6 +4,7 @@ model: haiku
 context: fork
 agent: Explore
 description: Grep a repomix snapshot repo-wide instead of the live tree — "where is X in this repo", "find usages of Z", "does this already exist", "check codebase before implementing". Not for in-session edits
+disable-model-invocation: true
 ---
 
 # Use Repo Code

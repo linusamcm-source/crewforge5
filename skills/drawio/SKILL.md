@@ -2,6 +2,7 @@
 name: drawio
 model: sonnet
 description: Create any diagram — flowchart, architecture, ER, sequence, class, network, mockup, wireframe, UI sketch — or when the user mentions draw.io, drawio, drawoi, .drawio, or export to PNG/SVG/PDF
+disable-model-invocation: true
 ---
 # Draw.io Diagram Skill
 

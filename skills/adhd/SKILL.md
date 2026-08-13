@@ -2,6 +2,7 @@
 name: adhd
 description: Parallel divergent ideation in isolated cognitive frames. Use on /adhd, "ADHD mode", or brainstorm/ideate on open-ended design, architecture, naming; skip "quick", "standard", "canonical", "textbook"
 license: MIT
+disable-model-invocation: true
 ---
 
 # ADHD

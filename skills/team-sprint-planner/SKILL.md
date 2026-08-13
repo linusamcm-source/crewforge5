@@ -2,6 +2,7 @@
 name: team-sprint-planner
 model: opus
 description: Codebase-grounded, TDD-ready story plan for /team-sprint — "write a plan for team-sprint", "turn this goal/spec into a sprint plan", "prep this for a sprint", "decompose this into sprint stories"
+disable-model-invocation: true
 ---
 
 # Team-Sprint Planner

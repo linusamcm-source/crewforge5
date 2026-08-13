@@ -2,6 +2,7 @@
 name: adversarial-review
 model: opus
 description: Catches contradictions and missing edge cases in a plan/spec/ADR vs the codebase. Use to "review", "audit", "stress-test", "find holes in", "adversarially review", "validate", "is this plan solid"
+disable-model-invocation: true
 ---
 
 # Adversarial Review

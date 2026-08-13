@@ -4,6 +4,7 @@ model: sonnet
 context: fork
 agent: general-purpose
 description: Grades a .claude/agents/*.md file pass/fail; agent-rectifier auto-fixes below grade A. Use on "validate an agent", "check my agent", "audit an agent", "debug this agent", or an agent misbehaving
+disable-model-invocation: true
 ---
 
 # Agent Validator

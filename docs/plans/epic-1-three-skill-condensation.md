@@ -375,12 +375,48 @@ the phase library.
 
 ---
 
-## Story 6: Hide the sub-skills and repoint every reference
+## Story 6a: Hide the sub-skills
 
-The switch-over. Only safe once all three entry points exist and pass.
+**Split out of the original Story 6 mid-build, because the original ordering was
+circular.** Stories 3–5 add three listed skills costing 611 chars / ~152 tok against
+102 tok of headroom, so `budget_check.sh` fails by 50 tok the moment they exist — and
+the only thing that frees the budget was Story 6, which declared
+`Depends-On: Story 3, Story 4, Story 5`. Three independent build agents each hit the
+wall and each proved it the same way; the adversarial review had missed it. Hiding is
+mechanically independent of the entry points, so it moves ahead of them.
 
-- Add `disable-model-invocation: true` to the 14 of 24 existing skills that lack it. After
-  this, exactly `init`, `plan` and `execute` remain listed out of 27 skill directories.
+Add `disable-model-invocation: true` to the 14 of 24 existing skills that lack it —
+`ac-validate`, `adhd`, `adversarial-review`, `agent-rectifier`, `agent-validator`,
+`code-reviewer`, `drawio`, `playwright-cli`, `pre-commit-review-fleet`,
+`skill-rectifier`, `skill-validator`, `sprint-watchdog`, `team-sprint-planner`,
+`use-repo-code`. Frontmatter only; no reference is repointed here.
+
+### Acceptance Criteria
+
+- Every `skills/*/SKILL.md` except `init`, `plan`, `execute` has
+  `disable-model-invocation: true` — asserted by a bats case counting listed skills.
+- `budget_check.sh` PASSes with the three entry skills present in the tree.
+- `validate_all.sh` and `name_check.sh` PASS; every touched frontmatter still parses.
+- Full bats suite green.
+
+### Definition of Done
+
+- ACs pass.
+- The measured before/after is in the commit message.
+
+### Depends-On: Story 1
+### Touches: skills/*/SKILL.md
+
+**Measured result:** 4,390 chars / ~1,098 tok / 23 entries → **2,165 chars / ~541 tok /
+12 entries**, headroom 102 → 659 tok. A 51% cut of the always-loaded surface, better
+than this plan originally projected.
+
+---
+
+## Story 6b: Repoint every reference
+
+The switch-over proper. Only safe once all three entry points exist and pass.
+
 - Rewrite the 259 cross-reference occurrences (across 38 files) from "invoke the `<X>`
   skill" to a `subskill_resolve.sh` load, honouring `--load-mode`: inline read for
   non-fork skills, `Agent` spawn for the five fork skills. Highest-fanout referenced
@@ -396,8 +432,6 @@ The switch-over. Only safe once all three entry points exist and pass.
 
 ### Acceptance Criteria
 
-- Every `skills/*/SKILL.md` except `init`, `plan`, `execute` has
-  `disable-model-invocation: true` — asserted by a bats case counting listed skills.
 - Zero remaining sites instruct a model to `Skill`-invoke a hidden skill: a grep over
   `skills/**/*.md` and `agents/*.md` for the hidden names outside a resolver call
   returns nothing.
@@ -419,8 +453,8 @@ The switch-over. Only safe once all three entry points exist and pass.
 - Each hidden skill still opens by slash command — spot-checked on three of them and
   recorded in the story report.
 
-### Depends-On: Story 3, Story 4, Story 5
-### Touches: skills/*/SKILL.md, skills/team-sprint/phases/, skills/team-sprint/reference/, agents/
+### Depends-On: Story 3, Story 4, Story 5, Story 6a
+### Touches: skills/team-sprint/phases/, skills/team-sprint/reference/, skills/*/SKILL.md, agents/
 
 ---
 
@@ -467,7 +501,7 @@ lacks, and wire it into the aggregate validator.
   measured new value.
 - `README.md:31-42`'s budget paragraph is updated in Story 8 to match the new number.
 
-### Depends-On: Story 6
+### Depends-On: Story 6b
 ### Touches: scripts/budget_check.sh, scripts/validate_all.sh, scripts/tests/
 
 ---

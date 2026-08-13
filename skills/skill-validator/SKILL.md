@@ -4,6 +4,7 @@ model: sonnet
 context: fork
 agent: general-purpose
 description: Grades a Claude Code skill structurally and behaviourally, with fixes. Use on "validate a skill", "audit a skill", "check if my skill works", "why isn't my skill working"
+disable-model-invocation: true
 ---
 
 # Skill Validator

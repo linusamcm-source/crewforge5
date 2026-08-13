@@ -4,6 +4,7 @@ model: sonnet
 context: fork
 agent: general-purpose
 description: Playwright acceptance-criteria validation against the running app. Use on "validate acceptance criteria", "run AC validation", "check if ACs pass", "playwright validate", "validate the sprint"
+disable-model-invocation: true
 ---
 
 # AC Validate — Playwright-Driven Story Validation
