@@ -359,11 +359,6 @@ consistency_agent: auto
 # Override when: you want node teammates pinned to a specific model.
 teammate_model: inherit
 
-# ui_loop                                    type: string   default: ui-validation-loop
-# UI verification skill invoked in Phase 4 when the diff touches JSX/TSX/CSS.
-# Override when: no UI in this sprint, set to `none` (skip UI validator).
-ui_loop: ui-validation-loop
-
 # ----------------------------------------------------------------------------
 # Merge / push
 # ----------------------------------------------------------------------------

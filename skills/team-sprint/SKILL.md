@@ -63,7 +63,6 @@ crew: auto  # auto → .claude/crews/<lang>.json | off
 test_writer_agent: auto  # → crew.tester
 engineer_agent: auto  # → crew.developer
 teammate_model: inherit
-ui_loop: ui-validation-loop
 push_on_merge: false
 ```
 
@@ -85,7 +84,6 @@ Required sub-skills — missing any → STOP at Phase 0:
 
 - **`use-repo-code`** — repomix-backed grep; refreshed once per sprint at Phase 0.
 - **`sprint-watchdog`** — pre/mid/post-phase audits.
-- **`ui-validation-loop`** — Playwright UI verification in Phase 4 (UI-facing diffs only).
 - **`pre-commit-review-fleet`** — the Phase 7 fleet: security, performance, codebase-consistency, simplifier.
 
 Optional sub-skills:

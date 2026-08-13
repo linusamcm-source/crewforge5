@@ -152,7 +152,7 @@ wrong plan and discarded every finding). Two checks, in order:
    | `test-writer` | Writes RED tests for each acceptance criterion (per node). |
    | `engineer` (1+) | Implements production code until RED tests turn GREEN (per node). |
    | `ac-reviewer` | Phase 4's single reviewer: AC/DoD verification + code-quality over the story diff (absorbs the former code/spec reviewer roles). Security/perf review happens once per sprint via the Phase 7 fleet, not here. |
-   | `ui-validator` | Drives `ui-validation-loop` at Phase 4 if the change is UI-facing. |
+   | `ui-validator` | Reviews the diff at Phase 4 if the change is UI-facing. |
    | `<domain_agents>` | Optional per-config (e.g. `oceanographer`, `go-engineer`). |
 
    **Role → agent-type resolution (canonical — phases 3 and 4 apply this at spawn time).** Precedence for every role, evaluated per spawn:
@@ -170,7 +170,7 @@ wrong plan and discarded every finding). Two checks, in order:
    | `ac-reviewer` | `crew.code_reviewer` |
    | `<domain_agents>` | `crew.architect`, `crew.simplifier`, `crew.docs_writer`, `crew.dependency_auditor` (spawned by the scheduler as a node needs them) |
 
-   `crew.security` and `crew.profiler` are NOT spawned per story — security/perf review is the Phase 7 fleet's job (the manifest still builds them; they remain available to `pre-commit-review-fleet` and to users directly). `ui-validator` drives `ui-validation-loop`; when the manifest carries a frontend `crew.accessibility` agent (present only for react-native/web stacks), add it as a second UI-facing reviewer at Phase 4 alongside `ui-validator` — otherwise the generated accessibility agent is never assigned. When `crew: off`, fall back to `engineer_agent` / `test_writer_agent` / `domain_agents` from config. An explicit non-`auto` agent name in config always overrides the manifest.
+   `crew.security` and `crew.profiler` are NOT spawned per story — security/perf review is the Phase 7 fleet's job (the manifest still builds them; they remain available to `pre-commit-review-fleet` and to users directly). when the manifest carries a frontend `crew.accessibility` agent (present only for react-native/web stacks), add it as a second UI-facing reviewer at Phase 4 alongside `ui-validator` — otherwise the generated accessibility agent is never assigned. When `crew: off`, fall back to `engineer_agent` / `test_writer_agent` / `domain_agents` from config. An explicit non-`auto` agent name in config always overrides the manifest.
 
 7. **Seed the TaskList projection.** Create one task per node, `addBlockedBy` mirroring `graph.json` edges, so the team dashboard shows the structure. **`graph.json` is authoritative** — never read frontier state from the TaskList; the scheduler keeps the projection in sync via `TaskUpdate` as node statuses change.
 
