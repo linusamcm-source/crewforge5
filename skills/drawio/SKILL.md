@@ -2,6 +2,7 @@
 name: drawio
 model: sonnet
 description: Create any diagram — flowchart, architecture, ER, sequence, class, network, mockup, wireframe, UI sketch — or when the user mentions draw.io, drawio, drawoi, .drawio, or export to PNG/SVG/PDF
+disable-model-invocation: true
 ---
 # Draw.io Diagram Skill
 
@@ -12,8 +13,14 @@ Generate draw.io diagrams as native `.drawio` files. Optionally export to PNG, S
 When the diagram describes real code — architecture, ER, class, sequence, call-flow, dependency, or module diagrams of the current repo — **ground it in the actual code first. Do not guess structure from memory.**
 
 1. **If `graphify-out/` exists**, treat the request as a graphify query first — invoke the `/graphify` skill (`skill: "graphify"`) to pull god nodes, communities, file relationships, and paths. Use its output as the source of truth for nodes and edges.
-2. **Otherwise, use `/use-repo-code`** (`skill: "use-repo-code"`) to grep the repomix snapshot for the components, callers, symbols, and relationships the diagram needs — instead of reading files one by one or assuming layout.
-3. Build the draw.io XML from what those skills return. Every box and arrow should trace to a real file/symbol/edge, not an assumption.
+2. **Otherwise, ground it with `use-repo-code`** — grep the repomix snapshot for the components, callers, symbols, and relationships the diagram needs, instead of reading files one by one or assuming layout. It is hidden from the catalogue, so resolve it rather than reaching for the `Skill` tool:
+
+   ```bash
+   bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+   ```
+
+   It answers `MODE=agent` — spawn it through the `Agent` tool with the type its frontmatter names, and take back only the nodes and edges. Reading its body inline would drag the whole pack in behind it.
+3. Build the draw.io XML from what those return. Every box and arrow should trace to a real file/symbol/edge, not an assumption.
 
 For diagrams unrelated to the current codebase (generic flowcharts, mockups, wireframes, conceptual diagrams), skip this — go straight to generation below.
 

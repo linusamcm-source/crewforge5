@@ -4,6 +4,7 @@ model: sonnet
 context: fork
 agent: general-purpose
 description: Grades a Claude Code skill structurally and behaviourally, with fixes. Use on "validate a skill", "audit a skill", "check if my skill works", "why isn't my skill working"
+disable-model-invocation: true
 ---
 
 # Skill Validator
@@ -189,9 +190,12 @@ Otherwise, show the user the summary table and overall grade. Then:
    production-ready. A SKIPPED phase (e.g., agent simulation without subagents) does not
    block grade A, but must be listed next to the grade. Stop here.
 
-2. **If grade is below A** (B, C, D, or F): invoke the **skill-rectifier** skill
-   (`/skill-rectifier`) exactly once, passing the validation report path and the target
-   skill path. Do not ask the user — this is mandatory. **The rectifier owns the loop
+2. **If grade is below A** (B, C, D, or F): hand off to **skill-rectifier** exactly once,
+   passing the validation report path and the target skill path. It is hidden from the
+   catalogue, so the `Skill` tool cannot reach it — resolve it with
+   `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-rectifier`
+   and honour the answer (`MODE=inline` — read the body and follow it here).
+   Do not ask the user — this is mandatory. **The rectifier owns the loop
    from here**: it applies fixes, re-runs this validator in report-only mode, and
    repeats until grade A, a 5-round cap, or escalation. Do not re-enter this step after
    handing off, and do not duplicate the loop logic here.

@@ -4,11 +4,14 @@ Agents and skills are a resource with a cost. This plugin generates them where
 they belong, executes work with them, and stops them rotting.
 
 ```
-detect stack → crew-factory generates the crew INTO the repo
-             → team-sprint executes a plan with that crew
-             → ceilings + validators stop the generated artefacts rotting
-             → self-improve distils lessons back into the crew
+/crewforge:init    → measure, slim and validate the config you already have
+/crewforge:plan    → a goal becomes an adversarially-reviewed plan file
+/crewforge:execute → that plan becomes a merged commit, crew and gates included
 ```
+
+Three commands is the whole surface. Everything underneath — the crew factory,
+the review fleet, the recon tooling, the distillation pass — is a sub-skill one
+of those three loads when its phase needs it.
 
 ## Install
 
@@ -19,6 +22,55 @@ claude plugin install crewforge@crewforge
 
 Restart the session. `claude plugin details crewforge` shows what you now carry.
 
+## The three entry points
+
+Always write the namespaced form. A bare `slash-init` reaches Claude Code's own
+CLAUDE.md initializer — a different tool doing a different job — and the bare
+forms of the other two are ambiguous in the same way.
+
+| Command | What it does | Also triggers on |
+| --- | --- | --- |
+| `/crewforge:init` | Gated config hygiene: measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md | "clean up my Claude config", "audit context load", "rightsize the environment" |
+| `/crewforge:plan` | A goal becomes an adversarial-clean, execute-ready plan file | "plan this feature", "write a sprint plan" |
+| `/crewforge:execute` | A reviewed plan becomes a merged commit — TDD agent fleet in an isolated worktree, coverage, AC/DoD and review-fleet gates, then an integration diagram and distilled learnings | "run a sprint", "execute this plan" |
+
+Each one is a state machine over a `phases.json` manifest: a phase is offered,
+its gate is run, and the verdict is written to state before the next phase is
+offered. A gate announced in prose and never run did not happen.
+
+### What drives which sub-skill
+
+The sub-skills stay on disk and stay callable by name; they are just no longer
+in the catalogue, so a flow reaches one through
+`scripts/flow/subskill_resolve.sh` rather than through the `Skill` tool.
+
+| Sub-skill | Driven by | Reached in |
+| --- | --- | --- |
+| `claude-config` | `/crewforge:init` | phase 0, resolving the live config |
+| `token-slim` | `/crewforge:init` | phases 1, 3 and 7 — baseline, trim, re-measure |
+| `context-hygiene` | `/crewforge:init` | phase 2, passes 1–4 over CLAUDE.md, rules, hooks, MCP |
+| `skill-validator` | `/crewforge:init` | phase 4 |
+| `agent-validator` | `/crewforge:init` | phase 4 |
+| `skill-rectifier` | `/crewforge:init` | phase 5 |
+| `agent-rectifier` | `/crewforge:init` | phase 5 |
+| `use-repo-code` | `/crewforge:plan`, `/crewforge:execute` | plan phase 1; execute's preflight and recon |
+| `adhd` | `/crewforge:plan` | phase 2, parallel divergent frames |
+| `grill-me` | `/crewforge:plan` | phase 3, the questioning loop |
+| `team-feature` | `/crewforge:plan` | phases 0–3, the interactive ratification half |
+| `tech-debt-audit` | `/crewforge:plan` | phase 4 |
+| `master_plan` | `/crewforge:plan` | phases 5 and 8 — impact map, coverage check |
+| `team-sprint-planner` | `/crewforge:plan` | phase 6, plan contract and story shape |
+| `adversarial-review` | `/crewforge:plan`, `/crewforge:execute` | plan phase 7; execute phase 2 under `scheduling: graph` |
+| `team-sprint` | `/crewforge:execute` | phases 0–7 are its phase docs, wrapped unchanged |
+| `sprint-watchdog` | `/crewforge:execute` | phase 0, the pre-sprint audit |
+| `pre-commit-review-fleet` | `/crewforge:execute` | phase 7, over the sprint diff |
+| `drawio` | `/crewforge:execute` | phase 8, the integration diagram |
+| `self-improve` | `/crewforge:execute` | phase 9, distilling the ledger |
+| `ac-validate` | — | assigned to a generated crew member by `crew-factory`; no phase drives it |
+| `code-reviewer` | — | same — a crew-assignable skill, distinct from the `code-reviewer` agent |
+| `playwright-cli` | — | same, for frontend AC verification |
+| `plugin-forge` | — | nothing drives it; reachable by name only |
+
 ## What it costs you
 
 Skill and agent descriptions load into **every** session whether or not you use
@@ -28,19 +80,23 @@ them. That is the plugin's rent, and it is measured rather than asserted:
 bash "$CREWFORGE_ROOT/scripts/budget_check.sh" --verbose
 ```
 
-The bundle is **~1,141 tokens** always-loaded across 24 catalogue entries,
-against a budget of **1,200**. Ten skills carry
-`disable-model-invocation: true` — `team-sprint`, `token-slim`,
-`context-hygiene`, `master_plan`, `self-improve`, `team-feature`,
-`tech-debt-audit`, `grill-me`, `plugin-forge`, `claude-config` — so they cost
-nothing until you call them by name (`/crewforge:team-sprint`). That discipline
-is the only reason a bundle this size is affordable, and `budget_check.sh` fails
-the build over the budget rather than moving it.
+The bundle is **~541 tokens** always-loaded across 12 catalogue entries, against
+a budget of **600** — one description's worth of headroom, so rewording a
+trigger phrase does not turn the build red, while a whole new listed surface
+still cannot slip in unpriced. The other **24 skills** carry
+`disable-model-invocation: true`, so they cost nothing until a flow resolves one
+or you call it by name. That discipline is the only reason a bundle this size is
+affordable, and `budget_check.sh` fails the build over the budget rather than
+moving it.
+
+Cost is only half of what the gate asserts. It also checks *which* skills are
+listed: exactly `init`, `plan` and `execute`. A fourth entry point with a short
+description used to pay its tokens and walk through unnoticed.
 
 `claude plugin details crewforge` reports a larger always-on number because its
-projection charges hidden skills too. Verified against a live session, the ten
-hidden skills do not appear in the catalogue at all; `budget_check.sh` measures
-what the session actually carries, including the one line the root hook prints.
+projection charges hidden skills too. Verified against a live session, hidden
+skills do not appear in the catalogue at all; `budget_check.sh` measures what
+the session actually carries, including the one line the root hook prints.
 
 ## `$CREWFORGE_ROOT`
 
@@ -131,7 +187,7 @@ it cannot edit anything, so applying stays your decision.
 
 ## Tests
 
-678 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
+853 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
 them on Ubuntu and macOS, plus four gates and a degradation job:
 
 **Check the exit code, not the tally.** `run-all.sh` runs shellcheck, then bats,
@@ -140,8 +196,8 @@ green-looking count with a red suite is exactly how a dangling `$REF` citation
 survived a full review here. `echo $?` is the signal.
 
 ```bash
-bash skills/team-sprint/scripts/tests/run-all.sh   # 655 — the toolchain
-bats scripts/tests/                                #  23 — installer + retention gate
+bash skills/team-sprint/scripts/tests/run-all.sh   # 656 — the toolchain
+bats scripts/tests/                                # 197 — flow driver, gates, docs surface
 bash scripts/budget_check.sh       # always-loaded context budget
 bash scripts/name_check.sh         # frontmatter name matches path
 bash scripts/validate_all.sh       # every skill and agent passes its own validator

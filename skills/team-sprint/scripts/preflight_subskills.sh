@@ -15,8 +15,11 @@
 #   --cache <path-to-json>      override the default lead-side cache file
 #                               ($ART/preflight-cache.json) location.
 #
-# Default probe (no --probe-fn) is a pure filesystem check:
-#   test -f "$HOME/.claude/skills/<skill-name>/SKILL.md"
+# Default probe (no --probe-fn) delegates to the sub-skill resolver:
+#   scripts/flow/subskill_resolve.sh --probe <skill-name>
+# which searches the plugin tree, the project catalogue and the user catalogue
+# in that order. Probing $HOME alone — as this did — declared every
+# plugin-installed sub-skill missing, since plugin skills never live there.
 #
 # Lead-side cache (optional enrichment): when $ART/preflight-cache.json
 # exists, a present/absent verdict for a given skill name wins over the
@@ -69,8 +72,7 @@ done
 # Default filesystem probe — pure shell, no Agent tool involved.
 _fs_probe() {
   local skill="$1"
-  [[ -n "${HOME:-}" ]] || return 1
-  test -f "$HOME/.claude/skills/$skill/SKILL.md"
+  bash "$_HERE/../../../scripts/flow/subskill_resolve.sh" --probe "$skill"
 }
 
 # Cache lookup. Returns 0=present, 1=absent (with explicit "false"), 2=unknown.

@@ -31,7 +31,13 @@ Every stack claim baked into a generated agent must trace to the stack profile o
     idioms, anti-patterns — all copied verbatim from the verified profile>
    ```
    followed by senior-developer responsibilities (idiomatic implementation, error handling, framework API correctness, minimal surgical changes).
-5. **Validate it**: invoke the `agent-validator` skill on the developer agent. The validator↔rectifier loop self-heals to grade A. **If the skill cannot run from this subagent context** (nested skill-from-subagent is not guaranteed), fall back to the non-spawning script `bash ${CREWFORGE_ROOT}/skills/agent-validator/scripts/validate_agent.sh <path>` for a structural grade and fix every WARN/FAIL by hand until it is clean. Proceed only at grade A. If it cannot reach A, stop and report the blocker — do not seed a failing base.
+5. **Validate it**: run `agent-validator` over the developer agent. It is hidden from the catalogue, so the `Skill` tool cannot reach it — resolve it instead:
+
+   ```bash
+   bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-validator
+   ```
+
+   That answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter names; never read its body inline. The validator↔rectifier loop self-heals to grade A. **If it cannot run from this subagent context** (nested spawn-from-subagent is not guaranteed), fall back to the non-spawning script `bash ${CREWFORGE_ROOT}/skills/agent-validator/scripts/validate_agent.sh <path>` for a structural grade and fix every WARN/FAIL by hand until it is clean. Proceed only at grade A. If it cannot reach A, stop and report the blocker — do not seed a failing base.
 
 ## Phase 3 — Seed the rest from the validated base
 
@@ -40,7 +46,7 @@ Every stack claim baked into a generated agent must trace to the stack profile o
 7. Roles are independent once the seed exists. Validate ONE generated role to grade A first — a defect it surfaces in the shared seed gets fixed in the seed before it multiplies across the fleet — then **generate and validate the rest in parallel**. For each role in the roster below:
    a. **Registry-first**: reuse a listed specialist ONLY if it genuinely fits the detected stack — do NOT reuse `go-svelte-test` for a plain Go repo, or `api-security-audit` for a non-API codebase. On any doubt about fit, generate instead. When reusing, record its name and generate nothing. Crew agents from a prior factory run found on disk (`<lang>-<role>.md`) also count as reused when the rebuild was triggered by a *different* missing agent — carry their grade from the old manifest into `validation` rather than re-validating.
    b. Otherwise generate the agent (see **Naming & location** below) = inherited Stack Knowledge block + the role layer (responsibility, tools, research focus from the table) + a `## Skills` section per **Skills for generated agents** below.
-   c. **Validate every generated agent — script first.** Role-agent defects are overwhelmingly systematic (they share the seed, which the developer base already proved via the full loop in step 5), so run the cheap non-spawning check `bash ${CREWFORGE_ROOT}/skills/agent-validator/scripts/validate_agent.sh <path>` on each; only an agent that fails it escalates to the full `agent-validator` skill loop. Grade A is required before accepting either way. Reused agents are assumed already valid — do not re-validate them.
+   c. **Validate every generated agent — script first.** Role-agent defects are overwhelmingly systematic (they share the seed, which the developer base already proved via the full loop in step 5), so run the cheap non-spawning check `bash ${CREWFORGE_ROOT}/skills/agent-validator/scripts/validate_agent.sh <path>` on each; only an agent that fails it escalates to the full `agent-validator` loop, resolved and `Agent`-spawned exactly as step 5 describes. Grade A is required before accepting either way. Reused agents are assumed already valid — do not re-validate them.
 
 ### Roster
 
@@ -79,6 +85,8 @@ If it reports `IGNORED`, stop and tell the caller: the crew has been generated b
 ### Skills for generated agents
 
 Each generated agent's prompt carries a `## Skills` section naming the skills it should load and the one-line condition for invoking each — assigned at build time, not left for the agent to discover. Grant the `Skill` tool to every role with at least one assigned skill (in addition to its roster tools). Reused agents are never edited — they keep whatever skills they already reference. Assignment rules:
+
+- **A bundle sub-skill is reached by resolver, not by the `Skill` tool.** Every skill this bundle ships except `init`, `plan` and `execute` carries `disable-model-invocation: true`, which puts it out of the `Skill` tool's reach entirely. When an assigned skill is one of those, the generated `## Skills` line must say to resolve it — `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode <name>` — and to honour the answer: `MODE=inline` reads the body, `MODE=agent` spawns it through the `Agent` tool with the type named. Emitting a bare "invoke the `<name>` skill" line seeds an agent that fails the first time it tries.
 
 - **Synced skills only**: assign only skills tracked in `$CLAUDE_CONFIG_DIR/skills/`. Never plugin skills — the `plugins/` tree is machine-local, and a crew agent referencing one breaks on every other machine.
 - **Probe before assigning**: `bash ${CREWFORGE_ROOT}/skills/team-sprint/scripts/preflight_subskills.sh --probe-only <skill>` — exit 0 or the skill is not assigned.

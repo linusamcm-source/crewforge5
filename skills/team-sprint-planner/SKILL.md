@@ -2,6 +2,7 @@
 name: team-sprint-planner
 model: opus
 description: Codebase-grounded, TDD-ready story plan for /team-sprint — "write a plan for team-sprint", "turn this goal/spec into a sprint plan", "prep this for a sprint", "decompose this into sprint stories"
+disable-model-invocation: true
 ---
 
 # Team-Sprint Planner
@@ -99,7 +100,9 @@ fabricated claim is worse than an acknowledged unknown: it fails review *and* mi
 
 ### 3. Grill the user — the shared-understanding gate
 
-**Invoke the `grill-me` skill (Skill tool, `skill: "grill-me"`) before writing a single story.**
+**Load `grill-me` before writing a single story.** It is hidden from the catalogue, so the
+`Skill` tool cannot reach it — `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh"
+--load-mode grill-me` answers `MODE=inline`, so read the body it names and run its loop here.
 Recon armed you with facts; this phase closes the logic gaps that facts alone can't — the
 decisions, trade-offs, and unstated assumptions that only the user can resolve. The plan is not
 allowed to encode a decision the user never made.
@@ -136,7 +139,9 @@ a Developer Note. An answer the user gave that the plan ignores is a defect.
 ### 4. Decompose into stories
 
 **Divergent decomposition first — when the shape is genuinely open.** Before committing to a
-story breakdown, invoke the `adhd` skill (Skill tool, `skill: "adhd"`) on the decomposition
+story breakdown, load `adhd` (hidden from the catalogue: resolve it with
+`bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode adhd`, which answers
+`MODE=inline`, then read the body it names) and run it on the decomposition
 question itself — "how should this work be sliced into stories?" — feeding it the grill's
 resolved decisions and recon's dependency map as context. It spawns isolated parallel frames,
 scores, prunes traps, and converges on 2–3 candidate decompositions; pick the winner (or a
@@ -242,7 +247,8 @@ read-back is script-generated, not composed — same output every run, nothing p
    any user-waived findings (there are none on a `status=clean` run — all severities are applied).
 2. **Diagram gate (boolean, must be answered).** Ask via AskUserQuestion — exactly yes or no:
    *"Want a draw.io diagram of how this plan fits into the existing system?"*
-   - **Yes** → invoke the `drawio` skill and author a **system-context diagram** — NOT a story
+   - **Yes** → load `drawio` (hidden from the catalogue: `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode drawio`
+     answers `MODE=inline`, so read the body it names) and author a **system-context diagram** — NOT a story
      dependency graph; stories, sprint ordering, and deployment sequence do not belong on it.
      Show, grounded in this session's recon: the existing components/files the plan touches,
      the inputs the new functionality consumes, the outputs it produces, and what the system

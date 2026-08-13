@@ -2,6 +2,7 @@
 name: skill-rectifier
 model: sonnet
 description: Use when a skill-validator report shows failures, or on "fix this skill", "rectify the validation failures", "apply the recommended fixes" — repairs and re-validates in a loop until grade A
+disable-model-invocation: true
 ---
 
 # Skill Rectifier
@@ -120,8 +121,8 @@ proceed. **This skill — not the validator — owns the loop.**
 Keep a running tally across rounds: round number, fixes applied this round, and the
 report's FAIL and WARN counts. You need it for the progress check and the final summary.
 
-After generating the rectification report, immediately invoke the **skill-validator**
-skill (`/skill-validator`) on the same target skill, and state in the invocation that
+After generating the rectification report, immediately re-run **skill-validator** on the
+same target skill, and state in the request that
 this is a **"report-only re-validation, round {N}"**. Those words matter: they tell the
 validator to stop after producing its report instead of invoking this rectifier again,
 which would nest a second loop inside this one. Let it run all phases (structural,
@@ -129,8 +130,19 @@ functional, efficiency, instruction compliance) — do not shortcut to just the 
 script. Agent simulation may be skipped in intermediate rounds to save time, but the
 final round that confirms grade A must run every phase the original validation ran.
 
-1. **Invoke `/skill-validator`** with the target skill path and the report-only wording
-   above. It produces a new validation report in `./docs/agent_reports/`.
+`skill-validator` is hidden from the catalogue, so the `Skill` tool cannot reach it.
+Resolve it:
+
+```bash
+bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-validator
+```
+
+It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
+frontmatter names. Never read its body inline — it forks so a whole validation run stays
+out of this window, and this rectifier loops up to five times.
+
+1. **Spawn the resolved `skill-validator`** with the target skill path and the report-only
+   wording above. It produces a new validation report in `./docs/agent_reports/`.
 
 2. **Read the new report's Overall Grade and its FAIL/WARN counts.** Add them to the tally.
 
@@ -147,7 +159,7 @@ final round that confirms grade A must run every phase the original validation r
    - Apply fixes for all remaining FAILs and WARNs (Steps 2-5 above)
    - Generate an updated rectification report (Step 7) — append the round number to the
      filename: `skill-rectification-{name}-{date}-round{N}.md`
-   - Return to the top of this step (invoke `/skill-validator` again)
+   - Return to the top of this step (spawn the resolved `skill-validator` again)
 
 5. **Exit conditions — the loop must stop on the first of these:**
    - **Grade A reached** (success).

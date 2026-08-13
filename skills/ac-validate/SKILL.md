@@ -4,6 +4,7 @@ model: sonnet
 context: fork
 agent: general-purpose
 description: Playwright acceptance-criteria validation against the running app. Use on "validate acceptance criteria", "run AC validation", "check if ACs pass", "playwright validate", "validate the sprint"
+disable-model-invocation: true
 ---
 
 # AC Validate — Playwright-Driven Story Validation
@@ -95,11 +96,18 @@ If the server was already running, don't kill it at the end. If the skill starte
 
 ### Phase 4: Validate UI-Testable ACs
 
-For each story with UI-testable ACs, invoke `/playwright-cli` to validate.
+For each story with UI-testable ACs, drive the browser with `playwright-cli`. It is hidden
+from the catalogue, so the `Skill` tool cannot reach it — resolve it once, up front:
+
+```bash
+bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode playwright-cli
+```
+
+It answers `MODE=inline`, so read the body at the path it names and drive it from here.
 
 The validation loop for each AC:
 
-1. **Invoke `/playwright-cli`** for browser automation
+1. **Use the loaded `playwright-cli`** for browser automation
 2. **Navigate** to the relevant page (infer from AC context)
 3. **Set up state** if the AC requires specific conditions
 4. **Assert** — take a snapshot, check elements/text/behavior

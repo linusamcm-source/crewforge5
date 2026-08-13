@@ -4,6 +4,7 @@ model: sonnet
 context: fork
 agent: general-purpose
 description: Grades a .claude/agents/*.md file pass/fail; agent-rectifier auto-fixes below grade A. Use on "validate an agent", "check my agent", "audit an agent", "debug this agent", or an agent misbehaving
+disable-model-invocation: true
 ---
 
 # Agent Validator
@@ -139,10 +140,13 @@ Show the user the summary table and overall grade. Then:
 
 1. **If grade is A** (all pass, 0-2 warnings): the agent is production-ready. Stop here.
 
-2. **If grade is below A** (B, C, D, or F): automatically invoke the **agent-rectifier**
-   skill (`/agent-rectifier`) with this validation report and the target agent path.
+2. **If grade is below A** (B, C, D, or F): automatically hand off to **agent-rectifier**
+   with this validation report and the target agent path. It is hidden from the catalogue,
+   so the `Skill` tool cannot reach it — resolve it with
+   `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-rectifier`
+   and honour the answer (`MODE=inline` — read the body and follow it here).
    Do not ask the user for confirmation — this is mandatory. The rectifier applies fixes
-   and then invokes this validator again for full re-validation. This creates a self-healing
+   and then re-runs this validator for full re-validation. This creates a self-healing
    loop:
 
    ```

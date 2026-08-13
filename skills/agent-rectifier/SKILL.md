@@ -2,6 +2,7 @@
 name: agent-rectifier
 model: sonnet
 description: Repairs agent-validator failures. Use on "fix this agent", "repair the agent issues", "rectify the agent validation failures", "make this agent pass validation", "apply the recommended agent fixes"
+disable-model-invocation: true
 ---
 
 # Agent Rectifier
@@ -119,13 +120,22 @@ Full report template — load when writing the report:
 
 This step is mandatory and automatic. Do not skip it. Do not ask the user whether to proceed.
 
-After generating the rectification report, immediately invoke the **agent-validator** skill
-(`/agent-validator`) on the same target agent for a full re-validation (all phases: structural,
-tool coherence, efficiency, instruction compliance). Use the skill's full workflow — do not
-shortcut to just the structural script.
+After generating the rectification report, immediately re-run **agent-validator** on the same
+target agent for a full re-validation (all phases: structural, tool coherence, efficiency,
+instruction compliance). Use its full workflow — do not shortcut to just the structural script.
 
-1. **Invoke `/agent-validator`** with the target agent path. Let it run its complete workflow
-   and produce a new validation report in `./docs/agent_reports/`.
+`agent-validator` is hidden from the catalogue, so the `Skill` tool cannot reach it. Resolve it:
+
+```bash
+bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-validator
+```
+
+It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter
+names. Never read its body inline — it forks so a whole validation run stays out of this
+window, and this rectifier loops up to five times.
+
+1. **Spawn the resolved `agent-validator`** with the target agent path. Let it run its complete
+   workflow and produce a new validation report in `./docs/agent_reports/`.
 
 2. **Read the new report's Overall Grade.**
 
@@ -142,7 +152,7 @@ shortcut to just the structural script.
    - Apply fixes for all remaining FAILs and WARNs (Steps 2-5 above)
    - Generate an updated rectification report (Step 7) — append the round number to the
      filename: `agent-rectification-{name}-{date}-round{N}.md`
-   - Return to the top of this step (invoke `/agent-validator` again)
+   - Return to the top of this step (spawn the resolved `agent-validator` again)
 
 5. **Loop until grade A is achieved.** Each round should make measurable progress; if a
    round produces zero fixes (all remaining issues are deferred/unfixable), escalate to the

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "crewforge",
-  "description": "CrewForge — agent crews as a managed resource: generate them into the repo, execute plans with them, keep them from rotting.",
+  "description": "CrewForge — agent crews as a managed resource, behind three commands: /crewforge:init, /crewforge:plan and /crewforge:execute.",
   "owner": {
     "name": "Linus McManamey",
     "url": "https://github.com/linusamcm-source"
@@ -9,9 +9,9 @@
   "plugins": [
     {
       "name": "crewforge",
-      "description": "Generates a language-matched agent crew into your repo, executes a plan with it, and stops the generated artefacts rotting.",
+      "description": "Three commands over one repo: /crewforge:init audits and slims your Claude config, /crewforge:plan turns a goal into an adversarially-reviewed plan, and /crewforge:execute drives that plan to a merged commit with a generated agent crew and its quality gates.",
       "source": "./",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "keywords": [
         "agents",
