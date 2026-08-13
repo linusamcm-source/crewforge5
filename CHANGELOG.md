@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.2.0 — 2026-08-13
+
+Condensed to three entry points. The always-loaded catalogue went from
+**4390 chars / ~1,098 tok / 23 entries** to
+**2165 chars / ~541 tok / 12 entries** — both figures from
+`scripts/budget_check.sh`, which is what a session actually carries, not a
+count of directories under `skills/`.
+
+The distinction matters, because a raw skill count would tell the wrong story:
+ten skills already carried `disable-model-invocation: true` before any of this
+work, so the headline is not "25 skills became 3" — nothing was deleted, and
+all 27 skills are still on disk and still callable by name.
+
+### Added
+
+- `/crewforge:init`, `/crewforge:plan`, `/crewforge:execute` — the only three
+  skills left in the catalogue. Each is a state machine over a `phases.json`
+  manifest, driven by the shared `scripts/flow/` driver: a phase is offered,
+  its gate is run, and the verdict is written to state before the next phase.
+- `scripts/flow/subskill_resolve.sh` — resolves a hidden skill to its
+  `SKILL.md` path and reports how to load it (`--load-mode` answers `inline`
+  or `agent`). A skill declaring `context: fork` must be spawned through the
+  `Agent` tool; reading it inline destroys the isolation it asked for.
+- `scripts/flow/flow_state.sh`, `flow_next.sh`, `flow_gate.sh` — one driver, so
+  the three entry skills share phase advance and gate recording rather than
+  each reimplementing it.
+
+### Changed
+
+- The other 24 skills carry `disable-model-invocation: true` and are reached
+  through the resolver by whichever flow needs them — or by name, which still
+  works. `README.md` carries the full map of sub-skill to driving entry point.
+- `scripts/budget_check.sh` now asserts *shape* as well as cost: `init`, `plan`
+  and `execute` are the only listed skills, checked in both directions. A
+  fourth entry point with a cheap description used to pay its tokens and walk
+  straight through. `BUDGET` is 541 with zero slack, so the next description
+  that grows is a decision somebody makes rather than drift nobody notices.
+- `scripts/validate_all.sh` invokes `budget_check.sh`, so one command answers
+  the whole release question instead of a local run reporting every component
+  clean on a tree that was over budget.
+- Every reference to a now-hidden skill — in skills, phase docs and agents —
+  points at the resolver instead of at the `Skill` tool, which cannot reach a
+  hidden skill at all. `scripts/tests/subskill_refs.bats` holds that line.
+
+### Not changed
+
+- Nothing was deleted. Every skill and agent that shipped in 0.1.0 is still on
+  disk, still validated, still invocable by its own name.
+- `team-sprint`'s phase docs are untouched. `/crewforge:execute` wraps them and
+  adds two phases at the end (integration diagram, distilled learnings) rather
+  than forking their content.
+
 ## 0.1.0 — 2026-08-10
 
 First packaged release. The toolchain existed as a personal `~/.claude` config;
