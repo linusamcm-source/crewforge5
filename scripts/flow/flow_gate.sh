@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# flow_gate.sh — run a phase's declared gate, record the verdict, exit its code.
+#
+# Usage:
+#   flow_gate.sh <flow> <phase>
+# Runs the `gate` command declared for <phase> in skills/<flow>/phases.json,
+# records phase.<phase>.status=PASS|FAIL plus phase.<phase>.stdout into
+# state.json, prints STATUS=PASS or STATUS=FAIL, and exits the gate's own code.
+# Gates run from the repo root, whatever directory the caller stood in, so a
+# phases.json entry can name a repo-relative command.
+#
+# The gate's exit code is passed through rather than collapsed to 0/1, because
+# a caller that wants to distinguish "gate failed" from "gate could not run"
+# needs the number the gate actually chose.
+#
+# The gate's stdout is CAPTURED (this script's own stdout is the KEY=VALUE
+# contract, and a gate's chatter on it would break every parser), recorded into
+# state.json so a resumed flow can read why it stopped, and echoed to stderr so
+# a human watching still sees it. The gate's stderr is never captured — it
+# streams straight through.
+#
+# A phase declaring an empty gate records PASS without running anything: some
+# phases are judgment, not a script, and that is a passable phase rather than a
+# broken one. A phase id absent from the manifest is an error.
+#
+# Exit codes: the gate's own on a run gate; 0 when no gate is declared;
+# 1 when the flow, manifest or phase cannot be resolved; 2 usage.
+set -uo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FLOW_STATE="$HERE/flow_state.sh"
+
+usage() {
+  sed -n '5,9p' "$0" | sed 's/^# //' >&2
+  exit 2
+}
+
+[ $# -eq 2 ] || usage
+FLOW="$1"
+PHASE="$2"
+case "$FLOW$PHASE" in -*) usage ;; esac
+
+command -v jq >/dev/null 2>&1 || { printf '[fail] jq missing — install: brew install jq\n' >&2; exit 1; }
+
+MANIFEST="$("$FLOW_STATE" "$FLOW" manifest)" || exit 1
+
+# `has` distinguishes an absent phase from one whose gate is legitimately empty.
+FOUND="$(jq -r --arg id "$PHASE" 'map(select(.id == $id)) | length' "$MANIFEST")"
+if [ "$FOUND" = "0" ]; then
+  printf 'flow_gate.sh: no phase "%s" in %s\n' "$PHASE" "$MANIFEST" >&2
+  exit 1
+fi
+
+GATE="$(jq -r --arg id "$PHASE" 'map(select(.id == $id)) | .[0].gate // ""' "$MANIFEST")"
+
+record() { # $1 status  $2 stdout
+  "$FLOW_STATE" "$FLOW" set "phase.$PHASE.status" "$1" "phase.$PHASE.stdout" "$2" || {
+    printf 'flow_gate.sh: could not record the %s verdict for phase %s\n' "$1" "$PHASE" >&2
+    exit 1
+  }
+}
+
+if [ -z "$GATE" ]; then
+  printf 'flow_gate.sh: phase %s declares no gate — recording PASS\n' "$PHASE" >&2
+  record PASS ""
+  printf 'STATUS=PASS\n'
+  exit 0
+fi
+
+ROOT="$(git rev-parse --git-common-dir 2>/dev/null)"
+if [ -z "$ROOT" ]; then
+  printf 'flow_gate.sh: not inside a git repository\n' >&2
+  exit 1
+fi
+ROOT="$(cd "$ROOT/.." && pwd -P)"
+
+CAPTURE="$(mktemp "${TMPDIR:-/tmp}/flow_gate.XXXXXX")"
+trap 'rm -f "$CAPTURE"' EXIT
+
+( cd "$ROOT" && bash -c "$GATE" ) > "$CAPTURE"
+RC=$?
+
+GATE_OUT="$(cat "$CAPTURE")"
+[ -n "$GATE_OUT" ] && printf '%s\n' "$GATE_OUT" >&2
+
+if [ "$RC" -eq 0 ]; then
+  record PASS "$GATE_OUT"
+  printf 'STATUS=PASS\n'
+else
+  record FAIL "$GATE_OUT"
+  printf 'STATUS=FAIL\n'
+fi
+exit "$RC"
