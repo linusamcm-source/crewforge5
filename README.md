@@ -81,11 +81,13 @@ bash "$CREWFORGE_ROOT/scripts/budget_check.sh" --verbose
 ```
 
 The bundle is **~541 tokens** always-loaded across 12 catalogue entries, against
-a budget of **541** — the measured value, with no headroom. The other
-**24 skills** carry `disable-model-invocation: true`, so they cost nothing
-until a flow resolves one or you call it by name. That discipline is the only
-reason a bundle this size is affordable, and `budget_check.sh` fails the build
-over the budget rather than moving it.
+a budget of **600** — one description's worth of headroom, so rewording a
+trigger phrase does not turn the build red, while a whole new listed surface
+still cannot slip in unpriced. The other **24 skills** carry
+`disable-model-invocation: true`, so they cost nothing until a flow resolves one
+or you call it by name. That discipline is the only reason a bundle this size is
+affordable, and `budget_check.sh` fails the build over the budget rather than
+moving it.
 
 Cost is only half of what the gate asserts. It also checks *which* skills are
 listed: exactly `init`, `plan` and `execute`. A fourth entry point with a short

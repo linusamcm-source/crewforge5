@@ -62,10 +62,11 @@ hidden_skills() {
   grep -q "$hidden skills" "$README"
 }
 
-@test "README states the budget as the measured value, not a slack ceiling" {
-  local tok
-  tok="$(measured_tokens)"
-  grep -q "budget of \*\*$tok\*\*" "$README"
+@test "README states the budget the gate actually enforces" {
+  local budget
+  budget="$(bash "$ROOT/scripts/budget_check.sh" | sed -n 's/^budget: \([0-9]*\) tok/\1/p')"
+  [ -n "$budget" ]
+  grep -q "budget of \*\*$budget\*\*" "$README"
 }
 
 @test "no stale ~1,141-token figure survives in README" {

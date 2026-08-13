@@ -95,7 +95,7 @@ three_entry_points() {
   [ "$status" -eq 0 ]
 }
 
-# --- AC: --budget still overrides, and the default is the measured value ----
+# --- AC: --budget still overrides, and the default carries bounded headroom ---
 
 @test "--budget still overrides in both directions" {
   run bash "$GATE" --budget 1
@@ -106,10 +106,26 @@ three_entry_points() {
   [ "$status" -eq 0 ]
 }
 
-@test "the recorded default is the measured value, with no slack" {
+# The default was briefly the measured total exactly, so any description edit
+# broke the build. Headroom is deliberate now — but headroom nobody bounds is
+# just a bigger number, so the slack is asserted from both sides.
+@test "the recorded default passes with headroom" {
   run bash "$GATE"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"PASS: 0 tok of headroom"* ]]
+  [[ "$output" == *"tok of headroom"* ]]
+  [[ "$output" != *"PASS: 0 tok of headroom"* ]]
+}
+
+@test "the default headroom is bounded — one description's worth, not a blank cheque" {
+  local measured budget slack
+  measured="$(bash "$GATE" | sed -n 's/^always-loaded: .*(~\([0-9]*\) tok).*/\1/p')"
+  budget="$(bash "$GATE" | sed -n 's/^budget: \([0-9]*\) tok/\1/p')"
+  [ -n "$measured" ] && [ -n "$budget" ]
+  slack=$(( budget - measured ))
+  # A new listed surface costs ~50-60 tok. Slack must absorb a reworded
+  # description without absorbing a whole extra entry unnoticed.
+  [ "$slack" -gt 0 ]
+  [ "$slack" -le 100 ]
 }
 
 @test "a bad flag is a usage error on stderr" {
