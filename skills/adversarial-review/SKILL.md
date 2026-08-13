@@ -37,8 +37,10 @@ HIGH-severity issues being caught before code ever shipped.
 This skill formalises that loop:
 
 1. Read the target document.
-2. Validate every concrete claim against the **current codebase** using the
-   `use-repo-code` skill (Repomix snapshot grep) plus live `Read`/`Grep`.
+2. Validate every concrete claim against the **current codebase** with
+   `use-repo-code` (Repomix snapshot grep) plus live `Read`/`Grep`. It is hidden
+   from the catalogue, so resolve and spawn it rather than reaching for the
+   `Skill` tool — see Step 2.
 3. Produce a severity-ranked findings list with file:line evidence.
 4. Apply surgical edits that resolve findings.
 5. Re-read and repeat until the doc reaches zero blocking findings or a hard
@@ -166,8 +168,20 @@ filesystem.
 
 ### Step 2 — Validate Each Claim Against The Codebase
 
-Use `use-repo-code` for **bulk searches** across the whole tree (find all
-callers, locate a symbol, scan for a pattern). Its instrument is the repomix
+Reach `use-repo-code` for **bulk searches** across the whole tree (find all
+callers, locate a symbol, scan for a pattern). It is hidden from the catalogue,
+so the `Skill` tool cannot get to it — resolve it:
+
+```bash
+bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+```
+
+It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
+frontmatter names. Never read its body inline: it forks so the pack stays out of
+the reviewer's window, and a review that has already swallowed the pack has no
+room left to reason about the document.
+
+Its instrument is the repomix
 pack at `${REPOMIX_PACK:-.repomix-output.xml}` (repo root, XML style: each
 file block is `<file path="...">…</file>`). One pack grep replaces 10+ live
 `Read` calls.

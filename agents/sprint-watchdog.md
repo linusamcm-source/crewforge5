@@ -248,12 +248,23 @@ the lead via SendMessage and to the user as the inline summary.
 ## Codebase Reference Rule
 
 For any read of unmodified the project source (verifying file existence,
-checking imports, reading a neighboring package), use the
-`use-repo-code` skill — grep `references/files.md` for `## File:
-{path}` rather than `Read`-ing the live tree. Reason: the corpus is
-~266K tokens and the watchdog is supposed to be lightweight. Direct
-Read is fine for tiny files (< 50 lines) and for files explicitly
-named in a violation report.
+checking imports, reading a neighboring package), go through
+`use-repo-code` — grep `references/files.md` for `## File: {path}`
+rather than `Read`-ing the live tree. Reason: the corpus is ~266K
+tokens and the watchdog is supposed to be lightweight. Direct Read is
+fine for tiny files (< 50 lines) and for files explicitly named in a
+violation report.
+
+`use-repo-code` is hidden from the catalogue, so the `Skill` tool cannot
+reach it. Resolve it instead:
+
+```bash
+bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+```
+
+That answers `MODE=agent` — spawn it through the `Agent` tool with the type
+its frontmatter names. Reading its body inline would pull the whole pack into
+this window, which is the one thing a lightweight watchdog must not do.
 
 ## Tone
 
