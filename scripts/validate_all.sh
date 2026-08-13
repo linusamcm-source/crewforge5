@@ -19,6 +19,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 AGENT_V="$ROOT/skills/agent-validator/scripts/validate_agent.sh"
 SKILL_V="$ROOT/skills/skill-validator/scripts/validate_structure.sh"
+BUDGET_C="$ROOT/scripts/budget_check.sh"
 
 fail=0
 checked=0
@@ -60,4 +61,19 @@ if [ "$fail" -eq 0 ]; then
 else
   echo "FAIL: structural failures above, across $checked components"
 fi
+
+# Structural cleanliness says nothing about what the bundle costs before it is
+# ever used, and the budget gate only ran as a separate CI step — so a local
+# `validate_all.sh` run reported green on a tree that was over budget. It is
+# folded in here so one command answers the whole release question.
+echo
+if [ -f "$BUDGET_C" ]; then
+  budget_out="$(bash "$BUDGET_C" 2>&1)"
+  budget_rc=$?
+  printf '%s\n' "$budget_out" | sed 's/^/budget:  /'
+  [ "$budget_rc" -eq 0 ] || fail=1
+else
+  echo "SKIP: no budget gate at $BUDGET_C"
+fi
+
 exit "$fail"
