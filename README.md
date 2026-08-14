@@ -30,7 +30,7 @@ forms of the other two are ambiguous in the same way.
 
 | Command | What it does | Also triggers on |
 | --- | --- | --- |
-| `/crewforge5:init` | Gated config hygiene: measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md | "clean up my Claude config", "audit context load", "rightsize the environment" |
+| `/crewforge5:init` | Gated config hygiene — measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md | "clean up my Claude config", "audit context load", "rightsize the environment" |
 | `/crewforge5:plan` | A goal becomes an adversarial-clean, execute-ready plan file | "plan this feature", "write a sprint plan" |
 | `/crewforge5:execute` | A reviewed plan becomes a merged commit — TDD agent fleet in an isolated worktree, coverage, AC/DoD and review-fleet gates, then an integration diagram and distilled learnings | "run a sprint", "execute this plan" |
 

@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.3.1 — 2026-08-15
+
+Bug fixes to the validators' mechanical half. No interface change.
+
+### Fixed
+
+- **`skills/init/SKILL.md` frontmatter did not parse.** The description was an
+  unquoted YAML scalar containing `: `, so the whole block failed to load and
+  the plugin's main entry point ran with **empty metadata — name, model and
+  description all silently dropped**. `claude plugin tag` refuses to tag over
+  it; `validate_all.sh` called the same file structurally clean, because the
+  repo's own gate never parsed the YAML it validates. Colon replaced with an
+  em dash. This was the only such file of 35 checked.
+- **`grade.sh` counted nothing the scripts reported.** `validate_structure.sh`
+  and `validate_agent.sh` emit JSON; `grade.sh` grepped for prose lines, so a
+  skill graded A while its own structural script reported two warnings on the
+  same file. The mechanical half of a grade whose skill says "grade.sh wins"
+  was scoring only what the model had typed by hand. It now counts both shapes.
+- **The grade scale lived in three places and two had drifted a full grade.**
+  1 failure read D in both report templates and C in `grade.sh`; 3 read F on
+  paper and D in code. The prose copies are deleted in favour of `grade.sh`'s
+  header — the code that applies the scale — and pinned by tests.
+- **Description checks were floors beside a gate that punishes length.** Every
+  agent in the tree warned `description is only 20 words (recommend > 30)` and
+  `lacks <example> blocks`, while `budget_check.sh` — run by the same
+  `validate_all.sh` invocation — charges those strings against a 600 token
+  budget with 57 of headroom. Both validators now warn on descriptions over the
+  ~200 char house limit `claude-config` already sets, and an absent
+  `<example>` block is no longer a defect.
+- **The heavy-directive tally flagged safety guards.** Directives about
+  credentials, force pushes, deletes, production and spend are exempt and
+  reported separately, so the rectifier is never pushed to soften the one line
+  that prevents damage.
+- **`agent-validator` and `agent-rectifier` each owned a rectify loop**, so a
+  re-validation round nested a second loop inside the first and each round
+  doubled. The validator gains the report-only mode `skill-validator` already
+  had; the rectifier now names it in the spawn prompt.
+
+### Added
+
+- `agent-validator` gains the findings ledger and mechanical grading
+  `skill-validator` had, reusing its `grade.sh` rather than copying it, and
+  applies `context-hygiene`'s principles as judgment checks. Any fix that
+  shortens an agent file must clear `retention_gate.sh` first.
+- `context-hygiene` principle 7, **mechanical over prose**: a deterministic
+  check belongs in a script whose output is canonical, and every mechanical
+  check needs a test asserting it counts what it claims — an unexercised script
+  is prose with extra steps.
+- `scripts/tests/validator_grading.bats` — 17 cases over both validators and
+  the grader, including a test that no report template restates the grade scale
+  in prose. `bats scripts/tests/` is now 227.
+
 ## 0.3.0 — 2026-08-14
 
 Renamed to `crewforge5`. This is a breaking rename, not a cosmetic one: the

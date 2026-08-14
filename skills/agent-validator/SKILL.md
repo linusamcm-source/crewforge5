@@ -189,7 +189,7 @@ Full report template, including summary table and grade scale: [references/repor
 
 **Report-only mode:** if this validation was invoked by agent-rectifier as a re-validation
 round (the invoking prompt contains "report-only" or "re-validation"), stop after Step 6.
-Return the report path and overall grade, and do NOT invoke agent-rectifier — the rectifier
+Return the report path and overall grade, and do not invoke agent-rectifier — the rectifier
 already owns the fix-and-revalidate loop, and invoking it from here nests a second loop
 inside the first.
 

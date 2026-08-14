@@ -1,7 +1,7 @@
 ---
 name: init
 model: opus
-description: Gated config hygiene: measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md. Use on /crewforge5:init, "clean up my Claude config", "audit context load", "rightsize the environment"
+description: Gated config hygiene — measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md. Use on /crewforge5:init, "clean up my Claude config", "audit context load", "rightsize the environment"
 ---
 
 # crewforge5:init — config hygiene as a gated state machine
