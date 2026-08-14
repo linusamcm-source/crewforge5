@@ -236,6 +236,46 @@ This is a large plugin and it invites issues. If that turns out to be more than
 can be carried, the honest alternative is a starter-config repo you fork — far
 less machinery, no maintenance promise.
 
+## Credits
+
+Not all of this was written here. Five of the shipped skills started as someone
+else's work and were adapted; four external projects are driven rather than
+vendored. Both lists are below, because a skill you can read is a skill whose
+origin you should be able to check.
+
+**Adapted skills.** Each row was matched against the upstream file, not
+guessed — a verbatim frontmatter description, a distinctive trigger token, or an
+install line still present in the vendored copy.
+
+| Skill | Upstream | Owner | Licence |
+| --- | --- | --- | --- |
+| `skills/adhd` | [UditAkhourii/adhd](https://github.com/UditAkhourii/adhd) | UditAkhourii | MIT |
+| `skills/grill-me` | [mattpocock/skills](https://github.com/mattpocock/skills) — `productivity/grilling` | Matt Pocock | MIT |
+| `skills/drawio` | [jgraph/drawio-mcp](https://github.com/jgraph/drawio-mcp) — `plugins/claude-code/skills/drawio` | JGraph Ltd (draw.io) | Apache-2.0 |
+| `skills/playwright-cli` | [microsoft/playwright](https://github.com/microsoft/playwright) — `packages/playwright-core/src/tools/skills/playwright-cli` | Microsoft | Apache-2.0 |
+| `skills/tech-debt-audit` | [ksimback/tech-debt-skill](https://github.com/ksimback/tech-debt-skill) | ksimback | **none declared** |
+
+`tech-debt-skill` ships no `LICENSE`, so its redistribution terms are unstated.
+It is credited here on that basis, and would be the first thing to remove if the
+author asked.
+
+`skills/adhd` links its own upstream in `references/companion.md` — the skill is
+this repo's in-Claude implementation of a spec whose prose lives there, and the
+companion `adhd-agent` CLI is the author's.
+
+**External projects the skills drive.** These are installed by you, not shipped
+here, and each degrades visibly when absent (see [Dependencies](#dependencies)).
+
+| Tool | Project | Owner | Licence | Used by |
+| --- | --- | --- | --- | --- |
+| `repomix` | [yamadashy/repomix](https://github.com/yamadashy/repomix) | yamadashy | MIT | `use-repo-code`, the recon ladder |
+| `graphify` (`graphifyy` on PyPI) | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) | Graphify-Labs | Apache-2.0 | `team-sprint` Phase 0/2/4 recon |
+| `drawio` desktop CLI, `drawio-mcp` | [jgraph/drawio-mcp](https://github.com/jgraph/drawio-mcp) | JGraph Ltd | Apache-2.0 | `drawio` export and live-viewer paths |
+| `playwright-cli` | [microsoft/playwright](https://github.com/microsoft/playwright) | Microsoft | Apache-2.0 | `playwright-cli`, `ac-validate` |
+
+Everything else under `skills/`, `agents/`, `hooks/` and `scripts/` is original
+to this repo.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
