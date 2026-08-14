@@ -32,7 +32,7 @@
 # can read everything directly and the graph adds overhead with no payoff. That
 # rationale is quoted inline rather than cited because its source is untracked
 # and never reaches a worktree; the owning story is RH3 of
-# docs/plans/recon-harness-1.md. `text` is Tier 1 and stays cheap at any repo
+# references/docs/plans/recon-harness-1.md. `text` is Tier 1 and stays cheap at any repo
 # size, so it is exempt, and recon_min_files: 0 disables the guard entirely.
 #
 # Root resolution precedes the count. Outside a git repository the guard answers
@@ -264,11 +264,7 @@ recon_root() {
 }
 
 _file_size() {
-  # GNU first: `-f %z` on GNU is a FILE-SYSTEM field, not the file size,
-  # and it exits 0 — so the BSD-first form returned the wrong number on
-  # Linux instead of falling through. BSD has no `-c`, so this order is
-  # correct on both.
-  stat -c %s "$1" 2>/dev/null || stat -f %z "$1"
+  stat -f %z "$1" 2>/dev/null || stat -c %s "$1"
 }
 
 # _json_array <newline-list> — the list as a sorted, de-duplicated JSON array.
@@ -882,7 +878,7 @@ recon_explain() {
 # ---------------------------------------------------------------------------
 
 # _recon_gitignore — make git ignore the .recon/ artifact dir, but ONLY when it
-# does not already: against a `/*`-whitelist .gitignore (the shape $CLAUDE_CONFIG_DIR
+# does not already: against a `/*`-whitelist .gitignore (the shape ~/.claude
 # itself uses) check-ignore already matches and an appended line would be
 # redundant churn in a tracked file. rc 0 = already ignored, rc 1 = not ignored,
 # anything else (128 outside a work tree) is an error this does not act on.

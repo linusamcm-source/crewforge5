@@ -78,16 +78,6 @@ _make_skill_dir() {
   [ "$status" -eq 1 ]
 }
 
-@test "--probe-only: a plugin-root-only skill probes present" {
-  # `token-slim` ships inside this plugin and is absent from the sandboxed
-  # $HOME. The old probe looked only under $HOME/.claude/skills, so it declared
-  # every plugin-installed sub-skill missing — the exact preflight that Phase 0
-  # runs against skills the plugin itself supplies.
-  [ ! -f "$FAKE_HOME/.claude/skills/token-slim/SKILL.md" ]
-  run "$PRE_SH" --probe-only token-slim
-  [ "$status" -eq 0 ]
-}
-
 # --- --probe-fn injection point -------------------------------------------
 
 @test "--probe-fn passing stub overrides filesystem (exit 0)" {

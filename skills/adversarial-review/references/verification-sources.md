@@ -28,7 +28,7 @@ Use the knowledge graph when `graphify-out/graph.json` exists; skip silently whe
   are independent" claim; an empty path supports it.
 - **Node summary**: `graphify explain "<symbol>"` — what a module/function is, in plain language.
 - **Freshness**: the graph is a snapshot like the repomix pack — freshness-check it the same way
-  (Anti-Fabrication rule 5) and prefer the live tree on disagreement.
+  (SKILL.md § Evidence Rules, `evidence-fresh.sh`) and prefer the live tree on disagreement.
 
 **Prefer the CLI command form over grepping `graphify-out/graph.json` directly.** `graphify
 query`/`path` perform graph *traversal* — transitive callers, reachability, shortest path between

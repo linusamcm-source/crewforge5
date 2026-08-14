@@ -17,7 +17,7 @@ source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.
 #   Populates <root> with a layout that passes every lint check (1..9, 11, 12).
 build_clean_skill() {
   local root="$1"
-  mkdir -p "$root/scripts/tests/lib" "$root/phases" "$root/reference"
+  mkdir -p "$root/scripts/tests/lib" "$root/references/phases" "$root/references"
 
   # Copy the real lint_skill.sh + the bats-fallback shim into the synthetic
   # skill so it can self-locate.
@@ -34,32 +34,26 @@ printf 'ok\n'
 SH
   chmod +x "$root/scripts/dummy.sh"
 
-  # The `@test` token is assembled rather than written literally. bats discovers
-  # tests by scanning a .bats file for `@test` at the start of a line, and some
-  # versions scan the OUTER file without understanding that this one sits inside
-  # a quoted heredoc. Those versions register a phantom "dummy script prints ok"
-  # in THIS file, then abort it with `bats: unknown test name` — 655 of 656 tests
-  # executed, no failure reported, one file silently skipped. Ubuntu's bats does
-  # this; the newer one on macOS does not, so it was invisible locally.
-  {
-    printf '#!/usr/bin/env bats\n'
-    printf 'source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.sh"\n\n'
-    printf '%s "dummy script prints ok" {\n' '@test'
-    printf '  run bash "$BATS_TEST_DIRNAME/../dummy.sh"\n'
-    printf '  [ "$status" -eq 0 ]\n'
-    printf '  [ "$output" = "ok" ]\n'
-    printf '}\n'
-  } > "$root/scripts/tests/dummy.bats"
+  cat > "$root/scripts/tests/dummy.bats" <<'BATS'
+#!/usr/bin/env bats
+source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.sh"
+
+@test "dummy script prints ok" {
+  run bash "$BATS_TEST_DIRNAME/../dummy.sh"
+  [ "$status" -eq 0 ]
+  [ "$output" = "ok" ]
+}
+BATS
 
   # One reference doc — content doesn't matter, just existence + back-reference.
-  cat > "$root/reference/example.md" <<'REF'
+  cat > "$root/references/example.md" <<'REF'
 **WHO READS THIS / WHEN:** test fixture.
 
 Example reference doc.
 REF
 
   # $REF/subskill-hooks.md — required by check #10 (mech-15 deliverable).
-  cat > "$root/reference/subskill-hooks.md" <<'REF'
+  cat > "$root/references/subskill-hooks.md" <<'REF'
 **WHO READS THIS / WHEN:** test fixture.
 
 Sub-skill hook contract stub.
@@ -67,7 +61,7 @@ REF
 
   # Eight phase docs (0..7) — each with marker + at least one $SCRIPTS/<x>.sh.
   for n in 0 1 2 3 4 5 6 7; do
-    cat > "$root/phases/phase-${n}.md" <<PHASE
+    cat > "$root/references/phases/phase-${n}.md" <<PHASE
 # Phase ${n}
 
 Steps reference \$SCRIPTS/dummy.sh.
@@ -138,9 +132,9 @@ teardown() {
 
 @test "missing subskill-hooks marker fails check #5" {
   # Strip the marker from phase-3.md.
-  grep -v 'subskill-hooks:phase-3' "$SKILL/phases/phase-3.md" \
-    > "$SKILL/phases/phase-3.md.new"
-  mv "$SKILL/phases/phase-3.md.new" "$SKILL/phases/phase-3.md"
+  grep -v 'subskill-hooks:phase-3' "$SKILL/references/phases/phase-3.md" \
+    > "$SKILL/references/phases/phase-3.md.new"
+  mv "$SKILL/references/phases/phase-3.md.new" "$SKILL/references/phases/phase-3.md"
 
   run bash "$SKILL/scripts/lint_skill.sh"
   [ "$status" -ne 0 ]
@@ -189,7 +183,7 @@ teardown() {
 }
 
 @test "missing phase doc fails check #1" {
-  rm "$SKILL/phases/phase-4.md"
+  rm "$SKILL/references/phases/phase-4.md"
 
   run bash "$SKILL/scripts/lint_skill.sh"
   [ "$status" -ne 0 ]
@@ -211,7 +205,7 @@ teardown() {
 }
 
 @test "missing \$REF/subskill-hooks.md fails check #10" {
-  rm "$SKILL/reference/subskill-hooks.md"
+  rm "$SKILL/references/subskill-hooks.md"
   # Also strip the SKILL.md back-reference so check #2 doesn't fire first.
   grep -v 'subskill-hooks.md' "$SKILL/SKILL.md" > "$SKILL/SKILL.md.new"
   mv "$SKILL/SKILL.md.new" "$SKILL/SKILL.md"

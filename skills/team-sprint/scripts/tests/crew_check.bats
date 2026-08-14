@@ -9,16 +9,18 @@ setup() {
   SCRIPTS="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   TMP="$(cd "$(mktemp -d)" && pwd -P)"
   AGENTS="$TMP/agents"
-  mkdir -p "$TMP/.claude/crews" "$AGENTS"
+  REGISTRY="$TMP/registry"
+  mkdir -p "$TMP/.claude/crews" "$AGENTS" "$REGISTRY"
 }
 
 teardown() { rm -rf "$TMP"; }
 
-C() { bash "$SCRIPTS/crew_check.sh" "$@" --project-dir "$TMP" --agents-dir "$AGENTS"; }
+C() { CREW_REGISTRY_DIR="$REGISTRY" bash "$SCRIPTS/crew_check.sh" "$@" --project-dir "$TMP" --agents-dir "$AGENTS"; }
 
 # Minimal file satisfying the generation contract agent_structure_issue checks.
+# Optional $2 overrides the target dir (default $AGENTS).
 write_agent() {
-  cat > "$AGENTS/$1.md" <<EOF
+  cat > "${2:-$AGENTS}/$1.md" <<EOF
 ---
 name: $1
 description: "test agent"
@@ -145,6 +147,75 @@ EOF
   printf '%s' "$out" | grep -q 'malformed:bash-developer:no_stack_knowledge'
 }
 
+@test "check: reused agent resolves from the registry dir -> CACHED" {
+  write_manifest
+  write_agent bash-developer
+  touch "$REGISTRY/bash-tester.md"
+  out="$(C check bash)"
+  printf '%s' "$out" | grep -q 'STATUS=CACHED'
+}
+
+@test "check: default agents dir is <project-dir>/.claude/agents" {
+  write_manifest
+  mkdir -p "$TMP/.claude/agents"
+  AGENTS_SAVE="$AGENTS"; AGENTS="$TMP/.claude/agents"
+  write_agent bash-developer
+  touch "$AGENTS/bash-tester.md"
+  AGENTS="$AGENTS_SAVE"
+  out="$(CREW_REGISTRY_DIR="$REGISTRY" bash "$SCRIPTS/crew_check.sh" check bash --project-dir "$TMP")"
+  printf '%s' "$out" | grep -q 'STATUS=CACHED'
+}
+
+@test "check: WORKTREE_AGENTS=not_git when project is not a git repo" {
+  write_manifest
+  write_agent bash-developer
+  touch "$AGENTS/bash-tester.md"
+  out="$(C check bash)"
+  printf '%s' "$out" | grep -q 'WORKTREE_AGENTS=not_git'
+}
+
+@test "check: WORKTREE_AGENTS=ok for a global agents dir outside the project" {
+  write_manifest
+  GLOBAL="$(mktemp -d)"
+  write_agent bash-developer "$GLOBAL"
+  touch "$GLOBAL/bash-tester.md"
+  out="$(CREW_REGISTRY_DIR="$REGISTRY" bash "$SCRIPTS/crew_check.sh" check bash --project-dir "$TMP" --agents-dir "$GLOBAL")"
+  rm -rf "$GLOBAL"
+  printf '%s' "$out" | grep -q 'WORKTREE_AGENTS=ok'
+}
+
+@test "check: untracked generated agent in a git repo -> WORKTREE_AGENTS=untracked" {
+  git init -q "$TMP"
+  write_manifest
+  mkdir -p "$TMP/.claude/agents"
+  write_agent bash-developer "$TMP/.claude/agents"
+  touch "$TMP/.claude/agents/bash-tester.md"
+  out="$(CREW_REGISTRY_DIR="$REGISTRY" bash "$SCRIPTS/crew_check.sh" check bash --project-dir "$TMP")"
+  printf '%s' "$out" | grep -q 'WORKTREE_AGENTS=untracked:bash-developer'
+}
+
+@test "check: tracked generated agent -> WORKTREE_AGENTS=ok" {
+  git init -q "$TMP"
+  write_manifest
+  mkdir -p "$TMP/.claude/agents"
+  write_agent bash-developer "$TMP/.claude/agents"
+  touch "$TMP/.claude/agents/bash-tester.md"
+  git -C "$TMP" add .claude/agents/bash-developer.md
+  out="$(CREW_REGISTRY_DIR="$REGISTRY" bash "$SCRIPTS/crew_check.sh" check bash --project-dir "$TMP")"
+  printf '%s' "$out" | grep -q 'WORKTREE_AGENTS=ok'
+}
+
+@test "check: gitignored agents dir -> WORKTREE_AGENTS=ignored" {
+  git init -q "$TMP"
+  echo '.claude/agents' > "$TMP/.gitignore"
+  write_manifest
+  mkdir -p "$TMP/.claude/agents"
+  write_agent bash-developer "$TMP/.claude/agents"
+  touch "$TMP/.claude/agents/bash-tester.md"
+  out="$(CREW_REGISTRY_DIR="$REGISTRY" bash "$SCRIPTS/crew_check.sh" check bash --project-dir "$TMP")"
+  printf '%s' "$out" | grep -q 'WORKTREE_AGENTS=ignored'
+}
+
 @test "check: reused agent is never structure-checked (empty file, still CACHED)" {
   write_manifest
   write_agent bash-developer
@@ -223,111 +294,5 @@ EOF
   write_manifest
   touch "$AGENTS/bash-developer.md"
   out="$(C collision bash developer)"
-  printf '%s' "$out" | grep -q 'STATUS=OK'
-}
-
-# --- project-local agents, user-catalogue fallback ---------------------------
-#
-# Generated agents belong to the project; only reused ones may come from the
-# user catalogue. These exercise the DEFAULT agents dir, which every test above
-# bypasses by passing --agents-dir.
-
-# Like C(), but without --agents-dir, and with an isolated user catalogue.
-D() {
-  CLAUDE_CONFIG_DIR="$TMP/userconfig" \
-    bash "$SCRIPTS/crew_check.sh" "$@" --project-dir "$TMP"
-}
-
-write_agent_at() { # <dir> <name>
-  mkdir -p "$1"
-  cat > "$1/$2.md" <<AGENT
----
-name: $2
-description: "test agent"
-tools: Read
----
-
-## Stack Knowledge (inherited)
-verified facts
-AGENT
-}
-
-write_user_agent()    { write_agent_at "$TMP/userconfig/agents" "$1"; }
-write_project_agent() { write_agent_at "$TMP/.claude/agents" "$1"; }
-
-@test "default agents dir is the project, not the user catalogue" {
-  write_manifest
-  write_project_agent bash-developer
-  write_project_agent bash-tester
-  out="$(D check bash)"
-  printf '%s' "$out" | grep -q 'STATUS=CACHED'
-}
-
-@test "an agent only in the user catalogue does not silently satisfy a project crew" {
-  write_manifest
-  write_user_agent bash-developer
-  out="$(D check bash)"
-  printf '%s' "$out" | grep -q 'STATUS=REBUILD'
-  printf '%s' "$out" | grep -q 'unresolved:bash-tester'
-}
-
-@test "a reused role resolves from the user catalogue" {
-  write_manifest
-  write_project_agent bash-developer
-  write_user_agent bash-tester
-  out="$(D check bash)"
-  printf '%s' "$out" | grep -q 'STATUS=CACHED'
-}
-
-@test "a plugin-shipped agent resolves when neither project nor user has it" {
-  # THE COLD-INSTALL CASE, asserted against the agent this plugin really ships.
-  # crew-factory is required to name `boundary-reviewer` and forbidden to
-  # generate it, so if the plugin's own agents/ is missing from the resolution
-  # chain the manifest can never reach CACHED on a fresh machine — every Phase 0
-  # re-triggers a ~470s-per-agent rebuild for a file that was in the bundle all
-  # along. It regressed once precisely because the dev machine carried a personal
-  # copy in its user catalogue, which masked it. The user catalogue here is an
-  # empty temp dir, so nothing can mask it again.
-  local plugin_root
-  plugin_root="$(cd "$SCRIPTS/../../.." && pwd)"
-  [ -f "$plugin_root/agents/boundary-reviewer.md" ] \
-    || skip "this tree ships no agents/boundary-reviewer.md"
-
-  cat > "$TMP/.claude/crews/bash.json" <<'MANIFEST'
-{
-  "language": "bash",
-  "stack_profile": ".claude/crews/bash.profile.md",
-  "commands": {},
-  "crew": { "developer": "bash-developer", "boundary_reviewer": "boundary-reviewer" },
-  "validation": {},
-  "generated": ["bash-developer"],
-  "reused": ["boundary-reviewer"]
-}
-MANIFEST
-  write_project_agent bash-developer
-  out="$(D check bash)"
-  printf '%s' "$out" | grep -q 'STATUS=CACHED'
-  printf '%s' "$out" | grep -qv 'unresolved:boundary-reviewer'
-}
-
-@test "project agent wins over a user agent of the same name" {
-  write_manifest
-  write_project_agent bash-developer
-  write_project_agent bash-tester
-  mkdir -p "$TMP/userconfig/agents"
-  printf 'no frontmatter at all\n' > "$TMP/userconfig/agents/bash-developer.md"
-  out="$(D check bash)"
-  printf '%s' "$out" | grep -q 'STATUS=CACHED'
-}
-
-@test "collision: a name taken in the user catalogue is still a collision" {
-  write_user_agent bash-architect
-  out="$(D collision bash architect)"
-  printf '%s' "$out" | grep -q 'COLLISION bash-architect'
-  printf '%s' "$out" | grep -q 'STATUS=COLLISION'
-}
-
-@test "collision: clean when the name is taken nowhere" {
-  out="$(D collision bash architect)"
   printf '%s' "$out" | grep -q 'STATUS=OK'
 }

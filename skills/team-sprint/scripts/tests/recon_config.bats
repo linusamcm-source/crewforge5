@@ -41,7 +41,7 @@ setup() {
   RECON="$SCRIPTS/recon.sh"
   PROVIDERS="$SCRIPTS/recon_providers.sh"
   LIB_SH="$SCRIPTS/lib.sh"
-  SCHEMA="$SCRIPTS/state.schema.json"
+  SCHEMA="$SCRIPTS/schemas/state.schema.json"
   EXAMPLE="$(cd "$SCRIPTS/.." && pwd)/team-sprint.config.yaml.example"
   GUARD_BATS="$BATS_TEST_DIRNAME/recon_guard.bats"
   # The live sprint config is untracked and .gitignore-matched, so its DoD is
@@ -179,11 +179,8 @@ _caps_provider() {
   fi
   if [ "$avail" = true ] && [ -x "$BIN/$binname" ]; then
     bin="$BIN/$binname"
-    # GNU first: GNU reads `-f` as --file-system and EXITS 0 with unrelated
-    # output, so the BSD-first form never falls through on Linux and feeds
-    # a mount point into arithmetic. BSD has no `-c` and fails cleanly.
-    mt="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin")"
-    sz="$(stat -c %s "$bin" 2>/dev/null || stat -f %z "$bin")"
+    mt="$(stat -f %m "$bin" 2>/dev/null || stat -c %Y "$bin")"
+    sz="$(stat -f %z "$bin" 2>/dev/null || stat -c %s "$bin")"
   fi
   jq -n --arg n "$name" --argjson a "$avail" --argjson i "$indexed" \
         --argjson l "$langs" --arg b "$bin" --argjson m "$mt" --argjson s "$sz" \
@@ -1066,10 +1063,7 @@ _assert_key_default() {
   # Untracked and .gitignore-matched, so this is asserted by READING the file —
   # it appears in no `git diff`. Without it every key resolves to its hardcoded
   # default for the whole sprint.
-  # Machine-local state: a fresh install has no live config at all, and this
-  # DoD is about a config that exists, not about forcing one into being. Skip
-  # rather than fail, or CI is green only on the machine the file was born on.
-  [ -f "$LIVE_CONFIG" ] || skip "no live config at $LIVE_CONFIG — generated on first run, not shipped"
+  [ -f "$LIVE_CONFIG" ] || { echo "no live config at $LIVE_CONFIG"; return 1; }
   local k missing=""
   for k in $(_recon_keys); do
     grep -Eq "^${k}:" "$LIVE_CONFIG" || missing="$missing $k"

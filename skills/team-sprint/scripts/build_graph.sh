@@ -7,7 +7,7 @@
 # Consumes `stories.json` (the array emitted by parse_stories.sh) plus config
 # from the environment, and emits a schema-valid `graph.json` with every node at
 # `status: "pending"`, `depends_on` = `declared_deps ∪ inferred_deps`, and a
-# cached topological `order[]`. Schema: reference/state-schema.md (graph.json).
+# cached topological `order[]`. Schema: references/state-schema.md (graph.json).
 #
 # Edge sources (TS_DEPENDENCY_SOURCE, default `hybrid`):
 #   declared  — edges from each story's `depends_on[]` only.
@@ -21,7 +21,7 @@
 #               the dependent's `inferred_deps[]`. Edging only incomparable
 #               pairs keeps the graph acyclic by construction.
 #
-# Config via env (phases/phase-2.md step 4 wires all three):
+# Config via env (references/phases/phase-2.md step 4 wires all three):
 #   TS_WORKTREE_NAME        -> integration_branch = "sprint/<name>"   (default sprint-unknown + stderr WARN)
 #   TS_MAX_PARALLEL_AGENTS  -> max_parallel_agents                    (default 4)
 #   TS_DEPENDENCY_SOURCE    -> declared | inferred | hybrid           (default hybrid)

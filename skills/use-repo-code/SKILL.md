@@ -3,8 +3,7 @@ name: use-repo-code
 model: haiku
 context: fork
 agent: Explore
-description: Grep a repomix snapshot repo-wide instead of the live tree — "where is X in this repo", "find usages of Z", "does this already exist", "check codebase before implementing". Not for in-session edits
-disable-model-invocation: true
+description: Use when you need to grep a repomix snapshot of the repo across many files at once — "where is X in this repo", "find usages of Z", "does this already exist", "check codebase before implementing". Not for editing live code or in-session changes; complements direct source reads.
 ---
 
 # Use Repo Code
@@ -57,14 +56,14 @@ Check the pack age. If missing or older than 2 hours, regenerate — one call do
 of it (age check, canonical flags and ignore list, repomix → npx → bunx fallback):
 
 ```bash
-bash ${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/pack.sh          # prints pack= age_s= regenerated=
+bash ~/.claude/skills/use-repo-code/scripts/pack.sh          # prints pack= age_s= regenerated=
 ```
 
 Flags and ignore list live in the script; per-size tuning in `references/repomix-flags.md`.
 
 **Never `Read` the XML whole** — it's huge. Grep only.
 
-**Search the pack with `rtk grep` (primary) — call it explicitly.** Run `rtk grep '<pattern>' "$PACK"` (add `-B 2` to catch the owning `<file path="...">` tag). It truncates lines, caps results, and groups hits by file — bare grep against a pack returns full-width XML lines and floods context. Do **not** rely on the RTK `PreToolUse` hook to rewrite bare `grep`/`rg` for you — the hook may not be installed, and the rewrite is a bonus, not the mechanism. The fallback chain is mechanised: `bash ${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/pack-grep.sh '<pattern>' [flags]` uses rtk when present, else bounded `grep -nE -m 40`, always with `-B 2`. The built-in `Grep`-tool examples in Steps 3–4 remain the no-Bash fallback.
+**Search the pack with `rtk grep` (primary) — call it explicitly.** Run `rtk grep '<pattern>' "$PACK"` (add `-B 2` to catch the owning `<file path="...">` tag). It truncates lines, caps results, and groups hits by file — bare grep against a pack returns full-width XML lines and floods context. Do **not** rely on the RTK `PreToolUse` hook to rewrite bare `grep`/`rg` for you — the hook may not be installed, and the rewrite is a bonus, not the mechanism. The fallback chain is mechanised: `bash ~/.claude/skills/use-repo-code/scripts/pack-grep.sh '<pattern>' [flags]` uses rtk when present, else bounded `grep -nE -m 40`, always with `-B 2`. The built-in `Grep`-tool examples in Steps 3–4 remain the no-Bash fallback.
 
 ### Step 2 — Navigate with the index, not file reads
 
@@ -81,7 +80,7 @@ Index entries usually have 2-3 line summaries. Use those to budget `-A` values w
 For every symbol/file/handler a task plans to create, grep the pack first. If it exists, **extend — never overwrite**. The four checks below are mechanised — one call each, `found=yes|no` plus sample hits:
 
 ```bash
-E=${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/exists.sh
+E=~/.claude/skills/use-repo-code/scripts/exists.sh
 bash $E file   path/to/expected.ext    # a) file already exists?
 bash $E symbol CreateThing             # b) symbol already exists?
 bash $E test   CreateThing             # c) test already covers this?
@@ -162,9 +161,9 @@ For worked end-to-end scenarios (pre-implementation check, file-list verificatio
 
 ## Inter-agent communication
 
-If invoked as part of a multi-agent flow that produces a report, deliver the report
-to the team-lead via `SendMessage` — not as inline text. Inline-only reports are not
-considered delivered and break sprint resume.
+If invoked as part of a multi-agent flow that produces a report, the structured final
+return is the delivery; persist any artifact the flow requires. Use `SendMessage` only
+when the recipient is not the spawner (per CLAUDE.md and the team-sprint protocol).
 
 ## Tips
 

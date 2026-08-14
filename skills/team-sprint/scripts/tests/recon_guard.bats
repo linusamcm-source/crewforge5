@@ -30,7 +30,7 @@ setup() {
   SCRIPTS="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   RECON="$SCRIPTS/recon.sh"
   FIX="$SCRIPTS/fixtures/recon"
-  PLAN="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)/docs/plans/recon-harness-1.md"
+  PLAN="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)/references/docs/plans/recon-harness-1.md"
   # The worktree's OWN graphify index — a genuine 3453-node graph, not the
   # 804-byte fixture. AC "graphify freshness is asserted against a real
   # graphify-out/graph.json and not by forced-mtime fixture alone".
@@ -191,11 +191,8 @@ _caps_provider() {
   fi
   if [ "$avail" = true ] && [ -x "$BIN/$binname" ]; then
     bin="$BIN/$binname"
-    # GNU first: GNU reads `-f` as --file-system and EXITS 0 with unrelated
-    # output, so the BSD-first form never falls through on Linux and feeds
-    # a mount point into arithmetic. BSD has no `-c` and fails cleanly.
-    mt="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin")"
-    sz="$(stat -c %s "$bin" 2>/dev/null || stat -f %z "$bin")"
+    mt="$(stat -f %m "$bin" 2>/dev/null || stat -c %Y "$bin")"
+    sz="$(stat -f %z "$bin" 2>/dev/null || stat -c %s "$bin")"
   fi
   jq -n --arg n "$name" --argjson a "$avail" --argjson i "$indexed" \
         --argjson l "$langs" --arg b "$bin" --argjson m "$mt" --argjson s "$sz" \
@@ -233,12 +230,6 @@ _bin_without_python3() {
     n="$(basename "$f")"
     if [ "$n" != python3 ]; then ln -sf "$f" "$d/$n"; fi
   done
-  # On a merged-usr Linux (Ubuntu, and every current distro) /bin IS /usr/bin,
-  # so the `/bin/*` sweep above links python3 straight back in. macOS keeps them
-  # separate and has no python3 in /bin, which is why this fixture looked correct
-  # for years and failed on the first Linux runner. Sweep the interpreter out
-  # after the fact rather than trying to predict which directory it came from.
-  rm -f "$d"/python3 "$d"/python3.* "$d"/python
   if [ -n "$(PATH="$d" command -v python3 2>/dev/null || true)" ]; then
     echo "fixture error: python3 still resolvable from $d"
     false
@@ -619,14 +610,7 @@ _freshness()    { printf '%s\n' "$output" | grep -o 'FRESHNESS=[^ ]*' | head -1 
 @test "AC14: against the repo's REAL graphify index, spans reports fresh or stale, never FRESHNESS=none" {
   # Not a forced-mtime fixture: this is the worktree's own graph.json, copied
   # with -p so its genuine mtime survives.
-  #
-  # Skipped rather than failed when there is no index. graphify earns its keep
-  # on call-graph reachability in source trees; $CLAUDE_CONFIG_DIR is 407 files of mostly
-  # markdown and shell, which the ladder answers at Tier 0/1, so no index is
-  # built here deliberately. The assertion below is still the real one wherever
-  # an index does exist — this precondition is about the environment, not the
-  # router.
-  [ -f "$REAL_GRAPH" ] || skip "no graphify index in this repo (graphify indexes source trees, not this config repo)"
+  [ -f "$REAL_GRAPH" ] || { echo "precondition: $REAL_GRAPH absent"; false; }
   [ "$(jq '.nodes | length' "$REAL_GRAPH")" -gt 1000 ]
 
   local d="$TMP/frreal"

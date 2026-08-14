@@ -309,7 +309,7 @@ STUB
 }
 
 @test "P3-2: schema encodes the graph-mode if/then conditional-required" {
-  SCHEMA="$SCRIPTS/state.schema.json"
+  SCHEMA="$SCRIPTS/schemas/state.schema.json"
   run jq -e '.["if"].properties.scheduling.const == "graph"
     and (.["then"].required | index("graph_path") != null)
     and (.["then"].required | index("sprint_branch") != null)' "$SCHEMA"
@@ -446,7 +446,7 @@ STUB
 @test "FL6: phase-2.md entry gate STOPs on check-plan FAIL and on sprint-dir mismatch" {
   # AC: phase-2.md instructs the STOP branch on STATUS=FAIL and on sprint-dir
   # mismatch, in the STATUS-branch style of phase-0.md's graphify steps.
-  doc="$SKILL_DIR/phases/phase-2.md"
+  doc="$SKILL_DIR/references/phases/phase-2.md"
   grep -qF 'check-plan "$plan_path" "$ART/plan-final.md"' "$doc"
   grep -qF 'STATUS=FAIL` → STOP' "$doc"
   grep -qF 'no-record' "$doc"
@@ -458,7 +458,7 @@ STUB
 }
 
 @test "FL6: machine schema names plan_of_record with required path + 64-hex sha256" {
-  SCHEMA="$SCRIPTS/state.schema.json"
+  SCHEMA="$SCRIPTS/schemas/state.schema.json"
   run jq -e '.properties.plan_of_record
     | (.required == ["path", "sha256"])
       and (.properties.path.type == "string")
@@ -467,7 +467,7 @@ STUB
 }
 
 @test "LS1: machine schema names five graph keys, drops dead subskills, comment stops overclaiming" {
-  SCHEMA="$SCRIPTS/state.schema.json"
+  SCHEMA="$SCRIPTS/schemas/state.schema.json"
   [ -f "$SCHEMA" ]
 
   # (1) The five keys the prose already declares must become NAMED properties in
@@ -605,7 +605,7 @@ STUB
 }
 
 @test "WA4: machine schema names workflow_runs as an object" {
-  SCHEMA="$SCRIPTS/state.schema.json"
+  SCHEMA="$SCRIPTS/schemas/state.schema.json"
   run jq -e '.properties.workflow_runs' "$SCHEMA"
   [ "$status" -eq 0 ]
   run jq -r '.properties.workflow_runs.type' "$SCHEMA"

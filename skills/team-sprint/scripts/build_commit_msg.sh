@@ -40,17 +40,7 @@ source "$(dirname "$0")/lib.sh"
 
 require_python3 || exit 1   # jq no longer used: the story lookup moved into python
 
-# Pick a UTF-8 locale that exists on THIS host. Hardcoding en_US.UTF-8 works on
-# macOS and on the CI ubuntu image, but a stock Debian/WSL box generates only
-# `C.utf8` — there bash prints `setlocale: LC_ALL: cannot change locale` on
-# stdout, which lands in the caller's `$(...)` and corrupts the subject line.
-for _loc in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
-  if locale -a 2>/dev/null | grep -qxF "$_loc"; then
-    export LC_ALL="$_loc"
-    break
-  fi
-done
-unset _loc
+export LC_ALL=en_US.UTF-8
 
 usage() {
   cat <<'USAGE' >&2

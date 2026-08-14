@@ -1,7 +1,6 @@
 ---
 name: context-hygiene
-description: Rightsize the Claude config — CLAUDE.md, skills, agents, hooks, MCP. On "clean up my Claude config", "slim CLAUDE.md", "refactor my skills", "audit context load", "rightsize the environment"
-disable-model-invocation: true
+description: Audit and refactor the Claude environment (CLAUDE.md, skills, agents, hooks, MCP config) to Claude 5-generation context-engineering rules. Use on "clean up my Claude config", "slim CLAUDE.md", "refactor my skills", "audit context load", or "rightsize the environment".
 ---
 
 # Context Hygiene — Claude 5 Generation Rules
@@ -48,7 +47,7 @@ rigid rules. Every instruction file in the environment should be re-audited agai
 
 ## Refactor Workflow
 
-Run these passes over the target environment (usually `$CLAUDE_CONFIG_DIR` and project `.claude/`):
+Run these passes over the target environment (usually `~/.claude` and project `.claude/`):
 
 **Audit the principles, not surface patterns.** Judge each file against the principle, don't pattern-match for keywords. Read the context the way Claude receives it - what loads always, what loads on demand - and ask per shift: is this workspace still living in the THEN column? The smells below are illustrations, not definitions; something can smell fine and still break the principle, and vice versa.
 
@@ -58,7 +57,6 @@ Run these passes over the target environment (usually `$CLAUDE_CONFIG_DIR` and p
 4. **One home over repetition** - does each instruction have one authoritative home? Smell: the same guidance restated in several places, especially copies that have drifted apart.
 5. **Auto-memory over guidance-file memory** - are facts about the user or the work (preferences, dates, decisions) living as prose in guidance files instead of the memory system?
 6. **Rich references over simple specs** - are active builds steered by plain markdown descriptions where a higher-fidelity reference (code, a test suite, an HTML mockup, a rubric) exists or would be cheap to make?
-7. **Mechanical over prose** - is a check written as prose that a script could decide? Anything deterministic - counting, presence, a threshold, a parse - belongs in a script whose output is canonical, with the skill forbidding hand-derivation; prose carries only what needs judgement. Smell: a skill instructing the agent to count or tally something, the same threshold stated in words in two files, or a script that exists but whose numbers the skill re-derives anyway. A mechanical check nobody tests is the same defect one step later - a grader that silently counted zero read as a passing grade for as long as it existed.
 
 
 ### Pass 1 — Measure
@@ -68,24 +66,12 @@ Run these passes over the target environment (usually `$CLAUDE_CONFIG_DIR` and p
 ### Pass 2 — CLAUDE.md
 - Flag every line that is (a) inferable from the repo, (b) generic best practice, or (c) a rigid rule compensating for a weaker model. Propose deletion or judgment-level rewrite.
 - Flag any section longer than a few paragraphs as a skill-extraction candidate.
-- **Never apply a trim without running the retention gate over it.** Write the proposal to a scratch file and check it against the original:
-
-  ```bash
-  bash "$CREWFORGE5_ROOT/scripts/retention_gate.sh" CLAUDE.md /tmp/claude-md-proposed.md
-  ```
-
-  A trim is measured by how much shorter it got, and the lines worth the most tokens are usually the ones worth keeping — an absolute directive nobody re-derives, the one exact command that works, a version somebody bled for. The gate fails the proposal if any `never`/`always`/`must` line, backticked command, path, version or quoted error string stopped appearing anywhere. It reads two files and returns a verdict; it cannot edit anything, so the decision to apply stays with the user.
 
 ### Pass 3 — Skills
 - Merge overlapping skills; delete dead ones.
 - Trim descriptions to trigger phrases plus one line of purpose — descriptions are the always-loaded surface, the body is the on-demand surface.
 - Split any long SKILL.md into entry point + reference files.
 - Remove usage examples that an expressive interface makes redundant.
-- Convert deterministic checks to scripts. Where a script already exists, the skill must say
-  its output is canonical and forbid re-deriving the numbers by hand — otherwise the two
-  answers drift and the prose one wins by being closer to the reader.
-- Every mechanical check needs a test asserting it counts what it claims. An unexercised
-  script is prose with extra steps.
 
 ### Pass 4 — Tools, hooks, MCP
 - Prefer deferred tool loading over always-loaded schemas.

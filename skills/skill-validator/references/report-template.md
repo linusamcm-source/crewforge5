@@ -23,12 +23,12 @@ Use this template:
 | Agent Simulation | X | X | X | X |
 | **Total** | **X** | **X** | **X** | **X** |
 
-**Overall Grade:** {grade= value from grade.sh}
-
-The scale lives in one place only — the header of `scripts/grade.sh`, which is the code that
-applies it. Do not restate it here. A prose copy of this scale drifted a full grade away from
-the executable one and survived, because a reader checks the nearest copy and the nearest copy
-was wrong.
+**Overall Grade:** {A/B/C/D/F}
+- A: All pass, 0-2 warnings — production-ready
+- B: All pass, 3-5 warnings — usable, minor improvements recommended
+- C: All pass, 6+ warnings — works but agents will be inconsistent
+- D: 1-2 failures — needs fixes before deployment
+- F: 3+ failures or critical failure — broken, do not deploy
 
 ## Structural Validation
 {checklist with PASS/WARN/FAIL per item}

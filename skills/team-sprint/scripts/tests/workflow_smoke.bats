@@ -23,14 +23,14 @@ setup() {
   # WA1: the old phase-4/5 workflow is git-mv'd to story-executor.workflow.js and
   # grows the Phase-3 stages (RED/RED-verify/GREEN/GREEN-verify/wip-commit)
   # ahead of Verify/Review/Fix, plus a bounded coverage loop.
-  SE="$SKILL/workflows/story-executor.workflow.js"
+  SE="$SKILL/references/workflows/story-executor.workflow.js"
   # story-executor: the SEVEN required args. testWriterAgent/engineerAgent use
   # distinctive values so agentType assertions cannot pass on a hardcoded default.
   SE_ARGS='{"storyId":"RH1","artDir":"/a","scriptsDir":"/s","planPath":"/p/plan.md","testWriterAgent":"my-tester","engineerAgent":"my-eng","coverageMode":"new"}'
   # All-green stubs for every stage label prefix; per-test overrides via _se_resp.
   SE_RESP='{"red-":{"test_files":["t.bats"],"evidence":"e"},"redverify-":{"failing_right_reason":true,"non_test_files":[],"evidence":"e"},"green-":{"source_files":["src.sh"],"evidence":"e"},"greenverify-":{"all_exist":true,"missing":[]},"wipcommit-":{"committed":true},"verify:":{"tests_pass":true,"typecheck_pass":true,"lint_pass":true,"evidence":"ok"},"diff:":{"patch_written":true},"review:":{"artifact_path":"/a/r.md","per_ac_checklist_present":true,"findings":[]},"artifactcheck-":{"exists":true},"fix:":{"finding_id":"F1","resolved":true,"source_files":["s.sh"]},"coverage:":{"pass":true,"gate_status":"measured"}}'
   # WA2: phase-7 workflow — regression gate, review fleet, bounded fix loop.
-  P7="$SKILL/workflows/phase-7.workflow.js"
+  P7="$SKILL/references/workflows/phase-7.workflow.js"
   # The TEN required args; the four command strings use distinctive literals so
   # verbatim-in-prompt assertions cannot pass on a hardcoded or re-derived
   # command. No lane-agent args and no reviewFixIterations: defaults exercised.
@@ -144,10 +144,10 @@ _wip_between() {
 # bounded coverage loop. Everything below is the RED contract for that move.
 
 @test "story-executor: file exists (git mv), parses, and phase-4-5 is gone" {
-  node --check "$SKILL/workflows/story-executor.workflow.js"
+  node --check "$SKILL/references/workflows/story-executor.workflow.js"
   # Built from a var so WA1's zero-references grep never matches this test file.
   old_wf="phase-4-5"
-  [ ! -e "$SKILL/workflows/${old_wf}.workflow.js" ]
+  [ ! -e "$SKILL/references/workflows/${old_wf}.workflow.js" ]
 }
 
 @test "story-executor: the no-args guard names ALL seven required args" {
@@ -388,7 +388,7 @@ _p7_rounds_ok() {
 
 # AC: `node --check` exits 0.
 @test "phase-7: workflow file exists and parses" {
-  node --check "$SKILL/workflows/phase-7.workflow.js"
+  node --check "$SKILL/references/workflows/phase-7.workflow.js"
 }
 
 # AC: guard names the TEN required args; the four lane-agent args are NOT

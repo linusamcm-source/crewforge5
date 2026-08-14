@@ -6,9 +6,9 @@
 #   CLAUDE.md                                       — the inheritance surface
 #   skills/team-sprint-planner/references/recon-instruments.md
 #   skills/team-sprint/SKILL.md
-#   skills/team-sprint/phases/phase-0.md
+#   skills/team-sprint/references/phases/phase-0.md
 # and one deliberate NON-edit: nothing under `agents/`. That non-edit is the
-# mechanism, not an omission — every custom subagent inherits `$CLAUDE_CONFIG_DIR/CLAUDE.md`
+# mechanism, not an omission — every custom subagent inherits `~/.claude/CLAUDE.md`
 # automatically, so the ladder reaches all 51 of them through one file. A test
 # suite that only asserted the four edits would let a well-meaning implementer
 # "help" by copying the ladder into `agents/*.md`, which is exactly the
@@ -42,16 +42,9 @@ source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.
 setup() {
   SKILL="$(cd "$BATS_TEST_DIRNAME/../.." && pwd -P)"
   REPO="$(cd "$SKILL/../.." && pwd -P)"
-  # The ladder's home moved when the toolchain was packaged: in a plugin tree it
-  # is a plugin-owned rule file, in the original config repo it is CLAUDE.md.
-  # Same text, same assertions — only the surface that carries it differs.
-  if [ -f "$REPO/rules/recon-ladder.md" ]; then
-    CLAUDE_MD="$REPO/rules/recon-ladder.md"
-  else
-    CLAUDE_MD="$REPO/CLAUDE.md"
-  fi
+  CLAUDE_MD="$REPO/CLAUDE.md"
   INSTR="$REPO/skills/team-sprint-planner/references/recon-instruments.md"
-  PHASE0="$SKILL/phases/phase-0.md"
+  PHASE0="$SKILL/references/phases/phase-0.md"
   SKILL_MD="$SKILL/SKILL.md"
   TMP="$(cd "$(mktemp -d)" && pwd -P)"
   export TMP
@@ -180,7 +173,10 @@ _three_layers_hits() {
 
 @test "AC2 the CLAUDE.md rewrite is anchored to the sprint base and adds at most 8 net lines" {
   local base numstat added deleted net
-  base="$(_base_ref)" || skip "no sprint base ref in this tree — this is a story-time budget AC, inert outside the repo the story ran in"
+  base="$(_base_ref)" || {
+    echo "cannot resolve a sprint base ref — set TS_DIFF_BASE or TS_TARGET_BRANCH"
+    return 1
+  }
   numstat="$(git -C "$REPO" diff --numstat "$base"...HEAD -- CLAUDE.md)"
   if [ -z "$numstat" ]; then
     # Post-merge, `base` resolves to the merge commit and the story diff no
@@ -208,25 +204,18 @@ _three_layers_hits() {
     || { echo "the committed CLAUDE.md diff never adds the escalation ladder"; return 1; }
 }
 
-@test "AC3 the Tier 1 row keeps the explicit rtk grep rule and the force-fresh-pack instruction" {
-  # Both rules must survive in CLAUDE.md and stay folded into the ladder —
+@test "AC3 the Tier 1 row keeps the explicit rtk grep rule and the delete-the-pack instruction" {
+  # Retained VERBATIM from the current CLAUDE.md, and folded into the ladder —
   # proximity to the Tier 1 row is what makes this the rewrite and not the
   # old three-layer list surviving underneath a new heading.
-  #
-  # The wording is pinned, not the phrasing of any one era: the rtk caveat
-  # became "the hook is best-effort" (matching RTK.md, which is where that
-  # rule now lives), and "delete the pack first" became `pack.sh 0`, the
-  # scripted form of the same instruction. What the AC protects is that Tier 1
-  # still says grep the pack through rtk, and still says how to force a fresh
-  # one — not which sentence said it.
   local s
-  for s in 'explicit `rtk grep`' 'the hook is best-effort' 'pack.sh 0'; do
+  for s in 'explicit `rtk grep`' 'never trust the RTK hook' 'force a fresh pack by deleting it first'; do
     grep -qF "$s" "$CLAUDE_MD" || { echo "CLAUDE.md dropped the verbatim rule: $s"; return 1; }
   done
-  _near "$CLAUDE_MD" 'recon.sh text' 'the hook is best-effort' 600 \
+  _near "$CLAUDE_MD" 'recon.sh text' 'never trust the RTK hook' 600 \
     || { echo "the rtk-hook rule is not folded into the Tier 1 row"; return 1; }
-  _near "$CLAUDE_MD" 'recon.sh text' 'pack.sh 0' 600 \
-    || { echo "the force-fresh-pack instruction is not folded into the Tier 1 row"; return 1; }
+  _near "$CLAUDE_MD" 'recon.sh text' 'force a fresh pack by deleting it first' 600 \
+    || { echo "the delete-the-pack instruction is not folded into the Tier 1 row"; return 1; }
 }
 
 @test "AC4 nothing under skills or CLAUDE.md still calls the recon convention three layers" {
@@ -239,28 +228,25 @@ _three_layers_hits() {
   fi
 }
 
-@test "AC5 the ladder is not duplicated into agents and the distribution goes through CLAUDE.md instead" {
-  # Re-scoped 2026-08-13. This assertion used to read "no file under agents/ was
-  # modified in this branch's diff", which is strictly broader than the mechanism
-  # it protects: it forbade ANY edit to ANY agent for ANY reason, forever. The
-  # epic-1 condensation had to repoint four agents off the `Skill` tool (their
-  # sub-skills are now hidden) and tripped a guard that has nothing to do with the
-  # recon ladder. What RH6 actually protects — see this file's header — is that a
-  # well-meaning implementer must not COPY THE LADDER into agents/*.md, because
-  # they inherit it from CLAUDE.md. That is what is asserted now.
-  local f hits=""
-  for f in "$REPO"/agents/*.md; do
-    [ -f "$f" ] || continue
-    if grep -qF 'recon.sh' "$f"; then
-      hits="$hits $(basename "$f")"
-    fi
-  done
-  if [ -n "$hits" ]; then
-    echo "agent(s) name recon.sh directly —  the ladder reaches them by CLAUDE.md inheritance,"
-    echo "so a per-agent copy is the duplication-drift RH6 exists to prevent:$hits"
+@test "AC5 no file under agents is modified and the distribution goes through CLAUDE.md instead" {
+  local base n dirty
+  base="$(_base_ref)" || { echo "cannot resolve a sprint base ref"; return 1; }
+  # `|| true` is load-bearing: grep -c exits 1 on zero matches and bats runs the
+  # test body under errexit, so the unguarded form fails in the PASSING case.
+  # Same guard as lint_skill.sh:111.
+  n="$(git -C "$REPO" diff --name-only "$base"...HEAD | grep -c '^agents/' || true)"
+  if [ "$n" -ne 0 ]; then
+    echo "$n file(s) under agents/ modified — RH6 distributes via CLAUDE.md inheritance, not per-agent edits"
     return 1
   fi
-  # …and the substitute must actually exist, or "no copy in agents/" is satisfied
+  # A diff misses untracked additions; porcelain does not.
+  dirty="$(git -C "$REPO" status --porcelain agents/)"
+  if [ -n "$dirty" ]; then
+    echo "agents/ is not clean:"
+    echo "$dirty" | sed 's/^/    /'
+    return 1
+  fi
+  # …and the substitute must actually exist, or "agents/ untouched" is satisfied
   # by a story that did nothing at all.
   grep -qF 'recon.sh' "$CLAUDE_MD" \
     || { echo "CLAUDE.md never names recon.sh — no agent can reach the router"; return 1; }
@@ -286,7 +272,7 @@ _three_layers_hits() {
 
 @test "AC7 the recon.sh block is executable-guarded and the absent case has a stated fallback" {
   # Same guard shape as the graphify block at recon-instruments.md:42-43.
-  grep -qF 'RS=${CREWFORGE5_ROOT}/skills/team-sprint/scripts/recon.sh' "$INSTR" \
+  grep -qF 'RS=~/.claude/skills/team-sprint/scripts/recon.sh' "$INSTR" \
     || { echo "recon-instruments.md has no RS= assignment for the router"; return 1; }
   grep -qF -- '-x "$RS"' "$INSTR" \
     || { echo "the recon.sh block is not guarded by [ -x \"\$RS\" ]"; return 1; }
@@ -530,7 +516,7 @@ _three_layers_hits() {
 }
 
 @test "contract coverage: every distribution surface reaches the router, including the deliberately absent one" {
-  local f missing=""
+  local f base n missing=""
   # The four surfaces RH6 edits…
   for f in "$CLAUDE_MD" "$INSTR" "$PHASE0" "$SKILL_MD"; do
     grep -l 'recon.sh' "$f" >/dev/null 2>&1 || missing="$missing [$(basename "$f")]"
@@ -539,14 +525,12 @@ _three_layers_hits() {
     echo "surfaces that never reach recon.sh:$missing"
     return 1
   fi
-  # …and the fifth surface, which must never carry a COPY of the ladder: agents/
-  # inherits CLAUDE.md, so naming recon.sh there is duplication-drift, not
-  # distribution. The absent case is part of the contract, not an omission from it.
-  # Re-scoped 2026-08-13 alongside the AC5 test above — see the rationale there.
-  local dup=""
-  for f in "$REPO"/agents/*.md; do
-    [ -f "$f" ] || continue
-    grep -qF 'recon.sh' "$f" && dup="$dup [$(basename "$f")]"
-  done
-  [ -z "$dup" ] || { echo "the absent surface is no longer absent — agents naming recon.sh:$dup"; return 1; }
+  # …and the fifth surface, which must stay untouched: agents/ inherits CLAUDE.md,
+  # so an edit there is duplication-drift, not distribution. The absent case is
+  # part of the contract, not an omission from it.
+  base="$(_base_ref)" || { echo "cannot resolve a sprint base ref"; return 1; }
+  n="$(git -C "$REPO" diff --name-only "$base"...HEAD | grep -c '^agents/' || true)"
+  [ "$n" -eq 0 ] || { echo "$n agents/ file(s) edited — the absent surface is no longer absent"; return 1; }
+  [ -z "$(git -C "$REPO" status --porcelain agents/)" ] \
+    || { echo "agents/ has uncommitted changes"; return 1; }
 }

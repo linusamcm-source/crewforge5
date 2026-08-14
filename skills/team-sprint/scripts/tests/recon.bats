@@ -26,7 +26,7 @@ setup() {
   RECON="$SCRIPTS/recon.sh"
   PROVIDERS="$SCRIPTS/recon_providers.sh"
   FIX="$SCRIPTS/fixtures/recon"
-  PLAN="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)/docs/plans/recon-harness-1.md"
+  PLAN="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)/references/docs/plans/recon-harness-1.md"
 
   TMP="$(cd "$(mktemp -d)" && pwd -P)"
   export TMP
@@ -136,11 +136,8 @@ _caps_provider() {
   fi
   if [ "$avail" = true ] && [ -x "$BIN/$binname" ]; then
     bin="$BIN/$binname"
-    # GNU first: GNU reads `-f` as --file-system and EXITS 0 with unrelated
-    # output, so the BSD-first form never falls through on Linux and feeds
-    # a mount point into arithmetic. BSD has no `-c` and fails cleanly.
-    mt="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin")"
-    sz="$(stat -c %s "$bin" 2>/dev/null || stat -f %z "$bin")"
+    mt="$(stat -f %m "$bin" 2>/dev/null || stat -c %Y "$bin")"
+    sz="$(stat -f %z "$bin" 2>/dev/null || stat -c %s "$bin")"
   fi
   jq -n --arg n "$name" --argjson a "$avail" --argjson i "$indexed" \
         --argjson l "$langs" --arg b "$bin" --argjson m "$mt" --argjson s "$sz" \
@@ -814,13 +811,7 @@ _out_lines()    { printf '%s\n' "$output" | grep -c . || true; }
   _install_stub graphify
   cp "$FIX/codegraph-status-initialized.txt" "$STUB/codegraph.status"
   _stub_exit codegraph 1
-  # A fixture whose rows SURVIVE the callees keep-filter. graphify-explain.txt
-  # carries only `[defines]` on `-->` and `[imports_from]` on `<--`, so every row
-  # is filtered out for this intent and the adapter correctly returns the
-  # advance-the-chain sentinel — meaning graphify never answers and the assertions
-  # below could not hold. The test is about chain advancement, so it needs a
-  # provider that genuinely answers.
-  _stub_out graphify "$FIX/graphify-explain-calls.txt"
+  _stub_out graphify "$FIX/graphify-explain.txt"
   _write_caps \
     "$(_caps_provider codegraph true true '["bash"]')" \
     "$(_caps_provider graphify  true true '["bash"]')" \

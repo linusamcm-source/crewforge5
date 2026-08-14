@@ -13,11 +13,6 @@ shift
 
 missing=""
 for r in "$@"; do
-  # shellcheck disable=SC2012  # ls, not find, is correct here: the two globs must
-  # be sorted TOGETHER so the newest artifact wins regardless of extension, and a
-  # find rewrite would sort .json and .md as separate groups. The names are
-  # generated artifact filenames in a directory this script created, never user
-  # input, so the non-alphanumeric hazard SC2012 warns about cannot arise.
   f="$(ls -1 "$DIR"/*"$r"*.json "$DIR"/*"$r"*.md 2>/dev/null | tail -1 || true)"
   if [ -z "$f" ]; then
     missing="$missing $r"

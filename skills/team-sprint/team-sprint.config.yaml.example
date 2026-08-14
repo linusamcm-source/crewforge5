@@ -272,7 +272,7 @@ subskill_hooks:
   # preflight miss logs a WARN but doesn't abort Phase 0.
   phase-6:
     - skill: my-skill
-      command: 'bash $CLAUDE_CONFIG_DIR/skills/my-skill/run.sh'
+      command: 'bash ~/.claude/skills/my-skill/run.sh'
       required: false
   phase-7: []
 
@@ -358,6 +358,11 @@ consistency_agent: auto
 #   <alias|id>        — passed through verbatim as `model:`.
 # Override when: you want node teammates pinned to a specific model.
 teammate_model: inherit
+
+# ui_loop                                    type: string   default: ac-validate
+# UI verification skill invoked in Phase 4 when the diff touches JSX/TSX/CSS.
+# Override when: no UI in this sprint, set to `none` (skip UI validator).
+ui_loop: ac-validate
 
 # ----------------------------------------------------------------------------
 # Merge / push

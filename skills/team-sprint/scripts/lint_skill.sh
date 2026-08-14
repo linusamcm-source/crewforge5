@@ -15,8 +15,8 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "$HERE/.." && pwd)"
 SCRIPTS="$HERE"
-PHASES="$SKILL_DIR/phases"
-REF="$SKILL_DIR/reference"
+PHASES="$SKILL_DIR/references/phases"
+REF="$SKILL_DIR/references"
 SKILL_MD="$SKILL_DIR/SKILL.md"
 CONFIG_EXAMPLE="$SKILL_DIR/team-sprint.config.yaml.example"
 

@@ -69,29 +69,29 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
 # Phase-3 stages, so its code markers must equal the UNION of the three docs.
 
 @test "phase-3/4/5 docs and story-executor.workflow.js declare the same requirements (union)" {
-  run check_drift "$SKILL/phases/phase-3.md" "$SKILL/phases/phase-4.md" "$SKILL/phases/phase-5.md" "$SKILL/workflows/story-executor.workflow.js"
+  run check_drift "$SKILL/references/phases/phase-3.md" "$SKILL/references/phases/phase-4.md" "$SKILL/references/phases/phase-5.md" "$SKILL/references/workflows/story-executor.workflow.js"
   [ "$status" -eq 0 ] || { echo "$output"; false; }
 }
 
 @test "phase-5 has a non-trivial number of tagged requirements" {
-  n="$(doc_markers "$SKILL/phases/phase-5.md" | wc -l | tr -d ' ')"
+  n="$(doc_markers "$SKILL/references/phases/phase-5.md" | wc -l | tr -d ' ')"
   [ "$n" -ge 4 ]
 }
 
 @test "phase-4 has a non-trivial number of tagged requirements" {
-  n="$(doc_markers "$SKILL/phases/phase-4.md" | wc -l | tr -d ' ')"
+  n="$(doc_markers "$SKILL/references/phases/phase-4.md" | wc -l | tr -d ' ')"
   [ "$n" -ge 2 ]
 }
 
 @test "phase-3 tags every executor stage: RED/RED-verify/GREEN/GREEN-verify/wip/coverage-loop" {
-  m="$(doc_markers "$SKILL/phases/phase-3.md")"
+  m="$(doc_markers "$SKILL/references/phases/phase-3.md")"
   for required in wf:p3-red wf:p3-red-verify wf:p3-green wf:p3-green-verify wf:p3-wip-commit wf:p3-coverage-loop; do
     grep -qx "$required" <<<"$m" || { echo "phase-3.md lost the $required marker"; false; }
   done
 }
 
 @test "phase-4 tags verify and re-review under its own p4- namespace" {
-  m="$(doc_markers "$SKILL/phases/phase-4.md")"
+  m="$(doc_markers "$SKILL/references/phases/phase-4.md")"
   for required in wf:p4-verify wf:p4-re-review; do
     grep -qx "$required" <<<"$m" || { echo "phase-4.md lost the $required marker"; false; }
   done
@@ -102,12 +102,12 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
   # and feeds it to the reviewer, but the workflow path ran nothing before the
   # call ("Before: nothing") — the patch had no producer. The marker makes the
   # union drift check enforce an implementation site in story-executor.
-  m="$(doc_markers "$SKILL/phases/phase-4.md")"
+  m="$(doc_markers "$SKILL/references/phases/phase-4.md")"
   grep -qx "wf:p4-diff" <<<"$m" || { echo "phase-4.md lost the wf:p4-diff marker"; false; }
 }
 
 @test "phase-5 tags fix/coverage/triage/persist-counter; re-review no longer lives here" {
-  m="$(doc_markers "$SKILL/phases/phase-5.md")"
+  m="$(doc_markers "$SKILL/references/phases/phase-5.md")"
   for required in wf:p5-fix wf:p5-coverage wf:p5-triage wf:p5-persist-counter; do
     grep -qx "$required" <<<"$m" || { echo "phase-5.md lost the $required marker"; false; }
   done
@@ -121,16 +121,16 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
 # lead-side.
 
 @test "phase-7.md and phase-7.workflow.js declare the same requirements" {
-  wf="$SKILL/workflows/phase-7.workflow.js"
+  wf="$SKILL/references/workflows/phase-7.workflow.js"
   # Existence first: check_drift on two marker-less sides passes vacuously,
   # which would hide a missing workflow file entirely.
   [ -f "$wf" ] || { echo "missing $wf"; false; }
-  run check_drift "$SKILL/phases/phase-7.md" "$wf"
+  run check_drift "$SKILL/references/phases/phase-7.md" "$wf"
   [ "$status" -eq 0 ] || { echo "$output"; false; }
 }
 
 @test "phase-7 tags the fleet/simplifier/cap/regression requirements" {
-  m="$(doc_markers "$SKILL/phases/phase-7.md")"
+  m="$(doc_markers "$SKILL/references/phases/phase-7.md")"
   for required in wf:regression-first wf:fleet-completeness wf:simplifier-mandatory wf:cap-residuals; do
     grep -qx "$required" <<<"$m" || { echo "phase-7.md lost the $required marker"; false; }
   done
@@ -141,7 +141,7 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
   # rewrite relocated the sentence out of the Gate bullet — the exact drift
   # this check exists to block. The words match the workflow's result note
   # byte-for-byte (em dash included).
-  awk '/^## Gate/{f=1;next} /^## /{f=0} f' "$SKILL/phases/phase-7.md" | grep -qF 'unavailable — no coverage command resolved'
+  awk '/^## Gate/{f=1;next} /^## /{f=0} f' "$SKILL/references/phases/phase-7.md" | grep -qF 'unavailable — no coverage command resolved'
 }
 
 # --- the marker grammar itself ----------------------------------------------
@@ -161,8 +161,8 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
 # --- the check itself must be able to fail ---------------------------------
 
 @test "the drift check DETECTS a workflow that dropped a required step" {
-  cp "$SKILL/phases/phase-7.md" "$TMP/doc.md"
-  sed 's|// wf:regression-first||' "$SKILL/workflows/phase-7.workflow.js" > "$TMP/wf.js"
+  cp "$SKILL/references/phases/phase-7.md" "$TMP/doc.md"
+  sed 's|// wf:regression-first||' "$SKILL/references/workflows/phase-7.workflow.js" > "$TMP/wf.js"
   run check_drift "$TMP/doc.md" "$TMP/wf.js"
   [ "$status" -ne 0 ]
   [[ "$output" == *"NOT implemented"* ]]
@@ -170,8 +170,8 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
 }
 
 @test "the drift check DETECTS a doc that dropped a still-implemented step" {
-  sed 's|<!-- wf:cap-residuals -->||' "$SKILL/phases/phase-7.md" > "$TMP/doc.md"
-  cp "$SKILL/workflows/phase-7.workflow.js" "$TMP/wf.js"
+  sed 's|<!-- wf:cap-residuals -->||' "$SKILL/references/phases/phase-7.md" > "$TMP/doc.md"
+  cp "$SKILL/references/workflows/phase-7.workflow.js" "$TMP/wf.js"
   run check_drift "$TMP/doc.md" "$TMP/wf.js"
   [ "$status" -ne 0 ]
   [[ "$output" == *"no longer required"* ]]
@@ -180,7 +180,7 @@ check_drift() { # $1..$(n-1) = phase docs (doc side is their UNION), $n = workfl
 
 @test "every workflow in workflows/ has a paired phase doc under the check" {
   # A new workflow added with no drift coverage is itself drift.
-  for wf in "$SKILL"/workflows/*.workflow.js; do
+  for wf in "$SKILL"/references/workflows/*.workflow.js; do
     base="$(basename "$wf")"
     case "$base" in
       story-executor.workflow.js|phase-7.workflow.js) ;;

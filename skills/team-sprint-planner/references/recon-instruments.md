@@ -4,17 +4,7 @@ Three instruments, layered — same convention as `tech-debt-audit`:
 
 1. **`use-repo-code` (repomix pack) — the text-evidence instrument.** Every broad sweep —
    "does X already exist", "where does this string occur", "list everything under feature W" —
-   goes through `use-repo-code` instead of fanning out live Greps or per-file Reads.
-   It is hidden from the catalogue, so the `Skill` tool cannot reach it — resolve it:
-
-   ```bash
-   bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
-   ```
-
-   It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
-   frontmatter names. Never read its body inline: it forks so a whole pack stays out of
-   the planner's window, and the planner needs that window for the plan.
-
+   goes through the `use-repo-code` skill instead of fanning out live Greps or per-file Reads.
    **The pack must be freshly regenerated for this plan — no exceptions.** The skill's own
    freshness check tolerates a pack up to 2 hours old; a plan must not be grounded against even
    that. Force it by deleting the pack first, so the skill's Step 1 always rebuilds:
@@ -23,7 +13,7 @@ Three instruments, layered — same convention as `tech-debt-audit`:
    rm -f "${REPOMIX_PACK:-.repomix-output.xml}"
    ```
 
-   Then spawn the resolved `use-repo-code` for the sweeps. A plan claim cited from a stale pack is exactly
+   Then invoke `use-repo-code` for the sweeps. A plan claim cited from a stale pack is exactly
    the kind of drift the Phase 7 adversarial review loop exists to catch — don't hand it to
    your own reviewers.
 
@@ -40,7 +30,7 @@ Three instruments, layered — same convention as `tech-debt-audit`:
    hundreds of lines above, so no `-B <n>` window reaches it. Attribute the hit by `Read`ing
    the live file, never by guessing from surrounding pack context.
 
-   When spawning `use-repo-code` (it runs as a forked subagent), pass this as an
+   When invoking the `use-repo-code` skill (it runs as a forked subagent), pass this as an
    instruction in the request: *"search the pack with `rtk grep` (bash), not the Grep tool or
    bare grep."* Bare grep against a repomix pack returns full-width XML lines and floods the
    forked agent's context before the sweep finishes.
@@ -54,7 +44,7 @@ Three instruments, layered — same convention as `tech-debt-audit`:
 bullets above. Ensure it's installed for this project and build the graph once, then query it:
 
 ```bash
-GE=${CREWFORGE5_ROOT}/skills/team-sprint/scripts/graphify_ensure.sh
+GE=~/.claude/skills/team-sprint/scripts/graphify_ensure.sh
 if [ -x "$GE" ]; then bash "$GE" --ensure; bash "$GE" --graph-status; fi
 ```
 
@@ -64,7 +54,7 @@ and names the provider and freshness behind every answer, so a provider that can
 language degrades visibly instead of returning an empty "no callers" that reads as safe:
 
 ```bash
-RS=${CREWFORGE5_ROOT}/skills/team-sprint/scripts/recon.sh
+RS=~/.claude/skills/team-sprint/scripts/recon.sh
 if [ -x "$RS" ]; then bash "$RS" --probe; bash "$RS" callers "<symbol>"; fi
 ```
 

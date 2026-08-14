@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-negative.sh <term> [dir] — Anti-Fabrication rule 3, mechanised.
+# verify-negative.sh <term> [dir] — mechanised triple verification of negative claims (SKILL.md § Evidence Rules).
 # Runs ALL THREE required searches for a negative claim ("X does not exist"):
 #   1. exact-string match        (git grep -F, fallback grep -rF)
 #   2. case-insensitive match    (git grep -Fi)

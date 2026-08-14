@@ -1,4 +1,4 @@
-# Whitelist .gitignore, the shape $CLAUDE_CONFIG_DIR itself uses: `/*` ignores every
+# Whitelist .gitignore, the shape ~/.claude itself uses: `/*` ignores every
 # root entry, then `!/<name>` re-includes the tracked ones. `git check-ignore -q
 # .recon/` ALREADY matches here (rule `/*`), so an appended `.recon/` line would
 # be redundant and RH4 must leave this file byte-identical.

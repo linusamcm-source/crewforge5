@@ -1,8 +1,7 @@
 ---
 name: pre-commit-review-fleet
 model: opus
-description: Parallel reviewer fleet (security, performance, consistency, simplifier) over the staged diff. Use on "review my staged changes", "run the review fleet", "audit this diff", "is this safe to commit"
-disable-model-invocation: true
+description: Run a parallel reviewer fleet (security, performance, consistency, simplifier) over the staged diff; severity-ranked report, optional HIGH auto-patch. Use when asked to "review my staged changes", "run the review fleet", "audit this diff", "is this safe to commit", or on /pre-commit-review-fleet.
 ---
 
 # Pre-Commit Review Fleet
@@ -170,7 +169,7 @@ decision deliberately kept.
 ### Step 1 — Capture The Diff
 
 ```bash
-bash ${CREWFORGE5_ROOT}/skills/pre-commit-review-fleet/scripts/capture-diff.sh [scope-paths...]
+bash ~/.claude/skills/pre-commit-review-fleet/scripts/capture-diff.sh [scope-paths...]
 ```
 
 Exit 1 = nothing staged, abort with its message. It writes the patch, prints
@@ -226,7 +225,7 @@ standalone run persists to `docs/review-fleet-runs/<timestamp>-<reviewer>.json`.
 Mechanised:
 
 ```bash
-S=${CREWFORGE5_ROOT}/skills/pre-commit-review-fleet/scripts
+S=~/.claude/skills/pre-commit-review-fleet/scripts
 bash $S/fleet-complete.sh <artifact-dir> security performance consistency simplifier
 ```
 

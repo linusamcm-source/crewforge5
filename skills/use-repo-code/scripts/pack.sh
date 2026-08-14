@@ -8,11 +8,7 @@ MAX_AGE="${1:-7200}"
 PACK="${REPOMIX_PACK:-.repomix-output.xml}"
 IGNORE="**/node_modules/**,**/dist/**,**/build/**,**/.next/**,**/.expo/**,**/coverage/**,**/cdk.out/**,**/*.lock,**/package-lock.json,**/bun.lockb,**/yarn.lock,**/graphify-out/**,**/.repomix-output.xml,**/.venv/**,**/__pycache__/**"
 
-# GNU first, deliberately: GNU reads `-f` as `--file-system` and succeeds with
-# unrelated output, so a BSD-first `||` fallback never fires on Linux. BSD stat
-# has no `-c` and fails cleanly, so this order works on both. See lib.sh
-# mtime_epoch for the full account.
-mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"; }
+mtime() { stat -f %m "$1" 2>/dev/null || stat -c %Y "$1"; }
 
 age=-1
 [ -f "$PACK" ] && age=$(( $(date +%s) - $(mtime "$PACK") ))

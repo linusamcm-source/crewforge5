@@ -103,12 +103,7 @@ art_dir() {
   root="$(repo_root)"
   local sprint_dir=""
   local plan_dir
-  # `cd … && pwd -P || true` inside the substitution is the SC2015 shape: it
-  # reads as if-then-else and is not. Moving the fallback outside keeps the
-  # behaviour — an unresolvable plan dir yields "" and the branch below fails
-  # over to the default — while saying so honestly. shellcheck 0.9, the declared
-  # minimum and what CI installs, flags the old form; 0.11 does not.
-  plan_dir="$(cd "$(dirname "$plan_path")" 2>/dev/null && pwd -P)" || plan_dir=""
+  plan_dir="$(cd "$(dirname "$plan_path")" 2>/dev/null && pwd -P || true)"
   if [[ "$(dirname "$plan_dir")" == */.team-sprint/sprints \
         && "$(basename "$plan_dir")" == sprint-* ]]; then
     sprint_dir=".team-sprint/sprints/$(basename "$plan_dir")"
@@ -297,27 +292,12 @@ PY
 }
 
 # mtime_epoch <file> — echo the file's mtime as an integer Unix epoch.
-#
-#   GNU IS TRIED FIRST, AND THE ORDER IS THE WHOLE POINT. The obvious form —
-#   `stat -f %m "$f" 2>/dev/null || stat -c %Y "$f"` — is silently wrong on
-#   Linux: GNU reads `-f` as `--file-system` and `%m` as the MOUNT POINT, so it
-#   EXITS 0 with unrelated output and the `||` fallback never runs. The result
-#   lands in `$(( ))`, bash parses the leading word as a variable name, and
-#   `set -u` kills the script with something as unhelpful as
-#   "File: unbound variable" several frames away.
-#
-#   Reversing it is safe because BSD `stat` has no `-c` at all and fails
-#   cleanly. The integer check is the belt to that braces: whatever a future
-#   platform does, a non-numeric answer is rejected here rather than deep inside
-#   an arithmetic expansion.
+#   Tries BSD `stat -f %m` (macOS) first, then GNU `stat -c %Y` (Linux).
+#   Extracted from the identical inline probes in repomix_refresh.sh and
+#   graphify_ensure.sh (Story LS4).
 mtime_epoch() {
-  local file="$1" out
-  out="$(stat -c %Y "$file" 2>/dev/null)" || out=""
-  if [[ ! "$out" =~ ^[0-9]+$ ]]; then
-    out="$(stat -f %m "$file" 2>/dev/null)" || out=""
-  fi
-  [[ "$out" =~ ^[0-9]+$ ]] || return 1
-  printf '%s\n' "$out"
+  local file="$1"
+  stat -f %m "$file" 2>/dev/null || stat -c %Y "$file"
 }
 
 # now_ms — echo the current Unix epoch in MILLISECONDS, as an integer.

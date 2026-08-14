@@ -46,7 +46,7 @@ _guard_has() {
 @test "phase-3/4/5/7 each carry a Workflow-path guard with the fact-check phrase" {
   bad=0
   for f in phase-3.md phase-4.md phase-5.md phase-7.md; do
-    _guard_has "$SKILL/phases/$f" 'a fact to check, not a preference to weigh' || bad=1
+    _guard_has "$SKILL/references/phases/$f" 'a fact to check, not a preference to weigh' || bad=1
   done
   [ "$bad" -eq 0 ]
 }
@@ -54,7 +54,7 @@ _guard_has() {
 @test "phase-3 and phase-4 guards name story-executor.workflow.js with the full args signature" {
   bad=0
   for f in phase-3.md phase-4.md; do
-    _guard_has "$SKILL/phases/$f" story-executor.workflow.js \
+    _guard_has "$SKILL/references/phases/$f" story-executor.workflow.js \
       storyId artDir scriptsDir planPath testWriterAgent engineerAgent coverageMode || bad=1
   done
   [ "$bad" -eq 0 ]
@@ -62,21 +62,21 @@ _guard_has() {
 
 @test "phase-5 guard names story-executor.workflow.js; the renamed workflow is gone from phase-5.md" {
   bad=0
-  _guard_has "$SKILL/phases/phase-5.md" story-executor.workflow.js \
+  _guard_has "$SKILL/references/phases/phase-5.md" story-executor.workflow.js \
     storyId artDir scriptsDir planPath testWriterAgent engineerAgent coverageMode || bad=1
-  run grep -E "phase-4-5[.]workflow" "$SKILL/phases/phase-5.md"
+  run grep -E "phase-4-5[.]workflow" "$SKILL/references/phases/phase-5.md"
   [ "$status" -ne 0 ] || { echo "phase-5.md still names the renamed workflow:"; echo "$output"; bad=1; }
   [ "$bad" -eq 0 ]
 }
 
 @test "phase-7 guard names phase-7.workflow.js with the full args signature" {
-  _guard_has "$SKILL/phases/phase-7.md" phase-7.workflow.js \
+  _guard_has "$SKILL/references/phases/phase-7.md" phase-7.workflow.js \
     artDir scriptsDir planPath targetBranch worktree \
     testCommand typecheckCommand lintCommand coverageCommand coverageThreshold
 }
 
 @test "no phase doc calls the prose the reference implementation" {
-  run grep -r "reference implementation" "$SKILL/phases/"
+  run grep -r "reference implementation" "$SKILL/references/phases/"
   [ "$status" -eq 1 ] || { echo "grep status=$status"; echo "$output"; false; }
 }
 
@@ -91,12 +91,12 @@ _guard_has() {
   # state.bats:501-503) — a bare-digit key would satisfy `workflow_runs.` yet
   # write a key space the resume contract never reads.
   for p in 3 4 5 7; do
-    _guard_has "$SKILL/phases/phase-$p.md" "workflow_runs.phase-$p" "phase-$p <run_id>" || bad=1
+    _guard_has "$SKILL/references/phases/phase-$p.md" "workflow_runs.phase-$p" "phase-$p <run_id>" || bad=1
   done
   for f in phase-3.md phase-4.md phase-5.md; do
-    _guard_has "$SKILL/phases/$f" 'sequential mode' || bad=1
+    _guard_has "$SKILL/references/phases/$f" 'sequential mode' || bad=1
   done
-  _guard_has "$SKILL/phases/phase-7.md" 'both scheduling modes' 'iterations.review_fix' || bad=1
+  _guard_has "$SKILL/references/phases/phase-7.md" 'both scheduling modes' 'iterations.review_fix' || bad=1
   [ "$bad" -eq 0 ]
 }
 
@@ -106,22 +106,22 @@ _guard_has() {
   # on the Workflow path needs the reminder inside the guard block itself.
   bad=0
   for f in phase-3.md phase-4.md phase-5.md; do
-    _guard_has "$SKILL/phases/$f" 'Lead before/after the call' || bad=1
+    _guard_has "$SKILL/references/phases/$f" 'Lead before/after the call' || bad=1
   done
   [ "$bad" -eq 0 ]
 }
 
 @test "journal recording is not documented (WA4 reduced branch)" {
   run grep -il "journal" \
-    "$SKILL/phases/phase-3.md" "$SKILL/phases/phase-4.md" \
-    "$SKILL/phases/phase-5.md" "$SKILL/phases/phase-7.md"
+    "$SKILL/references/phases/phase-3.md" "$SKILL/references/phases/phase-4.md" \
+    "$SKILL/references/phases/phase-5.md" "$SKILL/references/phases/phase-7.md"
   [ "$status" -eq 1 ] || { echo "grep status=$status"; echo "$output"; false; }
 }
 
 @test "combined line count of the four demoted docs is <= 306" {
   total=0
   for f in phase-3.md phase-4.md phase-5.md phase-7.md; do
-    n="$(wc -l < "$SKILL/phases/$f" | tr -d ' ')"
+    n="$(wc -l < "$SKILL/references/phases/$f" | tr -d ' ')"
     total=$((total + n))
   done
   [ "$total" -le 306 ] || { echo "combined=$total"; false; }
@@ -129,8 +129,8 @@ _guard_has() {
 
 @test "no demoted phase doc instructs AskUserQuestion" {
   run grep -l "AskUserQuestion" \
-    "$SKILL/phases/phase-3.md" "$SKILL/phases/phase-4.md" \
-    "$SKILL/phases/phase-5.md" "$SKILL/phases/phase-7.md"
+    "$SKILL/references/phases/phase-3.md" "$SKILL/references/phases/phase-4.md" \
+    "$SKILL/references/phases/phase-5.md" "$SKILL/references/phases/phase-7.md"
   [ "$status" -eq 1 ] || { echo "grep status=$status"; echo "$output"; false; }
 }
 

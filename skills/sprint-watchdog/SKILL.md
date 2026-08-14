@@ -1,8 +1,7 @@
 ---
 name: sprint-watchdog
 model: opus
-description: Verifies agent claims and gates between /team-sprint handoffs; default with any sprint run — "sprint stalled", "agent didn't deliver report", "sprint protocol broke down", "watchdog the sprint"
-disable-model-invocation: true
+description: Use when starting, running, resuming, or auditing a /team-sprint, or on "sprint stalled", "agent didn't deliver report", "sprint protocol broke down", or "watchdog the sprint". Verifies agent claims between handoffs — reports, files, clean tree, quality gates. Default alongside any team-sprint run.
 ---
 
 # Sprint Watchdog
@@ -105,7 +104,7 @@ For projects that want mechanical enforcement, the same checks can be wired as C
 
 ## Reporting
 
-After each sprint phase, emit a watchdog summary via `SendMessage` to team-lead:
+After each sprint phase, deliver a watchdog summary to the lead (structured final return when the lead spawned you; `SendMessage` only when it did not):
 
 ```
 ## Watchdog Report — Phase N
@@ -125,7 +124,7 @@ Baseline drift since phase start:
 - failing tests: 0 → 0
 ```
 
-This summary tells the lead what is real and what is theatre. It MUST go via `SendMessage` — the watchdog is the canonical example of the very protocol it enforces.
+This summary tells the lead what is real and what is theatre. It must reach the lead through the delivery channel above — the watchdog is the canonical example of the very protocol it enforces.
 
 ## Tone & Posture
 

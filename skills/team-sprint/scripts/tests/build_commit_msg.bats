@@ -21,13 +21,7 @@ teardown() {
 # Helper: count unicode code points (LC_ALL=en_US.UTF-8 forces Python len() to
 # match how the script truncates).
 codepoint_len() {
-  # Same host-portable locale pick as build_commit_msg.sh — a box without
-  # en_US.UTF-8 would otherwise emit a setlocale warning into this substitution.
-  local loc
-  for loc in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
-    if locale -a 2>/dev/null | grep -qxF "$loc"; then break; fi
-  done
-  LC_ALL="$loc" python3 -c 'import sys; print(len(sys.argv[1]))' "$1"
+  LC_ALL=en_US.UTF-8 python3 -c 'import sys; print(len(sys.argv[1]))' "$1"
 }
 
 # ---------------------------------------------------------------------------
