@@ -2,8 +2,8 @@
 # init_gate.sh — the pass/fail gate behind each phase of `/crewforge5:init`.
 #
 # Usage:
-#   init_gate.sh <check>   run one phase gate: preflight measure hygiene slim
-#                          validate rectify distil report
+#   init_gate.sh <check>   run one phase gate: deps preflight measure hygiene
+#                          slim validate rectify distil report
 #   init_gate.sh --list    print the checks this script answers to, one per line
 # stdout is KEY=VALUE (STATUS=, CHECK=, …); detail and commentary go to stderr.
 #
@@ -63,9 +63,127 @@ STATE="${INIT_STATE:-$REPO_ROOT/.crewforge5/init}"
 DESC_CAP="${INIT_DESC_CAP:-300}"
 BASELINE="$STATE/baseline.json"
 
-# Phase 0 — preflight. Later phases rewrite config files; an unrelated
-# uncommitted edit makes the diff that proves what init changed unreadable.
+# --- dependencies -----------------------------------------------------------
+# Phase 0 asks this before anything else: can the rest of the flow run at all?
+# Required tools stop the flow; optional ones are named and carried, because
+# this bundle degrades visibly rather than silently when one is absent.
+#
+# THIS CHECK MUST SURVIVE A MACHINE WITH NOTHING ON IT. Every other check here,
+# and the flow driver above it, exits early when jq is missing — so a run that
+# reached them would report "jq missing" and nothing else, which is the one
+# moment the user most needs the full list. `deps` is exempt from that guard
+# and is meant to be run directly, not through flow_gate.sh.
+#
+# It still installs nothing. Changing what is on someone's machine is not a
+# gate's decision to make; it emits the commands and the caller decides.
+DEPS_REQUIRED="bash git python3 jq"
+DEPS_OPTIONAL="rtk just repomix shellcheck bats graphify codegraph"
+
+_pkg_manager() {
+  local m
+  for m in brew apt-get dnf pacman; do
+    if command -v "$m" >/dev/null 2>&1; then printf '%s\n' "$m"; return 0; fi
+  done
+  printf 'none\n'
+}
+
+# _install_cmd — how to install one tool under one manager, or nothing when
+# this repo does not know. Silence beats a guess: an install line that does not
+# work costs more than an admitted gap, and the user is about to paste it into
+# a root shell.
+_install_cmd() { # $1 tool  $2 manager
+  case "$1" in
+    repomix)   printf 'npm install -g repomix\n'; return 0 ;;
+    graphify)  printf 'uv tool install graphifyy   # or: python3 -m pip install graphifyy\n'; return 0 ;;
+    codegraph) return 0 ;;
+  esac
+  case "$2" in
+    brew)
+      case "$1" in
+        python3) printf 'brew install python\n' ;;
+        bats)    printf 'brew install bats-core\n' ;;
+        *)       printf 'brew install %s\n' "$1" ;;
+      esac
+      ;;
+    apt-get)
+      case "$1" in
+        git|python3|jq|shellcheck|bats) printf 'sudo apt-get install -y %s\n' "$1" ;;
+      esac
+      ;;
+    dnf)
+      case "$1" in
+        shellcheck)          printf 'sudo dnf install -y ShellCheck\n' ;;
+        git|python3|jq|bats) printf 'sudo dnf install -y %s\n' "$1" ;;
+      esac
+      ;;
+    pacman)
+      case "$1" in
+        python3)            printf 'sudo pacman -S --needed python\n' ;;
+        git|jq|shellcheck)  printf 'sudo pacman -S --needed %s\n' "$1" ;;
+      esac
+      ;;
+  esac
+}
+
+# _deps_scan — populates DEPS_MISSING_REQ / DEPS_MISSING_OPT / DEPS_MANAGER and
+# writes the copy-paste block to stderr. Separate from check_deps so preflight
+# can consult it without emitting a second STATUS line onto stdout.
+_deps_scan() {
+  DEPS_MANAGER="$(_pkg_manager)"
+  DEPS_MISSING_REQ=""
+  DEPS_MISSING_OPT=""
+  local t cmd unknown=""
+  for t in $DEPS_REQUIRED; do
+    command -v "$t" >/dev/null 2>&1 || DEPS_MISSING_REQ="$DEPS_MISSING_REQ $t"
+  done
+  for t in $DEPS_OPTIONAL; do
+    command -v "$t" >/dev/null 2>&1 || DEPS_MISSING_OPT="$DEPS_MISSING_OPT $t"
+  done
+  DEPS_MISSING_REQ="${DEPS_MISSING_REQ# }"
+  DEPS_MISSING_OPT="${DEPS_MISSING_OPT# }"
+
+  [ -n "$DEPS_MISSING_REQ" ] && note "deps: required missing — $DEPS_MISSING_REQ"
+  [ -n "$DEPS_MISSING_OPT" ] && note "deps: optional missing — $DEPS_MISSING_OPT (the flow runs, degraded)"
+  if [ -z "$DEPS_MISSING_REQ" ] && [ -z "$DEPS_MISSING_OPT" ]; then
+    note "deps: every required and optional tool is present"
+    return 0
+  fi
+  note "deps: package manager — $DEPS_MANAGER"
+  note "deps: ----- copy-paste into another terminal -----"
+  for t in $DEPS_MISSING_REQ $DEPS_MISSING_OPT; do
+    cmd="$(_install_cmd "$t" "$DEPS_MANAGER")"
+    if [ -n "$cmd" ]; then note "$cmd"; else unknown="$unknown $t"; fi
+  done
+  [ -n "$unknown" ] && note "# no packaged install known here for:${unknown} — see each project's own docs"
+  note "deps: ----- end -----"
+  return 0
+}
+
+check_deps() {
+  _deps_scan
+  if [ -n "$DEPS_MISSING_REQ" ]; then
+    emit FAIL deps "MANAGER=$DEPS_MANAGER" \
+                   "REQUIRED_MISSING=${DEPS_MISSING_REQ// /,}" \
+                   "OPTIONAL_MISSING=${DEPS_MISSING_OPT// /,}" \
+                   "REASON=missing-required"
+    return 1
+  fi
+  emit OK deps "MANAGER=$DEPS_MANAGER" "REQUIRED_MISSING=" \
+               "OPTIONAL_MISSING=${DEPS_MISSING_OPT// /,}"
+}
+
+# Phase 0 — preflight. Dependencies first: a flow that cannot run its own
+# scripts has nothing to say about a config root. Then the clean tree, because
+# later phases rewrite config files and an unrelated uncommitted edit makes the
+# diff that proves what init changed unreadable.
 check_preflight() {
+  _deps_scan
+  if [ -n "$DEPS_MISSING_REQ" ]; then
+    note "preflight: required tooling missing — $DEPS_MISSING_REQ"
+    emit FAIL preflight "REASON=missing-deps" \
+                        "REQUIRED_MISSING=${DEPS_MISSING_REQ// /,}"
+    return 1
+  fi
   if ! git rev-parse --git-dir >/dev/null 2>&1; then
     note "preflight: not inside a git repository — init needs one to gate a clean tree"
     emit FAIL preflight "REASON=not-a-repo"
@@ -321,15 +439,23 @@ check_report() {
 
 case "$1" in
   --list)
-    printf '%s\n' preflight measure hygiene slim validate rectify distil report
+    printf '%s\n' deps preflight measure hygiene slim validate rectify distil report
     exit 0
     ;;
   -h|--help) usage ;;
 esac
 
-command -v jq >/dev/null 2>&1 || { note "[fail] jq missing — install: brew install jq"; exit 1; }
+# `deps` and `preflight` must answer on a machine missing jq — that is the
+# machine they exist for, and neither reads state through jq. Refusing here
+# would report one missing tool and hide every other. The remaining checks all
+# parse JSON, so for them a missing jq is still a stop.
+case "$1" in
+  deps|preflight) ;;
+  *) command -v jq >/dev/null 2>&1 || { note "[fail] jq missing — install: brew install jq"; exit 1; } ;;
+esac
 
 case "$1" in
+  deps)      check_deps ;;
   preflight) check_preflight ;;
   measure)   check_measure ;;
   hygiene)   check_hygiene ;;

@@ -1,9 +1,52 @@
 # Phase 0 — Preflight
 
-Establish where init is operating and on what, before anything is measured or
-rewritten.
+Establish that the flow can run, then where it is operating and on what, before
+anything is measured or rewritten.
 
 ## Work
+
+0. **Check dependencies first — before anything else, including the flow
+   driver.** Run the check directly, not through `flow_gate.sh`:
+
+   ```bash
+   bash "${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh" deps
+   ```
+
+   It is the only gate that answers on a machine without `jq`, which is the
+   machine it exists for — `flow_gate.sh`, `flow_next.sh` and every other gate
+   exit early when `jq` is absent, so reaching them first would report one
+   missing tool and hide the rest.
+
+   Stdout carries `REQUIRED_MISSING=` and `OPTIONAL_MISSING=` as comma-joined
+   lists; stderr carries a ready-to-paste install block between its
+   `----- copy-paste into another terminal -----` markers.
+
+   Then, in this order:
+
+   - **Nothing missing.** Say so in one line and go to step 1.
+   - **Only optional tools missing.** Name them, say what degrades (see the
+     bundle's `README.md` Dependencies section), and go to step 1. Optional
+     tooling absent is a documented degradation, not a stop.
+   - **Required tools missing, and you can install them without `sudo` and
+     without a package manager that needs one** — a Homebrew formula on macOS,
+     `npm install -g`, `uv tool install` — then **ask the user first**, naming
+     the exact command, and run it only if they agree. Installing software is a
+     change to their machine, and a gate that made it silently would be
+     deciding on their behalf.
+   - **Otherwise** — anything needing `sudo`, an unknown package manager, or a
+     tool the gate reports no install command for — do not attempt it. Print
+     the block from the gate's stderr verbatim, in a fenced `bash` block, and
+     tell the user to run it in another terminal.
+
+   **Then wait.** Do not advance, do not start step 1, and do not run any
+   later gate. When the user says they are done, run `init_gate.sh deps` again
+   and compare the new `REQUIRED_MISSING=` against the old one. **Loop:**
+   re-emit the block for whatever is still missing, wait again, re-check. The
+   loop ends only when `STATUS=OK` — or when the user asks to stop, which is
+   their call to make and yours to record in the report.
+
+   Report progress between rounds. "`jq` installed, `python3` still missing" is
+   what makes a second round feel like progress rather than the same wall.
 
 1. **Resolve the config root.** `INIT_TARGET` is the directory holding the
    `skills/` and `agents/` this run audits. Default is the repo root. Export it
@@ -29,8 +72,13 @@ rewritten.
 
 ## Gate
 
-`init_gate.sh preflight` — inside a git repo, `INIT_TARGET` exists, and
-`git status --porcelain` is empty.
+`init_gate.sh preflight` — every required tool present, inside a git repo,
+`INIT_TARGET` exists, and `git status --porcelain` is empty.
+
+The gate re-runs the dependency scan itself, so a run that skipped step 0 still
+fails here with `REASON=missing-deps` rather than proceeding half-equipped.
+Step 0 exists because by the time the driver can call this gate, `jq` is
+already required — the check has to happen before the machinery that needs it.
 
 If the tree is dirty, stop and say so. Do not commit on the user's behalf: the
 uncommitted work is theirs and they have not been asked about it.

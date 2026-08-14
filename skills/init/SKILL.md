@@ -26,6 +26,15 @@ FLOW="${CREWFORGE5_ROOT}/scripts/flow"
 "$FLOW/flow_state.sh" init get <key>  # read anything a phase recorded
 ```
 
+**One thing runs before that driver.** The dependency check is step 0 of phase
+0 and is invoked directly, because `flow_next.sh` and `flow_gate.sh` both exit
+early when `jq` is missing — the flow cannot report its own missing tooling
+through machinery that needs the tooling:
+
+```bash
+bash "${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh" deps
+```
+
 `phases.json` is the manifest — `{id, title, doc, gate, required}` per phase.
 Every gate is one subcommand of `scripts/init_gate.sh`, which reads the config
 root and returns `STATUS=OK` or `STATUS=FAIL` in `KEY=VALUE` on stdout. It
@@ -43,7 +52,7 @@ Two locations, both overridable:
 
 | # | Phase | Doc | Gate |
 | --- | --- | --- | --- |
-| 0 | Preflight | `phases/phase-0.md` | clean tree, config root resolved |
+| 0 | Preflight | `phases/phase-0.md` | dependencies present, clean tree, config root resolved |
 | 1 | Measure | `phases/phase-1.md` | `baseline.json` exists and records skills |
 | 2 | Hygiene | `phases/phase-2.md` | `retention_gate.sh` per proposal pair |
 | 3 | Slim | `phases/phase-3.md` | token-slim `check.sh` per skill, then `sweep.py` |
@@ -92,6 +101,11 @@ disjoint, so nothing serialises that does not have to.
 
 ## Stopping rules
 
+- **A missing required tool stops phase 0 before anything else.** Offer to
+  install only what needs no `sudo`, and ask before running it. Otherwise hand
+  over the gate's copy-paste block, wait for the user, re-run
+  `init_gate.sh deps`, and loop until `STATUS=OK` or the user calls it off.
+  Optional tools missing is a documented degradation, not a stop.
 - **A dirty tree stops phase 0.** Say so; do not commit on the user's behalf.
 - **A retention breach stops phase 2.** Re-propose keeping the reported line.
   Losing a `never` is the failure this flow exists to prevent, and it is

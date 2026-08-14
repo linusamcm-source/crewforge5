@@ -273,8 +273,117 @@ print(len(re.sub(r"\s+", " ", m.group(1)).strip()))
 }
 
 # ---------------------------------------------------------------------------
+# Phase 0 step 0 — dependencies.
+#
+# The point of this check is the machine that has nothing on it, so the tests
+# build that machine rather than describing it: _shim makes a PATH holding only
+# the named tools, and every case below runs the gate against one.
+# ---------------------------------------------------------------------------
+
+# _shim <dir> <tool>… — a PATH containing only the tools named, symlinked to
+# wherever they really live. Anything not named is genuinely unreachable.
+_shim() {
+  local dir="$1" t p
+  shift
+  mkdir -p "$dir"
+  for t in "$@"; do
+    p="$(command -v "$t")" || continue
+    ln -sf "$p" "$dir/$t"
+  done
+  printf '%s\n' "$dir"
+}
+
+@test "deps passes on this machine and reports no required tool missing" {
+  run bash "$GATE_SH" deps
+  assert_success
+  case "$output" in *STATUS=OK*) : ;; *) return 1 ;; esac
+  case "$output" in *CHECK=deps*) : ;; *) return 1 ;; esac
+  case "$output" in *"REQUIRED_MISSING="$'\n'*) : ;; *) return 1 ;; esac
+}
+
+@test "deps fails and names the required tool that is missing" {
+  local p
+  p="$(_shim "$TMP/shim-nojq" bash git dirname python3)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  [ "$status" -eq 1 ]
+  case "$output" in *STATUS=FAIL*) : ;; *) return 1 ;; esac
+  case "$output" in *REQUIRED_MISSING=jq*) : ;; *) return 1 ;; esac
+  case "$output" in *REASON=missing-required*) : ;; *) return 1 ;; esac
+}
+
+# The whole reason deps is exempt from the script's jq precondition. Without
+# the exemption this run would print "[fail] jq missing" and exit before ever
+# reaching the scan — reporting one missing tool and hiding the rest.
+@test "deps answers on a machine without jq instead of hitting the jq guard" {
+  local p
+  p="$(_shim "$TMP/shim-guard" bash git dirname python3)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  case "$output" in *"[fail] jq missing"*) return 1 ;; esac
+  case "$output" in *CHECK=deps*) : ;; *) return 1 ;; esac
+}
+
+# …and the exemption is scoped to deps alone. Every other check reads state
+# through jq, so it must still refuse rather than measure with a broken tool.
+@test "a non-deps check still refuses when jq is missing" {
+  local p
+  p="$(_shim "$TMP/shim-measure" bash git dirname python3)"
+  run env PATH="$p" bash "$GATE_SH" measure
+  [ "$status" -eq 1 ]
+  case "$output" in *"jq missing"*) : ;; *) return 1 ;; esac
+}
+
+# Optional tooling absent is a documented degradation, not a stop — the README
+# says the bundle degrades visibly, and a gate that failed here would make that
+# sentence false.
+@test "deps passes when only optional tools are missing, and names them" {
+  local p
+  p="$(_shim "$TMP/shim-noopt" bash git dirname python3 jq)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  assert_success
+  case "$output" in *STATUS=OK*) : ;; *) return 1 ;; esac
+  case "$output" in *OPTIONAL_MISSING=*repomix*) : ;; *) return 1 ;; esac
+}
+
+# The block is what the user pastes into another terminal, so its markers are
+# part of the contract the phase doc tells the model to relay.
+@test "deps emits a delimited copy-paste block when something is missing" {
+  local p
+  p="$(_shim "$TMP/shim-block" bash git dirname python3)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  case "$output" in *"copy-paste into another terminal"*) : ;; *) return 1 ;; esac
+  case "$output" in *"deps: ----- end -----"*) : ;; *) return 1 ;; esac
+}
+
+# A tool with no install command this repo can vouch for is admitted, never
+# guessed at — the user is about to paste the block into a root shell.
+@test "deps admits the tools it knows no install command for" {
+  local p
+  p="$(_shim "$TMP/shim-unknown" bash git dirname python3 jq)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  case "$output" in *"no packaged install known here for:"*) : ;; *) return 1 ;; esac
+}
+
+@test "the phase-0 doc drives the wait-and-loop, not just the check" {
+  local doc="$INIT_DIR/phases/phase-0.md"
+  grep -q 'init_gate.sh" deps' "$doc"
+  grep -qi 'loop' "$doc"
+  grep -qi 'wait' "$doc"
+  # Installing without asking is the failure mode worth pinning: the doc must
+  # keep sudo off the table and put the decision to the user.
+  grep -q 'sudo' "$doc"
+}
+
+# ---------------------------------------------------------------------------
 # Phase 0 — preflight.
 # ---------------------------------------------------------------------------
+
+@test "preflight refuses when a required tool is missing, before the tree check" {
+  local p
+  p="$(_shim "$TMP/shim-pre" bash git dirname python3)"
+  run env PATH="$p" bash "$GATE_SH" preflight
+  [ "$status" -eq 1 ]
+  case "$output" in *REASON=missing-deps*) : ;; *) return 1 ;; esac
+}
 
 @test "preflight passes on a clean tree and reports the target" {
   run bash "$GATE_SH" preflight

@@ -143,6 +143,20 @@ name; nothing fails silently. `graphify` is not shipped as a skill — it needs 
 `uv`-installed binary, and a plugin that hard-fails on a missing external tool
 is a bad first impression.
 
+`/crewforge5:init` checks this list before it does anything else, and it is the
+one check that answers on a machine without `jq` — every other gate, and the
+flow driver itself, exits early there, so reaching them first would report one
+missing tool and hide the rest:
+
+```bash
+bash "$CREWFORGE5_ROOT/skills/init/scripts/init_gate.sh" deps
+```
+
+A missing required tool stops the run: init offers to install what needs no
+`sudo`, hands you a copy-paste block for anything else, and waits — re-checking
+and re-listing until every required tool is there. Optional tools missing are
+named and carried.
+
 ## State
 
 Nothing is written to your `CLAUDE.md`, ever. Runtime state lands in
@@ -187,7 +201,7 @@ it cannot edit anything, so applying stays your decision.
 
 ## Tests
 
-854 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
+863 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
 them on Ubuntu and macOS, plus four gates and a degradation job:
 
 **Check the exit code, not the tally.** `run-all.sh` runs shellcheck, then bats,
@@ -197,7 +211,7 @@ survived a full review here. `echo $?` is the signal.
 
 ```bash
 bash skills/team-sprint/scripts/tests/run-all.sh   # 656 — the toolchain
-bats scripts/tests/                                # 198 — flow driver, gates, docs surface
+bats scripts/tests/                                # 207 — flow driver, gates, docs surface
 bash scripts/budget_check.sh       # always-loaded context budget
 bash scripts/name_check.sh         # frontmatter name matches path
 bash scripts/validate_all.sh       # every skill and agent passes its own validator
