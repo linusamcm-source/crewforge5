@@ -58,6 +58,7 @@ Run these passes over the target environment (usually `$CLAUDE_CONFIG_DIR` and p
 4. **One home over repetition** - does each instruction have one authoritative home? Smell: the same guidance restated in several places, especially copies that have drifted apart.
 5. **Auto-memory over guidance-file memory** - are facts about the user or the work (preferences, dates, decisions) living as prose in guidance files instead of the memory system?
 6. **Rich references over simple specs** - are active builds steered by plain markdown descriptions where a higher-fidelity reference (code, a test suite, an HTML mockup, a rubric) exists or would be cheap to make?
+7. **Mechanical over prose** - is a check written as prose that a script could decide? Anything deterministic - counting, presence, a threshold, a parse - belongs in a script whose output is canonical, with the skill forbidding hand-derivation; prose carries only what needs judgement. Smell: a skill instructing the agent to count or tally something, the same threshold stated in words in two files, or a script that exists but whose numbers the skill re-derives anyway. A mechanical check nobody tests is the same defect one step later - a grader that silently counted zero read as a passing grade for as long as it existed.
 
 
 ### Pass 1 — Measure
@@ -80,6 +81,11 @@ Run these passes over the target environment (usually `$CLAUDE_CONFIG_DIR` and p
 - Trim descriptions to trigger phrases plus one line of purpose — descriptions are the always-loaded surface, the body is the on-demand surface.
 - Split any long SKILL.md into entry point + reference files.
 - Remove usage examples that an expressive interface makes redundant.
+- Convert deterministic checks to scripts. Where a script already exists, the skill must say
+  its output is canonical and forbid re-deriving the numbers by hand — otherwise the two
+  answers drift and the prose one wins by being closer to the reader.
+- Every mechanical check needs a test asserting it counts what it claims. An unexercised
+  script is prose with extra steps.
 
 ### Pass 4 — Tools, hooks, MCP
 - Prefer deferred tool loading over always-loaded schemas.

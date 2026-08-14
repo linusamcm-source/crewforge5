@@ -134,8 +134,11 @@ It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its 
 names. Never read its body inline — it forks so a whole validation run stays out of this
 window, and this rectifier loops up to five times.
 
-1. **Spawn the resolved `agent-validator`** with the target agent path. Let it run its complete
-   workflow and produce a new validation report in `./docs/agent_reports/`.
+1. **Spawn the resolved `agent-validator`** with the target agent path, and say **report-only
+   re-validation** in the prompt. That phrase is what stops the validator handing back to this
+   rectifier at its own Step 7 — without it, a second loop nests inside this one and each
+   round doubles. Let it run its complete workflow and produce a new validation report in
+   `./docs/agent_reports/`.
 
 2. **Read the new report's Overall Grade.**
 

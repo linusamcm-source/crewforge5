@@ -31,10 +31,16 @@ verbatim from SKILL.md.
 - Large code blocks (> 30 lines) that could be extracted to a skill reference (WARN)
 - Duplicate information — same instruction stated multiple ways (WARN)
 - Inline data tables or examples that could be in a referenced skill (WARN)
+- Guidance that already has an authoritative home in CLAUDE.md, a rules file, or a skill the
+  agent loads anyway (WARN) — copies drift apart from their source
 
 **Instruction quality (heuristic checks):**
 - Count heavy-handed directives (MUST, ALWAYS, NEVER, IMPORTANT in all-caps)
 - Flag if > 10 such directives (WARN — explaining "why" is more effective)
+- **Exempt directives guarding irreversible or costly actions** — credentials, force pushes,
+  deletes, production, spend. `validate_agent.sh` excludes them from the tally and reports
+  them as `directive_safety_exempt`. A hard rule there is doing real work; counting it would
+  pressure the rectifier into deleting the one line that prevents damage.
 - Check for explained rationale ("because", "this matters because", "the reason is")
 
 ## Step 4: Instruction Compliance Diagnosis
@@ -94,6 +100,11 @@ For each WARN or FAIL in the compliance matrix, write a specific fix:
 - Split overloaded agents into focused roles
 - Replace implicit assumptions with explicit statements
 - Realign drifted instructions with the role statement
+
+Every fix is also a token proposal. A fix that lengthens the agent must earn the context it
+costs on every spawn; a fix that shortens it must clear `${CREWFORGE5_ROOT}/scripts/retention_gate.sh` before it
+is applied. Never write a fix that pads the frontmatter `description` — that string is
+always-loaded rent charged against `${CREWFORGE5_ROOT}/scripts/budget_check.sh`.
 
 ## Step 5: Behavioral Simulation
 

@@ -1,7 +1,11 @@
 # Agent Validator — Report Template (Step 6)
 
 Load this file when writing the Step 6 report. Copy the template verbatim, filling the
-placeholders. Content relocated verbatim from SKILL.md.
+placeholders.
+
+The Overall Grade is whatever `grade.sh` printed — never a number you tallied yourself. Paste
+its output block and the full ledger into the report verbatim; the rectifier parses them, and
+if your prose summary and `grade.sh` disagree, `grade.sh` wins.
 
 ```markdown
 # Agent Validation Report: {agent-name}
@@ -21,12 +25,23 @@ placeholders. Content relocated verbatim from SKILL.md.
 | Behavioral Simulation | X | X | X | X |
 | **Total** | **X** | **X** | **X** | **X** |
 
-**Overall Grade:** {A/B/C/D/F}
-- A: All pass, 0-2 warnings — production-ready
-- B: All pass, 3-5 warnings — usable, minor improvements recommended
-- C: All pass, 6+ warnings — works but agent will be inconsistent
-- D: 1-2 failures — needs fixes before deployment
-- F: 3+ failures or critical failure — broken, do not deploy
+**Overall Grade:** {grade= value from grade.sh}
+
+```
+{verbatim grade.sh output: grade= fails= warns= skipped=}
+```
+
+<details><summary>Findings ledger</summary>
+
+{verbatim ledger contents}
+
+</details>
+
+The scale lives in one place only — the header of
+`${CREWFORGE5_ROOT}/skills/skill-validator/scripts/grade.sh`, which is the code that
+applies it. Do not restate it here. A prose copy of this scale drifted a full grade away
+from the executable one and survived, because a reader checks the nearest copy and the
+nearest copy was wrong.
 
 ## Structural Validation
 {checklist with PASS/WARN/FAIL per item}
@@ -40,7 +55,9 @@ placeholders. Content relocated verbatim from SKILL.md.
 |--------|-------|--------|
 | Agent file lines | X | PASS/WARN/FAIL |
 | Estimated tokens | ~X | PASS/WARN/FAIL |
-| Heavy directives | X | PASS/WARN |
+| Description (always-loaded) | X chars / ~X tok | PASS/WARN |
+| Heavy directives (non-safety) | X | PASS/WARN |
+| Safety-exempt directives | X | INFO — do not soften |
 | Role statement | Present/Missing | PASS/WARN |
 | Completion gate | Present/Missing | PASS/WARN |
 

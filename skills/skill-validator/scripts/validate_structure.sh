@@ -83,12 +83,19 @@ else
         found && /^[A-Za-z0-9_-]+:/ { exit }
         found { print }')
       WORD_COUNT=$(printf '%s\n' "$DESC" | wc -w | tr -d ' ')
+      # The bar is a ceiling, not a floor. A visible skill's description renders
+      # into the always-loaded catalogue every session whether or not the skill is
+      # ever invoked, and budget_check.sh charges this exact string against the
+      # release gate — so a rule that rewards padding fights the gate it ships
+      # beside. claude-config sets the house limit at ~200 chars; trigger phrases
+      # plus one line of purpose is the shape that fits.
+      DESC_CHARS=$(printf '%s' "$DESC" | wc -c | tr -d ' ')
       if [ "$WORD_COUNT" -lt 5 ]; then
         emit "$(result FAIL "description_field" "description is too short ($WORD_COUNT words)")"
-      elif [ "$WORD_COUNT" -lt 30 ]; then
-        emit "$(result WARN "description_length" "description is only $WORD_COUNT words (recommend > 30 for reliable triggering)")"
+      elif [ "$DESC_CHARS" -gt 200 ]; then
+        emit "$(result WARN "description_length" "description is $DESC_CHARS chars (~$((DESC_CHARS / 4)) tok always-loaded; house limit ~200 — trim to trigger phrases plus one line of purpose)")"
       else
-        emit "$(result PASS "description_length" "description is $WORD_COUNT words")"
+        emit "$(result PASS "description_length" "description is $DESC_CHARS chars (~$((DESC_CHARS / 4)) tok always-loaded)")"
       fi
     else
       emit "$(result FAIL "description_field" "description field missing from frontmatter")"

@@ -72,26 +72,35 @@ else
       # Grab description — may be multi-line (folded or literal block)
       DESC_BLOCK=$(echo "$FM" | sed -n '/^description:/,/^[a-z_]*:/{ /^description:/p; /^[a-z_]*:/!p; }' | head -30)
       WORD_COUNT=$(echo "$DESC_BLOCK" | wc -w | tr -d ' ')
+      # An agent description is always-loaded rent: it renders into the catalogue
+      # for every session whether or not the agent is ever spawned, and unlike a
+      # skill it has no `disable-model-invocation` escape. So the bar is a
+      # ceiling, not a floor — trigger phrases plus one line of purpose, at the
+      # ~200 char house limit claude-config sets. See budget_check.sh, which
+      # charges this same string against the release gate.
+      DESC_CHARS=$(printf '%s' "$DESC_BLOCK" | sed 's/^description:[[:space:]]*//' | wc -c | tr -d ' ')
       if [ "$WORD_COUNT" -lt 5 ]; then
         emit "$(result FAIL "description_field" "description is too short ($WORD_COUNT words)")"
-      elif [ "$WORD_COUNT" -lt 30 ]; then
-        emit "$(result WARN "description_length" "description is only $WORD_COUNT words (recommend > 30 for reliable triggering)")"
+      elif [ "$DESC_CHARS" -gt 200 ]; then
+        emit "$(result WARN "description_length" "description is $DESC_CHARS chars (~$((DESC_CHARS / 4)) tok always-loaded; house limit ~200 — trim to trigger phrases plus one line of purpose)")"
       else
-        emit "$(result PASS "description_length" "description is $WORD_COUNT words")"
+        emit "$(result PASS "description_length" "description is $DESC_CHARS chars (~$((DESC_CHARS / 4)) tok always-loaded)")"
       fi
 
-      # Check for trigger contexts
+      # Trigger phrases are the one part of a description that must never be
+      # trimmed away — they are how the agent gets found at all.
       if echo "$DESC_BLOCK" | grep -qiE '(use when|trigger|invoke|use this)'; then
         emit "$(result PASS "description_triggers" "description includes trigger context phrases")"
       else
         emit "$(result WARN "description_triggers" "description lacks trigger phrases (Use when..., Trigger on...)")"
       fi
 
-      # Check for examples in description
+      # `<example>` blocks are reported, never demanded. An expressive
+      # description carries the same semantics for a fraction of the rent, so an
+      # absent example block is not a defect — only a present one is worth
+      # pricing, because the reader is paying for it every session.
       if echo "$DESC_BLOCK" | grep -qE '<example>'; then
-        emit "$(result PASS "description_examples" "description includes usage examples")"
-      else
-        emit "$(result WARN "description_examples" "description lacks <example> blocks — examples improve triggering accuracy")"
+        emit "$(result INFO "description_examples" "description carries <example> blocks — confirm the triggering they buy is worth their always-loaded cost")"
       fi
     else
       emit "$(result FAIL "description_field" "description field missing from frontmatter")"
@@ -145,11 +154,25 @@ TOKEN_EST=$((WORD_COUNT * 4 / 3))
 emit "$(result INFO "token_estimate" "~$TOKEN_EST tokens ($WORD_COUNT words)")"
 
 # --- Heavy directive count ---
-DIRECTIVE_COUNT=$(grep -cEi '\b(MUST|ALWAYS|NEVER|IMPORTANT)\b' "$AGENT_FILE" 2>/dev/null || echo 0)
+# The count exists to catch rules written to compensate for a weaker model. It is
+# NOT a reason to soften a guard on something irreversible or expensive: a hard
+# directive around a push, a delete, a credential or a spend is doing real work,
+# and counting it here would pressure the rectifier into deleting it. Those lines
+# are excluded from the tally and reported separately.
+SAFETY_RE='secret|credential|token|password|api[ _-]?key|force|delete|destructiv|irreversib|rm -rf|git push|--hard|overwrit|production|billing|spend|cost|budget'
+DIRECTIVE_RE='\b(MUST|ALWAYS|NEVER|IMPORTANT)\b'
+# `grep -c` prints 0 AND exits 1 on no match, so `|| echo 0` would emit a second
+# zero and turn the arithmetic below into a syntax error. `|| true` keeps the count.
+DIRECTIVE_TOTAL=$(grep -cEi "$DIRECTIVE_RE" "$AGENT_FILE" 2>/dev/null || true)
+SAFETY_COUNT=$(grep -Ei "$DIRECTIVE_RE" "$AGENT_FILE" 2>/dev/null | grep -cEi "$SAFETY_RE" || true)
+DIRECTIVE_COUNT=$((DIRECTIVE_TOTAL - SAFETY_COUNT))
+if [ "$SAFETY_COUNT" -gt 0 ]; then
+  emit "$(result INFO "directive_safety_exempt" "$SAFETY_COUNT directives guard irreversible or costly actions — exempt from the tally, do not soften")"
+fi
 if [ "$DIRECTIVE_COUNT" -gt 10 ]; then
-  emit "$(result WARN "directive_count" "$DIRECTIVE_COUNT heavy directives (MUST/ALWAYS/NEVER/IMPORTANT) — explain reasoning instead")"
+  emit "$(result WARN "directive_count" "$DIRECTIVE_COUNT non-safety heavy directives (MUST/ALWAYS/NEVER/IMPORTANT) — explain reasoning instead")"
 else
-  emit "$(result PASS "directive_count" "$DIRECTIVE_COUNT heavy directives")"
+  emit "$(result PASS "directive_count" "$DIRECTIVE_COUNT non-safety heavy directives")"
 fi
 
 # --- Role/identity statement ---

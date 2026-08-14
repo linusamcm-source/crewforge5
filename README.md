@@ -211,7 +211,7 @@ survived a full review here. `echo $?` is the signal.
 
 ```bash
 bash skills/team-sprint/scripts/tests/run-all.sh   # 656 — the toolchain
-bats scripts/tests/                                # 210 — flow driver, gates, docs surface
+bats scripts/tests/                                # 227 — flow driver, gates, docs surface, validator grading
 bash scripts/budget_check.sh       # always-loaded context budget
 bash scripts/name_check.sh         # frontmatter name matches path
 bash scripts/validate_all.sh       # every skill and agent passes its own validator
