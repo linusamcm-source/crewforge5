@@ -375,7 +375,28 @@ _shim() {
   run env PATH="$p" bash "$GATE_SH" deps
   case "$output" in *"npm install -g repomix"*) : ;; *) return 1 ;; esac
   case "$output" in *"uv tool install graphifyy"*) : ;; *) return 1 ;; esac
+  case "$output" in *"codegraph/main/install.sh | sh"*) : ;; *) return 1 ;; esac
   case "$output" in *"npm install -g @colbymchenry/codegraph"*) : ;; *) return 1 ;; esac
+}
+
+# A piped-remote-script install is the one line the model must never run for
+# the user: it needs no sudo, so the "install what needs no sudo" rule would
+# otherwise wave it through. The doc has to say so, and an alternative has to
+# be offered rather than the line simply being withheld.
+@test "the phase-0 doc refuses to run a piped remote installer on the user's behalf" {
+  grep -q 'Never run a line that pipes a remote script into a shell' \
+    "$INIT_DIR/phases/phase-0.md"
+}
+
+@test "a piped installer is offered with a non-piped alternative beside it" {
+  local p
+  p="$(_shim "$TMP/shim-piped" bash git dirname python3 jq)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  # The alternative is a comment line, so the block stays safe to paste whole.
+  case "$output" in
+    *"install.sh | sh"*"# or, without piping a remote script to a shell:"*) : ;;
+    *) return 1 ;;
+  esac
 }
 
 @test "the phase-0 doc drives the wait-and-loop, not just the check" {

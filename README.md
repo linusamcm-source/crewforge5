@@ -201,7 +201,7 @@ it cannot edit anything, so applying stays your decision.
 
 ## Tests
 
-864 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
+866 bats cases cover the shell toolchain and the plugin's own scripts. CI runs
 them on Ubuntu and macOS, plus four gates and a degradation job:
 
 **Check the exit code, not the tally.** `run-all.sh` runs shellcheck, then bats,
@@ -211,7 +211,7 @@ survived a full review here. `echo $?` is the signal.
 
 ```bash
 bash skills/team-sprint/scripts/tests/run-all.sh   # 656 — the toolchain
-bats scripts/tests/                                # 208 — flow driver, gates, docs surface
+bats scripts/tests/                                # 210 — flow driver, gates, docs surface
 bash scripts/budget_check.sh       # always-loaded context budget
 bash scripts/name_check.sh         # frontmatter name matches path
 bash scripts/validate_all.sh       # every skill and agent passes its own validator

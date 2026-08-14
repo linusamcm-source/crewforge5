@@ -38,6 +38,13 @@ anything is measured or rewritten.
      the block from the gate's stderr verbatim, in a fenced `bash` block, and
      tell the user to run it in another terminal.
 
+   **Never run a line that pipes a remote script into a shell**, whatever the
+   user has already agreed to in this run. `curl … | sh` fetches code nobody
+   in this conversation has read, from a URL that can answer differently the
+   next time it is asked, and it needs no `sudo` — so the rule above would
+   otherwise wave it through. Hand those lines over; the gate marks the
+   alternative on the following comment line where one exists.
+
    **Then wait.** Do not advance, do not start step 1, and do not run any
    later gate. When the user says they are done, run `init_gate.sh deps` again
    and compare the new `REQUIRED_MISSING=` against the old one. **Loop:**
