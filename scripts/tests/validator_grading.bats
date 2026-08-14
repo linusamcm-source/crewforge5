@@ -220,3 +220,91 @@ ALWAYS name the variable in camelCase — rule $i."
   printf '%s\n' "$output" | grep -q '"status":"PASS","check":"directive_count"'
   ! printf '%s\n' "$output" | grep -qi 'syntax error\|unbound variable'
 }
+
+# --- frontmatter must PARSE, not merely have delimiters ---------------------
+#
+# `skills/init/SKILL.md` shipped with an unquoted description containing `: `.
+# The block did not parse, so the plugin's main entry point ran with no name, no
+# model and no description — and `validate_all.sh` called it structurally clean,
+# because every other check asks whether a field appears in the TEXT and a
+# broken block has no fields to find. `claude plugin tag` caught it; nothing in
+# this repo did. The reserved-character set was measured against PyYAML rather
+# than reasoned out, so these cases pin the measurement, not an opinion.
+
+fmcheck() { bash "$ROOT/scripts/frontmatter_check.sh" "$1"; }
+
+# mkfm <file> <frontmatter-line>
+mkfm() {
+  printf -- '---\nname: t\n%s\n---\n\nBody.\n' "$2" > "$1"
+}
+
+@test "frontmatter_check: the exact bug that shipped — unquoted value with a colon" {
+  mkfm "$TMP/f.md" 'description: Gated config hygiene: measure, slim, validate'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 1 ]
+  [[ "$output" == FAIL:* ]]
+}
+
+@test "frontmatter_check: quoting the same value makes it legal" {
+  mkfm "$TMP/f.md" 'description: "Gated config hygiene: measure, slim, validate"'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 0 ]
+  [ -z "$output" ]
+}
+
+@test "frontmatter_check: a URL's colon is not a mapping" {
+  mkfm "$TMP/f.md" 'description: see https://example.com/x for detail'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 0 ]
+}
+
+@test "frontmatter_check: closed flow collections are legal, unclosed ones are not" {
+  mkfm "$TMP/f.md" 'tools: [Read, Write]'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 0 ]
+  mkfm "$TMP/f.md" 'tools: [Read, Write'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 1 ]
+}
+
+@test "frontmatter_check: the quoted wildcard this repo's house rules require" {
+  mkfm "$TMP/f.md" 'tools: "*"'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 0 ]
+  mkfm "$TMP/f.md" 'tools: *all'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 1 ]
+}
+
+@test "frontmatter_check: a truncating comment warns without failing" {
+  mkfm "$TMP/f.md" 'description: real text # this half is silently lost'
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 0 ]
+  [[ "$output" == WARN:* ]]
+}
+
+@test "frontmatter_check: block scalars carry colons legally" {
+  printf -- '---\nname: t\ndescription: |\n  free: text with colons\n  more: here\ntools: Read\n---\n\nBody.\n' > "$TMP/f.md"
+  run fmcheck "$TMP/f.md"
+  [ "$status" -eq 0 ]
+}
+
+@test "frontmatter_check: every shipped manifest parses" {
+  for f in "$ROOT"/skills/*/SKILL.md "$ROOT"/agents/*.md; do
+    run fmcheck "$f"
+    [ "$status" -eq 0 ] || { echo "$f: $output"; return 1; }
+  done
+}
+
+@test "both validators report the parse failure, and their JSON stays valid" {
+  mkfm "$TMP/broken.md" 'description: Reviews things: badly'
+  run bash "$AGENT_V" "$TMP/broken.md"
+  printf '%s\n' "$output" | grep -q '"status":"FAIL","check":"frontmatter_parses"'
+  printf '%s\n' "$output" | python3 -c 'import sys,json; json.load(sys.stdin)'
+
+  mkdir -p "$TMP/sk3"
+  mkfm "$TMP/sk3/SKILL.md" 'description: Reviews things: badly'
+  run bash "$SKILL_V" "$TMP/sk3"
+  printf '%s\n' "$output" | grep -q '"status":"FAIL","check":"frontmatter_parses"'
+  printf '%s\n' "$output" | python3 -c 'import sys,json; json.load(sys.stdin)'
+}

@@ -105,7 +105,7 @@ fixture_clean_skill() {
   cat > "$INIT_TARGET/skills/fixture-clean/SKILL.md" <<'EOF'
 ---
 name: fixture-clean
-description: A deliberately unremarkable fixture skill that exists only so the init validate and rectify gates have one structurally clean component to walk past on their way to the agent that is actually broken in this fixture config root.
+description: An unremarkable fixture skill the validate and rectify gates walk past. Use when a fixture run needs one clean component.
 ---
 
 # Fixture clean skill
@@ -144,7 +144,7 @@ fixture_fixed_agent() {
   cat > "$INIT_TARGET/agents/fixture-reviewer.md" <<'EOF'
 ---
 name: fixture-reviewer
-description: Fixture reviewer agent for the init phase-4 and phase-5 gate tests. Use when the init flow needs one structurally clean component to validate against. <example>Context: a fixture gate run. user: "check the fixture" assistant: "I inspect the fixture config root and report what I found."</example>
+description: Fixture reviewer for the init phase-4 and phase-5 gate tests. Use when the init flow needs one clean agent to validate against.
 tools: Grep
 color: blue
 ---

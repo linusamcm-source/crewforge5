@@ -6,11 +6,25 @@
 set -euo pipefail
 
 AGENT_FILE="${1:?Usage: validate_agent.sh <agent-file.md>}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FM_CHECK="$HERE/../../../scripts/frontmatter_check.sh"
+
+# Escape backslashes, quotes, and control whitespace so details can't break the
+# JSON. The parse-failure details quote the offending value, which is exactly the
+# kind of string that contains a quote character.
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/ }"
+  s="${s//$'\t'/ }"
+  printf '%s' "$s"
+}
 
 # Helper to emit a check result
 result() {
   local status="$1" check="$2" detail="$3"
-  printf '{"status":"%s","check":"%s","detail":"%s"}\n' "$status" "$check" "$detail"
+  printf '{"status":"%s","check":"%s","detail":"%s"}\n' "$status" "$check" "$(json_escape "$detail")"
 }
 
 echo "["
@@ -51,6 +65,22 @@ else
     exit 0
   else
     emit "$(result PASS "frontmatter_present" "Frontmatter delimiters found (lines 1-$CLOSE)")"
+
+    # Delimiters present is not the same claim as parses. Every other check here
+    # asks whether a field is in the text; a block that does not parse has no
+    # fields at all, so those checks read a broken manifest as a clean one. This
+    # shipped: the plugin's own entry point ran with empty metadata and every
+    # gate called it clean.
+    if [ -f "$FM_CHECK" ]; then
+      FM_OUT="$(bash "$FM_CHECK" "$AGENT_FILE" 2>&1)" && FM_RC=0 || FM_RC=$?
+      case "${FM_OUT:-}" in
+        FAIL:*) emit "$(result FAIL "frontmatter_parses" "${FM_OUT#FAIL: } — at runtime this agent loads with NO metadata")" ;;
+        WARN:*) emit "$(result WARN "frontmatter_parses" "${FM_OUT#WARN: }")" ;;
+        *)      [ "$FM_RC" -eq 0 ] && emit "$(result PASS "frontmatter_parses" "frontmatter parses as a flat mapping")" ;;
+      esac
+    else
+      emit "$(result WARN "frontmatter_parses" "frontmatter_check.sh not found at $FM_CHECK — parse validation skipped")"
+    fi
 
     # Extract frontmatter
     FM=$(sed -n "2,$((CLOSE-1))p" "$AGENT_FILE")
