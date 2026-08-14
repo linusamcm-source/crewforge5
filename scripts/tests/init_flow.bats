@@ -355,12 +355,27 @@ _shim() {
 }
 
 # A tool with no install command this repo can vouch for is admitted, never
-# guessed at — the user is about to paste the block into a root shell.
+# guessed at — the user is about to paste the block into a root shell. The shim
+# carries no package manager, so MANAGER=none and the tools that only have a
+# manager-specific line land in the unknown list on every platform.
 @test "deps admits the tools it knows no install command for" {
   local p
   p="$(_shim "$TMP/shim-unknown" bash git dirname python3 jq)"
   run env PATH="$p" bash "$GATE_SH" deps
   case "$output" in *"no packaged install known here for:"*) : ;; *) return 1 ;; esac
+}
+
+# The three manager-independent tools carry their own install line whatever the
+# platform, so MANAGER=none must not empty the block out entirely. codegraph's
+# line was verified against the live registry (@colbymchenry/codegraph, MIT),
+# not inferred from the name.
+@test "deps emits manager-independent install lines even with no package manager" {
+  local p
+  p="$(_shim "$TMP/shim-nomgr" bash git dirname python3 jq)"
+  run env PATH="$p" bash "$GATE_SH" deps
+  case "$output" in *"npm install -g repomix"*) : ;; *) return 1 ;; esac
+  case "$output" in *"uv tool install graphifyy"*) : ;; *) return 1 ;; esac
+  case "$output" in *"npm install -g @colbymchenry/codegraph"*) : ;; *) return 1 ;; esac
 }
 
 @test "the phase-0 doc drives the wait-and-loop, not just the check" {

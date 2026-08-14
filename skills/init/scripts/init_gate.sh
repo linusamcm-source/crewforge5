@@ -95,7 +95,7 @@ _install_cmd() { # $1 tool  $2 manager
   case "$1" in
     repomix)   printf 'npm install -g repomix\n'; return 0 ;;
     graphify)  printf 'uv tool install graphifyy   # or: python3 -m pip install graphifyy\n'; return 0 ;;
-    codegraph) return 0 ;;
+    codegraph) printf 'npm install -g @colbymchenry/codegraph\n'; return 0 ;;
   esac
   case "$2" in
     brew)
