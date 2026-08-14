@@ -1,12 +1,12 @@
 ---
 name: init
 model: opus
-description: Gated config hygiene: measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md. Use on /crewforge:init, "clean up my Claude config", "audit context load", "rightsize the environment"
+description: Gated config hygiene: measure, slim, validate, rectify and report a Claude setup's skills, agents and CLAUDE.md. Use on /crewforge5:init, "clean up my Claude config", "audit context load", "rightsize the environment"
 ---
 
-# crewforge:init — config hygiene as a gated state machine
+# crewforge5:init — config hygiene as a gated state machine
 
-Invoke as **`/crewforge:init`**. A bare slash-init reaches Claude Code's own
+Invoke as **`/crewforge5:init`**. A bare slash-init reaches Claude Code's own
 CLAUDE.md initializer, which is a different tool doing a different job; the
 namespaced form is the only one that reaches this skill.
 
@@ -20,7 +20,7 @@ with a verdict rather than an impression.
 State and sequencing come from the shared flow driver, not from this file:
 
 ```bash
-FLOW="${CREWFORGE_ROOT}/scripts/flow"
+FLOW="${CREWFORGE5_ROOT}/scripts/flow"
 "$FLOW/flow_next.sh"  init            # STATUS=NEXT PHASE=<id> DOC=<phase doc>
 "$FLOW/flow_gate.sh"  init <phase>    # runs that phase's gate, records the verdict
 "$FLOW/flow_state.sh" init get <key>  # read anything a phase recorded
@@ -37,7 +37,7 @@ Two locations, both overridable:
 | Variable | Meaning | Default |
 | --- | --- | --- |
 | `INIT_TARGET` | config root under audit (holds `skills/`, `agents/`) | repo root |
-| `INIT_STATE` | where baseline, proposals and report live | `.crewforge/init/` |
+| `INIT_STATE` | where baseline, proposals and report live | `.crewforge5/init/` |
 
 ## Phases
 
@@ -62,7 +62,7 @@ also puts them out of reach of the `Skill` tool. Resolve a name to a path
 instead, and ask how to load it:
 
 ```bash
-RESOLVE="${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh"
+RESOLVE="${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
 "$RESOLVE" --load-mode <name>   # MODE=inline | MODE=agent AGENT=<type>
 "$RESOLVE" <name>               # absolute path to its SKILL.md
 ```
@@ -102,7 +102,7 @@ disjoint, so nothing serialises that does not have to.
   component, record that in the report and leave it. A suppressed check is a
   lie the next run inherits.
 
-The whole flow is covered by `${CREWFORGE_ROOT}/scripts/tests/init_flow.bats`,
+The whole flow is covered by `${CREWFORGE5_ROOT}/scripts/tests/init_flow.bats`,
 which walks `phases.json`, exercises every `init_gate.sh` check against fixture
 config roots, and proves a rejected phase-2 proposal leaves the flow where it
 was.

@@ -1,6 +1,6 @@
 # Phase 6 — Draft
 
-**Goal of the phase:** write the plan file `crewforge:execute` will run.
+**Goal of the phase:** write the plan file `crewforge5:execute` will run.
 
 ## Steps
 
@@ -8,7 +8,7 @@
    acceptance-criteria discipline:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" team-sprint-planner
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" team-sprint-planner
    ```
 
 2. Choose the filename before writing a line of it. It must carry a story or
@@ -20,7 +20,7 @@
 4. Record where it landed — the phase 7 and phase 8 gates both read this key:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh" plan set \
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh" plan set \
      plan_path docs/plans/<story-id>-<slug>.md
    ```
 

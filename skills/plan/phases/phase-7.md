@@ -1,7 +1,7 @@
 # Phase 7 — Review
 
 **Goal of the phase:** drive the plan to adversarial-clean, then stamp it. The
-stamp is what `crewforge:execute` checks before it will run anything, so it is a
+stamp is what `crewforge5:execute` checks before it will run anything, so it is a
 claim about work done, not a formality.
 
 ## Steps
@@ -9,7 +9,7 @@ claim about work done, not a formality.
 1. Load the reviewer's body:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" adversarial-review
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" adversarial-review
    ```
 
 2. Loop: review → annotate each finding into the plan as a
@@ -20,7 +20,7 @@ claim about work done, not a formality.
 3. When a round produces no new findings, stamp the plan on its own line:
 
    ```markdown
-   <!-- adversarial-review: status=clean rounds=<N> date=<YYYY-MM-DD> reviewer=crewforge:plan -->
+   <!-- adversarial-review: status=clean rounds=<N> date=<YYYY-MM-DD> reviewer=crewforge5:plan -->
    ```
 
    `status=user-override` is the honest alternative when the user chooses to

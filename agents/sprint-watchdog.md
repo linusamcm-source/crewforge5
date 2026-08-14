@@ -100,7 +100,7 @@ cat .claude/scripts/sprint-watchdog/.sprint-active.json
 ```
 
 The `PostToolUse(TaskUpdate)` guard
-(`${CREWFORGE_ROOT}/hooks/sprint-watchdog-guard.sh`, registered in
+(`${CREWFORGE5_ROOT}/hooks/sprint-watchdog-guard.sh`, registered in
 `settings.json`) records every violation here under `violations[]`.
 Phase 0 step 8a arms it by creating this file; Phase 7 disarms it.
 
@@ -138,12 +138,12 @@ TaskList({ status: "completed" })
 **Run the predicates — do not re-derive them.** The same code the
 guard runs is callable directly, so your verdict and the hook's can
 never disagree. Role vocabularies and test-file patterns come from
-`${CREWFORGE_ROOT}/skills/team-sprint/data/vocab.json`; never restate them.
+`${CREWFORGE5_ROOT}/skills/team-sprint/data/vocab.json`; never restate them.
 
 ```bash
 # per completed task, from the repo root
 printf '%s' "$task_json" \
-  | ${CREWFORGE_ROOT}/hooks/sprint-watchdog-guard.sh --verify-task "$PWD"
+  | ${CREWFORGE5_ROOT}/hooks/sprint-watchdog-guard.sh --verify-task "$PWD"
 # -> {"clean":true}  |  {"clean":false,"kind":"...","detail":"..."}
 ```
 
@@ -259,7 +259,7 @@ violation report.
 reach it. Resolve it instead:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
 ```
 
 That answers `MODE=agent` — spawn it through the `Agent` tool with the type

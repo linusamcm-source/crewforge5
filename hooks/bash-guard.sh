@@ -15,10 +15,10 @@
 # a wedged shell is not.
 #
 # OFF BY DEFAULT. Denying `git add -A` on a stranger's machine, unannounced, is
-# a bad first impression for a plugin. Opt in with CREWFORGE_HOOKS=1.
+# a bad first impression for a plugin. Opt in with CREWFORGE5_HOOKS=1.
 set -u
 
-[ "${CREWFORGE_HOOKS:-0}" = "1" ] || exit 0
+[ "${CREWFORGE5_HOOKS:-0}" = "1" ] || exit 0
 
 payload="$(cat 2>/dev/null)" || exit 0
 [ -n "$payload" ] || exit 0
@@ -50,13 +50,13 @@ bare="$(printf '%s' "$cmd" | sed -e "s/'[^']*'/''/g" -e 's/"[^"]*"/""/g')"
 # 1. Wholesale staging. `git add .gitignore` and `git add -Ax` must NOT match,
 #    so `.` and `-A` are anchored to a word end.
 if printf '%s' "$bare" | grep -qE '(^|[;&|]|&&|\|\|)[[:space:]]*git[[:space:]]+add[[:space:]]+([^;&|]*[[:space:]])?(-A|--all|\.)([[:space:]]|$)'; then
-  deny 'CrewForge git-hygiene rule: stage explicit paths — `git add <file>`, never `git add -A` / `git add .`. Name the files this change touched. If you genuinely want everything, the user has to ask for it.'
+  deny 'CrewForge5 git-hygiene rule: stage explicit paths — `git add <file>`, never `git add -A` / `git add .`. Name the files this change touched. If you genuinely want everything, the user has to ask for it.'
 fi
 
 # 2. Unscoped find. Scoped roots (., ./x, "$REPO", relative paths) are fine;
 #    only / and the home directory are refused.
 if printf '%s' "$bare" | grep -qE '(^|[;&|]|&&|\|\|)[[:space:]]*(sudo[[:space:]]+)?find[[:space:]]+(/|~|\$HOME)([[:space:]]|$)'; then
-  deny 'CrewForge git-hygiene rule: never run `find` from / or ~ — scope it to the project tree. Use the repo root, or Glob, which is faster and already scoped.'
+  deny 'CrewForge5 git-hygiene rule: never run `find` from / or ~ — scope it to the project tree. Use the repo root, or Glob, which is faster and already scoped.'
 fi
 
 exit 0

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase_gate.sh — the mechanical gate behind one `crewforge:execute` phase.
+# phase_gate.sh — the mechanical gate behind one `crewforge5:execute` phase.
 #
 # Usage:
 #   phase_gate.sh <phase>
@@ -28,7 +28,7 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${CREWFORGE_ROOT:-$(cd "$HERE/../../.." && pwd)}"
+ROOT="${CREWFORGE5_ROOT:-$(cd "$HERE/../../.." && pwd)}"
 RESOLVE="$ROOT/scripts/flow/subskill_resolve.sh"
 FLOW_STATE="$ROOT/scripts/flow/flow_state.sh"
 

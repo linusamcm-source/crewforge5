@@ -8,7 +8,7 @@ Three instruments, layered — same convention as `tech-debt-audit`:
    It is hidden from the catalogue, so the `Skill` tool cannot reach it — resolve it:
 
    ```bash
-   bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+   bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
    ```
 
    It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
@@ -54,7 +54,7 @@ Three instruments, layered — same convention as `tech-debt-audit`:
 bullets above. Ensure it's installed for this project and build the graph once, then query it:
 
 ```bash
-GE=${CREWFORGE_ROOT}/skills/team-sprint/scripts/graphify_ensure.sh
+GE=${CREWFORGE5_ROOT}/skills/team-sprint/scripts/graphify_ensure.sh
 if [ -x "$GE" ]; then bash "$GE" --ensure; bash "$GE" --graph-status; fi
 ```
 
@@ -64,7 +64,7 @@ and names the provider and freshness behind every answer, so a provider that can
 language degrades visibly instead of returning an empty "no callers" that reads as safe:
 
 ```bash
-RS=${CREWFORGE_ROOT}/skills/team-sprint/scripts/recon.sh
+RS=${CREWFORGE5_ROOT}/skills/team-sprint/scripts/recon.sh
 if [ -x "$RS" ]; then bash "$RS" --probe; bash "$RS" callers "<symbol>"; fi
 ```
 

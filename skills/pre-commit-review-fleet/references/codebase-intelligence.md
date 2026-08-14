@@ -16,7 +16,7 @@ question, or memory for a current-code question, is how reviews go wrong:
    the `Skill` tool, which cannot see a hidden skill:
 
    ```bash
-   bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+   bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
    ```
 
    It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its

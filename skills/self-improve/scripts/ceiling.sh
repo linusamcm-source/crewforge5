@@ -31,7 +31,7 @@ ROOT="${CLAUDE_CONFIG_DIR:-$(cd "$HERE/../../.." && pwd)}"
 # Recorded budgets are runtime state, not shipped content: they are one tree's
 # byte sizes, and a plugin update replaces the install directory. They live with
 # the ledger, beside it, wherever that is.
-CEILINGS="${CLAUDE_CONFIG_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge}/ceilings.json"
+CEILINGS="${CLAUDE_CONFIG_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge5}/ceilings.json"
 MODE="${1:-report}"
 shift || true
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# flow_state.sh — locked read-modify-write over <repo>/.crewforge/<flow>/state.json.
+# flow_state.sh — locked read-modify-write over <repo>/.crewforge5/<flow>/state.json.
 #
 # Usage:
 #   flow_state.sh <flow> path                  absolute path to state.json
@@ -50,7 +50,7 @@ usage() {
 
 # repo_root — the MAIN repo root, absolute and symlink-resolved. Derived from
 # --git-common-dir rather than --show-toplevel so a call from a worktree CWD
-# still lands on the shared repo, instead of minting a second .crewforge tree
+# still lands on the shared repo, instead of minting a second .crewforge5 tree
 # per worktree (the dual-artifact bug team-sprint fought four times).
 repo_root() {
   local common
@@ -60,7 +60,7 @@ repo_root() {
 }
 
 state_path() {
-  printf '%s/.crewforge/%s/state.json\n' "$(repo_root)" "$1"
+  printf '%s/.crewforge5/%s/state.json\n' "$(repo_root)" "$1"
 }
 
 # manifest_path — <flow>/phases.json, found beside the SKILL.md that the Story 1

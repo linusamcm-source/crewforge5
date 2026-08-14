@@ -11,13 +11,13 @@ chosen it.
 2. Load the `adhd` skill body for the framing mechanic:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" adhd
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" adhd
    ```
 
    It reports `MODE=inline` under `--load-mode`, so read it here.
 3. Run its parallel frames over **each** open decision — one frame set per
    decision, not one set for the whole goal.
-4. Write the result to `.crewforge/plan/frames.md`, one section per decision:
+4. Write the result to `.crewforge5/plan/frames.md`, one section per decision:
 
    ```markdown
    ## D1 — <decision, phrased as a question>
@@ -33,5 +33,5 @@ a settled question is theatre.
 
 ## Gate
 
-`test -s .crewforge/plan/frames.md` — the frames file exists and is non-empty.
+`test -s .crewforge5/plan/frames.md` — the frames file exists and is non-empty.
 Every open decision listed in step 1 has a section in it before you run the gate.

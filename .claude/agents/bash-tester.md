@@ -68,7 +68,7 @@ measures target projects a sprint runs against, not this codebase.
   statement; the enforcing copy is jq inside `crew_check.sh`. Change one, change
   the other.
 - No machine-specific paths in `skills/`, `agents/`, `hooks/`, `rules/` — CI
-  greps for `~/.claude` and `/Users/` and fails. Use `${CREWFORGE_ROOT}`.
+  greps for `~/.claude` and `/Users/` and fails. Use `${CREWFORGE5_ROOT}`.
 - Always-loaded context is a release gate; headroom is 59 tokens.
 - bats tests source `tests/lib/bats-fallback.sh` so they also run under plain
   `bash <file>`.

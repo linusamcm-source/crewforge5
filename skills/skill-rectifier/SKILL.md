@@ -95,7 +95,7 @@ After applying all fixes:
 
 1. **Run the structural validation script** to confirm structural issues are resolved:
    ```bash
-   bash ${CREWFORGE_ROOT}/skills/skill-validator/scripts/validate_structure.sh <skill-path>
+   bash ${CREWFORGE5_ROOT}/skills/skill-validator/scripts/validate_structure.sh <skill-path>
    ```
 
 2. **Check scripts still work** — if you modified any scripts, verify syntax:
@@ -134,7 +134,7 @@ final round that confirms grade A must run every phase the original validation r
 Resolve it:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-validator
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-validator
 ```
 
 It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its

@@ -286,7 +286,7 @@ _three_layers_hits() {
 
 @test "AC7 the recon.sh block is executable-guarded and the absent case has a stated fallback" {
   # Same guard shape as the graphify block at recon-instruments.md:42-43.
-  grep -qF 'RS=${CREWFORGE_ROOT}/skills/team-sprint/scripts/recon.sh' "$INSTR" \
+  grep -qF 'RS=${CREWFORGE5_ROOT}/skills/team-sprint/scripts/recon.sh' "$INSTR" \
     || { echo "recon-instruments.md has no RS= assignment for the router"; return 1; }
   grep -qF -- '-x "$RS"' "$INSTR" \
     || { echo "the recon.sh block is not guarded by [ -x \"\$RS\" ]"; return 1; }

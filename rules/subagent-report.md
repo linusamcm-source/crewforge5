@@ -34,7 +34,7 @@ without waiting to be prompted; never leave findings as inline prose instead.
 - Quote the verifying evidence inline: the exact command and its literal output, truncated
   if huge but never paraphrased.
 - Negative claims ("X doesn't exist") are the easiest thing to get wrong — run
-  `${CREWFORGE_ROOT}/skills/adversarial-review/scripts/verify-negative.sh`, which does the exact-name,
+  `${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/verify-negative.sh`, which does the exact-name,
   case-insensitive and filename passes and requires all three to return zero.
 - Line-number citations require a Read of the cited range, not just a Grep hit.
 - Snapshots are recon; the live tree is evidence. Freshness-check any derived artifact

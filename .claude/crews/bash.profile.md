@@ -1,4 +1,4 @@
-# bash stack profile — crewforge
+# bash stack profile — crewforge5
 
 Verified 2026-08-11 against the live tree at commit `1fa2245`.
 
@@ -111,7 +111,7 @@ Non-obvious only — anything you would learn by reading two scripts is omitted.
   must change the other.
 - **No machine-specific paths** in `skills/`, `agents/`, `hooks/`, `rules/`. CI
   greps for `~/.claude` and `/Users/` and fails the build. Use
-  `${CREWFORGE_ROOT}`.
+  `${CREWFORGE5_ROOT}`.
 - **Always-loaded context is a release gate.** Adding an unhidden skill without
   paying for it fails `budget_check.sh`. Headroom is currently 59 tokens.
 - **bats tests carry a fallback.** They source

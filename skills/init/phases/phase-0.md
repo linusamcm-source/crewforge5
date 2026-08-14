@@ -14,7 +14,7 @@ rewritten.
    proposes edits against it. Load it inline:
 
    ```bash
-   RESOLVE="${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh"
+   RESOLVE="${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
    "$RESOLVE" --load-mode claude-config     # MODE=inline
    "$RESOLVE" claude-config                 # path to read
    ```

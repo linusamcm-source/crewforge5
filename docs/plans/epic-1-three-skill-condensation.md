@@ -1,10 +1,10 @@
-# Epic 1 — Condense CrewForge to three mechanically-driven skills
+# Epic 1 — Condense CrewForge5 to three mechanically-driven skills
 
 <!-- version: v3 -->
 
 ## Goal
 
-Reduce CrewForge's per-turn context cost from **14 listed skills to 3** (`init`, `plan`,
+Reduce CrewForge5's per-turn context cost from **14 listed skills to 3** (`init`, `plan`,
 `execute`) without losing a single capability, and replace prose orchestration with a
 shared state-machine driver plus per-phase gate scripts.
 
@@ -84,7 +84,7 @@ epic hides — `crew-factory` (3 sites), `sprint-watchdog` (2), `architect-revie
 
 **Naming — `init` collides with a built-in.** Claude Code ships a listed `init` skill
 ("Initialize a new CLAUDE.md file with codebase documentation"). Plugin skills are
-namespaced, so this bundle's entry point is `/crewforge:init` and the two coexist, but a
+namespaced, so this bundle's entry point is `/crewforge5:init` and the two coexist, but a
 bare `/init` will never reach it. `plan` and `execute` have no built-in counterpart in
 the current catalogue. Story 3 and Story 8 must both use the namespaced form in every
 trigger phrase and doc line; anything that tells a user to type `/init` is wrong.
@@ -106,9 +106,9 @@ trigger phrase and doc line; anything that tells a user to type `/init` is wrong
 
 | Entry skill | Absorbs |
 | --- | --- |
-| `crewforge:init` | context-hygiene, token-slim, skill-validator, skill-rectifier, agent-validator, agent-rectifier, self-improve, claude-config |
-| `crewforge:plan` | grill-me, adhd, master_plan, tech-debt-audit, team-sprint-planner, team-feature, adversarial-review, use-repo-code |
-| `crewforge:execute` | team-sprint (and its sub-fleet: sprint-watchdog, pre-commit-review-fleet, code-reviewer, adversarial-review, use-repo-code, playwright-cli), drawio, self-improve |
+| `crewforge5:init` | context-hygiene, token-slim, skill-validator, skill-rectifier, agent-validator, agent-rectifier, self-improve, claude-config |
+| `crewforge5:plan` | grill-me, adhd, master_plan, tech-debt-audit, team-sprint-planner, team-feature, adversarial-review, use-repo-code |
+| `crewforge5:execute` | team-sprint (and its sub-fleet: sprint-watchdog, pre-commit-review-fleet, code-reviewer, adversarial-review, use-repo-code, playwright-cli), drawio, self-improve |
 | Not wired (hidden, slash-only) | ac-validate, plugin-forge |
 
 Agents are unchanged in role: `crew-factory` and `stack-surveyor` stay part of `execute`
@@ -148,7 +148,7 @@ stays slash-only. Nothing is deleted.
 `scripts/flow/subskill_resolve.sh` turns a skill name into an absolute `SKILL.md` path,
 so a hidden skill stays reachable without the `Skill` tool.
 
-Search order, first hit wins: `$CREWFORGE_ROOT/skills/<name>/SKILL.md` →
+Search order, first hit wins: `$CREWFORGE5_ROOT/skills/<name>/SKILL.md` →
 `<repo-root>/.claude/skills/<name>/SKILL.md` → `$HOME/.claude/skills/<name>/SKILL.md`.
 Name normalisation maps `_` and `-` interchangeably (`master_plan` vs `master-plan` both
 resolve).
@@ -164,7 +164,7 @@ it. `bats` preferred; the fallback shim covers its absence.
 
 - `bash scripts/flow/subskill_resolve.sh token-slim` prints the absolute path to
   `skills/token-slim/SKILL.md` and exits 0.
-- Resolving a name present in two roots returns the `$CREWFORGE_ROOT` copy; a temp
+- Resolving a name present in two roots returns the `$CREWFORGE5_ROOT` copy; a temp
   fixture with the same skill in a fake repo `.claude/skills/` proves precedence.
 - `subskill_resolve.sh master-plan` and `subskill_resolve.sh master_plan` both resolve to
   `skills/master_plan/SKILL.md`.
@@ -196,7 +196,7 @@ it. `bats` preferred; the fallback shim covers its absence.
 Generalise the `team-sprint` state machine into `scripts/flow/` so all three entry skills
 share one driver instead of three copies.
 
-- `flow_state.sh` — locked read-modify-write over `<repo>/.crewforge/<flow>/state.json`,
+- `flow_state.sh` — locked read-modify-write over `<repo>/.crewforge5/<flow>/state.json`,
   schema-checked. Lifted from `skills/team-sprint/scripts/state.sh`, with `<flow>` as a
   first argument; `flock` with the existing `mkdir` mutex fallback preserved.
 - `flow_next.sh <flow>` — prints the next unblocked phase id and its phase-doc path, or
@@ -210,7 +210,7 @@ Each flow declares its phases in `skills/<flow>/phases.json`:
 ### Acceptance Criteria
 
 - `flow_state.sh init set phase.0.status ok` then `flow_state.sh init get phase.0.status`
-  round-trips through `.crewforge/init/state.json`.
+  round-trips through `.crewforge5/init/state.json`.
 - Two concurrent `flow_state.sh` writers to **distinct keys** produce a valid final
   `state.json` with both writes present — `skills/team-sprint/scripts/tests/state.bats:200`
   ("concurrent updates of distinct keys both survive"), re-pointed. Same-key contention is
@@ -234,24 +234,24 @@ Each flow declares its phases in `skills/<flow>/phases.json`:
 
 ---
 
-## Story 3: `crewforge:init`
+## Story 3: `crewforge5:init`
 
 New listed skill: repo and config hygiene, driven by `phases.json`. Every phase is a
 gate-backed step over scripts that already exist.
 
-Invoked as `/crewforge:init` — bare `/init` reaches Claude Code's built-in CLAUDE.md
+Invoked as `/crewforge5:init` — bare `/init` reaches Claude Code's built-in CLAUDE.md
 initializer, so every trigger phrase and doc line uses the namespaced form.
 
 | Phase | Work | Gate |
 | --- | --- | --- |
 | 0 preflight | Locate config roots, load `claude-config` house rules, require clean tree | `git status --porcelain` empty |
-| 1 measure | `token-slim/scripts/baseline.py --out .crewforge/init/baseline.json` | baseline.json exists, non-empty |
+| 1 measure | `token-slim/scripts/baseline.py --out .crewforge5/init/baseline.json` | baseline.json exists, non-empty |
 | 2 hygiene | `context-hygiene` passes 1–4 against the roots; proposals to scratch files | `scripts/retention_gate.sh <orig> <proposed>` per file |
 | 3 slim | `token-slim` trim + split mechanic | `token-slim/scripts/check.sh` per skill, then `sweep.py` totals |
 | 4 validate | `validate_all.sh` structural, then `skill-validator`/`agent-validator` per component | zero FAIL |
 | 5 rectify | `skill-rectifier`/`agent-rectifier` loop per failing component | re-validate to grade A |
 | 6 distil | `self-improve` over the learn ledger | `self-improve/scripts/ceiling.sh check` per target |
-| 7 report | Re-measure, write `.crewforge/init/report.md` with before/after | report exists, delta recorded |
+| 7 report | Re-measure, write `.crewforge5/init/report.md` with before/after | report exists, delta recorded |
 
 Sub-skill bodies are loaded via `subskill_resolve.sh`, never the `Skill` tool. Phases 2–6
 fan out one agent per target (skill dirs are disjoint).
@@ -284,7 +284,7 @@ fan out one agent per target (skill dirs are disjoint).
 
 ---
 
-## Story 4: `crewforge:plan`
+## Story 4: `crewforge5:plan`
 
 New listed skill: goal → adversarial-clean, `/team-sprint`-ready plan file. Merges the
 interactive front half of `team-feature` with the audit-grounded back half of
@@ -332,7 +332,7 @@ Phases 2–3 are interactive, so this skill stays inline — no `context: fork`,
 
 ---
 
-## Story 5: `crewforge:execute`
+## Story 5: `crewforge5:execute`
 
 New listed skill: stamped plan → merged commit, plus diagrams and captured learnings.
 `team-sprint`'s eight phases are kept as-is behind the driver; two phases are added.
@@ -518,7 +518,7 @@ numbers and a named list**, not a rewrite of a wrong claim.
 - `README.md:31-42` carries the post-condensation figures from Story 7 and the new hidden
   list; no stale "ten skills" or "~1,141 tokens" survives — grep proves both strings gone.
 - `README.md` documents exactly three entry points with their trigger phrases, written in
-  the namespaced form (`/crewforge:init`, not `/init`, which reaches the built-in), and a
+  the namespaced form (`/crewforge5:init`, not `/init`, which reaches the built-in), and a
   table mapping each hidden sub-skill to the entry point that drives it.
 - `CHANGELOG.md` records the condensation with before/after always-loaded totals from
   `budget_check.sh`, not a hand-counted skill number.
@@ -543,7 +543,7 @@ numbers and a named list**, not a rewrite of a wrong claim.
 | Hiding a sub-skill breaks a `Skill`-tool call site that grep missed | Story 6 AC greps for every hidden name outside a resolver call, and a smoke run of each entry skill must reach its first gate |
 | A fork-declaring skill gets read inline, moving its context cost into the main window | Story 1 ships `--load-mode`; Story 6 ACs grep to prove all five fork skills are `Agent`-spawned |
 | Cost moves from the skill listing to the agent listing | `budget_check.sh` already charges agents, the command and the hook line; Story 7 re-baselines it rather than replacing it |
-| A user types `/init` and gets the built-in CLAUDE.md initializer | Every trigger phrase and doc line uses `/crewforge:init`; Story 8 AC greps for the bare form |
+| A user types `/init` and gets the built-in CLAUDE.md initializer | Every trigger phrase and doc line uses `/crewforge5:init`; Story 8 AC greps for the bare form |
 | Slash-command reachability of a hidden skill is assumed, not proven | Story 6 DoD spot-checks three hidden skills by slash command before the story closes; if slash access is also lost, the fallback is to keep the highest-value few listed and re-baseline Story 7's ceiling |
 | `execute` drifts from `team-sprint` behaviour | Story 5 forbids editing team-sprint phase docs and diffs gate verdicts against a direct run |
 | Interactive phases fail in a forked context | `plan` and `execute` stay inline — no `context: fork`, no `agent:` frontmatter |

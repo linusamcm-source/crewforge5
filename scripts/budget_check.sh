@@ -95,9 +95,9 @@ for cmd in sorted((root / "commands").glob("*.md")) if (root / "commands").is_di
 # The SessionStart root hook prints one line into every session. It is rent like
 # any other always-loaded string, so it is counted here rather than quietly
 # excluded because it is not a description.
-HOOK_LINE = "CREWFORGE_ROOT=/Users/someone/.claude/plugins/cache/crewforge/crewforge/0.1.0"
+HOOK_LINE = "CREWFORGE5_ROOT=/Users/someone/.claude/plugins/cache/crewforge5/crewforge5/0.1.0"
 total += len(HOOK_LINE)
-rows.append(("hook", "crewforge-root (SessionStart line)", len(HOOK_LINE), ""))
+rows.append(("hook", "crewforge5-root (SessionStart line)", len(HOOK_LINE), ""))
 
 tokens = round(total / 4)
 if verbose:

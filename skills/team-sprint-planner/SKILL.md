@@ -101,7 +101,7 @@ fabricated claim is worse than an acknowledged unknown: it fails review *and* mi
 ### 3. Grill the user — the shared-understanding gate
 
 **Load `grill-me` before writing a single story.** It is hidden from the catalogue, so the
-`Skill` tool cannot reach it — `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh"
+`Skill` tool cannot reach it — `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
 --load-mode grill-me` answers `MODE=inline`, so read the body it names and run its loop here.
 Recon armed you with facts; this phase closes the logic gaps that facts alone can't — the
 decisions, trade-offs, and unstated assumptions that only the user can resolve. The plan is not
@@ -140,7 +140,7 @@ a Developer Note. An answer the user gave that the plan ignores is a defect.
 
 **Divergent decomposition first — when the shape is genuinely open.** Before committing to a
 story breakdown, load `adhd` (hidden from the catalogue: resolve it with
-`bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode adhd`, which answers
+`bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode adhd`, which answers
 `MODE=inline`, then read the body it names) and run it on the decomposition
 question itself — "how should this work be sliced into stories?" — feeding it the grill's
 resolved decisions and recon's dependency map as context. It spawns isolated parallel frames,
@@ -186,7 +186,7 @@ Before reporting done, dogfood team-sprint's own parser and path validator if th
 this catches mis-parses the eye misses:
 
 ```bash
-TS=${CREWFORGE_ROOT}/skills/team-sprint/scripts
+TS=${CREWFORGE5_ROOT}/skills/team-sprint/scripts
 bash "$TS/validate_plan_path.sh" <plan-path>      # STATUS=OK means the slug is valid
 bash "$TS/parse_stories.sh" <plan-path> | jq '.'  # confirm every story + AC + depends_on parsed
 ```
@@ -238,7 +238,7 @@ read-back is script-generated, not composed — same output every run, nothing p
 
 1. **Dot-point read-back (mechanical).**
    ```bash
-   bash ${CREWFORGE_ROOT}/skills/team-sprint-planner/scripts/plan_readback.sh <plan-path>
+   bash ${CREWFORGE5_ROOT}/skills/team-sprint-planner/scripts/plan_readback.sh <plan-path>
    ```
    Emits the stamp line (or `STAMP: MISSING`), one bullet per story (`- <id> — <title>
    (depends on: ...)`), and the review-artifact dir. Display its output **verbatim** to the
@@ -247,7 +247,7 @@ read-back is script-generated, not composed — same output every run, nothing p
    any user-waived findings (there are none on a `status=clean` run — all severities are applied).
 2. **Diagram gate (boolean, must be answered).** Ask via AskUserQuestion — exactly yes or no:
    *"Want a draw.io diagram of how this plan fits into the existing system?"*
-   - **Yes** → load `drawio` (hidden from the catalogue: `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode drawio`
+   - **Yes** → load `drawio` (hidden from the catalogue: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode drawio`
      answers `MODE=inline`, so read the body it names) and author a **system-context diagram** — NOT a story
      dependency graph; stories, sprint ordering, and deployment sequence do not belong on it.
      Show, grounded in this session's recon: the existing components/files the plan touches,

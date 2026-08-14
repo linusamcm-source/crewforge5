@@ -100,7 +100,7 @@ After applying all fixes:
 
 1. **Run the structural validation script** to confirm structural issues are resolved:
    ```bash
-   bash ${CREWFORGE_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>
+   bash ${CREWFORGE5_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>
    ```
 
 2. **Read the fixed agent file end-to-end** to verify:
@@ -127,7 +127,7 @@ instruction compliance). Use its full workflow — do not shortcut to just the s
 `agent-validator` is hidden from the catalogue, so the `Skill` tool cannot reach it. Resolve it:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-validator
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-validator
 ```
 
 It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter
@@ -164,7 +164,7 @@ drift between invocations. The validator and rectifier exist as a pair — one d
 other heals. Running them in a loop until grade A ensures the agent is actually
 production-ready, not just "better than before."
 
-The agent-validator is at `${CREWFORGE_ROOT}/skills/agent-validator/` — it handles the full
+The agent-validator is at `${CREWFORGE5_ROOT}/skills/agent-validator/` — it handles the full
 validation workflow including structural checks, tool coherence, efficiency, and instruction
 compliance diagnosis.
 

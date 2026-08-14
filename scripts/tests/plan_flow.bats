@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# plan_flow.bats — contract for the `crewforge:plan` flow.
+# plan_flow.bats — contract for the `crewforge5:plan` flow.
 #
 # `plan` turns a goal into an adversarial-clean, /team-sprint-ready plan file.
 # Everything it does that a human could fake — "the goal is recorded", "the
@@ -28,10 +28,10 @@ setup() {
   OUT="$TMP/out"
   ERR="$TMP/err"
 
-  # The gates name their scripts through ${CREWFORGE_ROOT:-.} so that the flow
+  # The gates name their scripts through ${CREWFORGE5_ROOT:-.} so that the flow
   # works on a repo that is not the plugin. Pointing it at this checkout is
   # therefore the realistic configuration, not a shortcut.
-  export CREWFORGE_ROOT="$ROOT"
+  export CREWFORGE5_ROOT="$ROOT"
 
   # Sandbox HOME so the resolver's third root never reaches the developer's
   # real catalogue.
@@ -39,7 +39,7 @@ setup() {
   mkdir -p "$HOME/.claude/skills"
 
   # State lives under the repo root, so the target repo is a throwaway one —
-  # never this checkout, whose .crewforge/ must stay untouched by a test run.
+  # never this checkout, whose .crewforge5/ must stay untouched by a test run.
   mkdir -p "$TMP/repo"
   cd "$TMP/repo"
   git init -q -b main .
@@ -47,7 +47,7 @@ setup() {
   git config user.name  "test"
   git commit -q --allow-empty -m "init"
 
-  STATE="$TMP/repo/.crewforge/plan/state.json"
+  STATE="$TMP/repo/.crewforge5/plan/state.json"
 }
 
 teardown() {
@@ -107,8 +107,8 @@ _write_plan() { # $1 = path (relative to the fixture repo), $2… = extra lines
 @test "every script a gate names resolves under the plugin root" {
   local p n=0
   for p in $(jq -r '.[].gate' "$MANIFEST" \
-             | grep -oE '\$\{CREWFORGE_ROOT:-\.\}/[A-Za-z0-9._/-]+' \
-             | sed 's|\${CREWFORGE_ROOT:-\.}/||' | sort -u); do
+             | grep -oE '\$\{CREWFORGE5_ROOT:-\.\}/[A-Za-z0-9._/-]+' \
+             | sed 's|\${CREWFORGE5_ROOT:-\.}/||' | sort -u); do
     [ -f "$ROOT/$p" ] || { printf 'gate names a missing script: %s\n' "$p" >&2; return 1; }
     n=$((n + 1))
   done

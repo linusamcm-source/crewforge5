@@ -21,7 +21,7 @@ Success criteria for the whole run: (1) `TECH_DEBT_AUDIT.md` exists and is curre
 
 ## Phase 1 — Ground truth
 
-Run tech-debt-audit over the current repo. It is hidden from the catalogue, so the `Skill` tool cannot reach it — `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode tech-debt-audit` answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter names rather than reading its body inline. It refreshes the repomix pack by default, and refreshes/uses graphify for structural questions when its tools are available (fail-soft), then writes `TECH_DEBT_AUDIT.md` with ID'd, file:line-cited findings. Do NOT invoke /graphify separately — the audit already handles it when needed; a second build wastes minutes.
+Run tech-debt-audit over the current repo. It is hidden from the catalogue, so the `Skill` tool cannot reach it — `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode tech-debt-audit` answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter names rather than reading its body inline. It refreshes the repomix pack by default, and refreshes/uses graphify for structural questions when its tools are available (fail-soft), then writes `TECH_DEBT_AUDIT.md` with ID'd, file:line-cited findings. Do NOT invoke /graphify separately — the audit already handles it when needed; a second build wastes minutes.
 
 ## Phase 2 — Goal impact map + debt triage
 
@@ -37,7 +37,7 @@ Table columns: `Finding ID | File:Line | Severity | Effort | Disposition | Ratio
 
 ## Phase 3 — Plan
 
-Load team-sprint-planner — hidden from the catalogue, so resolve it: `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode team-sprint-planner` answers `MODE=inline`, so read the body it names and follow it here. Give it the goal plus these source docs: `TECH_DEBT_AUDIT.md`, `docs/plans/GOAL_IMPACT.md`, `graphify-out/GRAPH_REPORT.md`. Requirements for the plan it produces:
+Load team-sprint-planner — hidden from the catalogue, so resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode team-sprint-planner` answers `MODE=inline`, so read the body it names and follow it here. Give it the goal plus these source docs: `TECH_DEBT_AUDIT.md`, `docs/plans/GOAL_IMPACT.md`, `graphify-out/GRAPH_REPORT.md`. Requirements for the plan it produces:
 
 - Feature stories with testable acceptance criteria, per-story DoD, and a Depends-On/Touches graph.
 - Every **fix-first** finding becomes a story whose acceptance criterion is the finding's detection command, inverted — the grep/graphify query/analyzer rule that found the debt is re-run and must come back clean. The audit's evidence command IS the story's acceptance test: mechanically re-runnable, no judgment. Refactor stories use TDD shape — characterization test pins current behaviour first, then the fix, tests stay green.

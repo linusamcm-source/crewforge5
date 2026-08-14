@@ -170,7 +170,7 @@ decision deliberately kept.
 ### Step 1 — Capture The Diff
 
 ```bash
-bash ${CREWFORGE_ROOT}/skills/pre-commit-review-fleet/scripts/capture-diff.sh [scope-paths...]
+bash ${CREWFORGE5_ROOT}/skills/pre-commit-review-fleet/scripts/capture-diff.sh [scope-paths...]
 ```
 
 Exit 1 = nothing staged, abort with its message. It writes the patch, prints
@@ -226,7 +226,7 @@ standalone run persists to `docs/review-fleet-runs/<timestamp>-<reviewer>.json`.
 Mechanised:
 
 ```bash
-S=${CREWFORGE_ROOT}/skills/pre-commit-review-fleet/scripts
+S=${CREWFORGE5_ROOT}/skills/pre-commit-review-fleet/scripts
 bash $S/fleet-complete.sh <artifact-dir> security performance consistency simplifier
 ```
 

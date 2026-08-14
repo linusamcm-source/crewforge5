@@ -8,8 +8,8 @@ made about existing debt. A disposition table nobody checks is a wish list.
 1. Run the coverage check over the impact map and the plan:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/skills/master_plan/scripts/check_coverage.sh" \
-     docs/plans/GOAL_IMPACT.md "$(bash "${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh" plan get plan_path)"
+   bash "${CREWFORGE5_ROOT:-.}/skills/master_plan/scripts/check_coverage.sh" \
+     docs/plans/GOAL_IMPACT.md "$(bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh" plan get plan_path)"
    ```
 
 2. It compares finding IDs found in the impact map's table rows against the same
@@ -23,7 +23,7 @@ made about existing debt. A disposition table nobody checks is a wish list.
      nobody chose.
 
 3. On `CLEAN`, tell the user the plan is deployable and name the next command:
-   `/crewforge:execute <plan path>`.
+   `/crewforge5:execute <plan path>`.
 
 ## Gate
 

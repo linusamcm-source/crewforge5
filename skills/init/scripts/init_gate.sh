@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# init_gate.sh — the pass/fail gate behind each phase of `/crewforge:init`.
+# init_gate.sh — the pass/fail gate behind each phase of `/crewforge5:init`.
 #
 # Usage:
 #   init_gate.sh <check>   run one phase gate: preflight measure hygiene slim
@@ -18,7 +18,7 @@
 #
 # Overridable so the tests can point at a fixture:
 #   INIT_TARGET    config root under audit, holding skills/ and agents/ (repo root)
-#   INIT_STATE     baseline.json, proposals/ and report.md (<repo>/.crewforge/init)
+#   INIT_STATE     baseline.json, proposals/ and report.md (<repo>/.crewforge5/init)
 #   INIT_DESC_CAP  description trim cap handed to token-slim's check.sh (300)
 #
 # Exit codes: 0 pass, 1 fail, 2 usage.
@@ -49,7 +49,7 @@ emit() { # $1 STATUS  $2 CHECK  [KEY=VALUE …]
 
 # --- locations --------------------------------------------------------------
 # --git-common-dir, not --show-toplevel: a call from a worktree still lands on
-# the shared repo, so the flow keeps one .crewforge tree instead of one per
+# the shared repo, so the flow keeps one .crewforge5 tree instead of one per
 # worktree.
 REPO_ROOT="$(git rev-parse --git-common-dir 2>/dev/null)"
 if [ -n "$REPO_ROOT" ]; then
@@ -59,7 +59,7 @@ else
 fi
 
 TARGET="${INIT_TARGET:-$REPO_ROOT}"
-STATE="${INIT_STATE:-$REPO_ROOT/.crewforge/init}"
+STATE="${INIT_STATE:-$REPO_ROOT/.crewforge5/init}"
 DESC_CAP="${INIT_DESC_CAP:-300}"
 BASELINE="$STATE/baseline.json"
 

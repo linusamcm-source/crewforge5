@@ -8,7 +8,7 @@ without letting any of them grow.
 Load `self-improve` through the resolver (`MODE=inline`), then read the ledger:
 
 ```bash
-bash "${CREWFORGE_ROOT}/skills/self-improve/scripts/ledger.sh" list
+bash "${CREWFORGE5_ROOT}/skills/self-improve/scripts/ledger.sh" list
 ```
 
 Each entry names a target and a source: `hook` is a mechanically observed

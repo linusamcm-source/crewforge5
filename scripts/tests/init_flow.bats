@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# init_flow.bats — the contract for `crewforge:init`: its phase manifest, the
+# init_flow.bats — the contract for `crewforge5:init`: its phase manifest, the
 # gate script behind every phase, and the two flow-level behaviours the story
 # cares about (a rejected proposal must not advance the flow; a clean tree must).
 #
@@ -30,9 +30,9 @@ setup() {
   unset CLAUDE_CONFIG_DIR || true
 
   # The plugin under test is this checkout: gates are declared against
-  # ${CREWFORGE_ROOT}, which is how a phase command reaches the plugin from
+  # ${CREWFORGE5_ROOT}, which is how a phase command reaches the plugin from
   # inside whatever repo the flow is being run on.
-  export CREWFORGE_ROOT="$ROOT"
+  export CREWFORGE5_ROOT="$ROOT"
 
   REPO="$TMP/repo"
   mkdir -p "$REPO"
@@ -42,7 +42,7 @@ setup() {
   git config user.name "test"
   git commit -q --allow-empty -m "init"
 
-  STATE_DIR="$REPO/.crewforge/init"
+  STATE_DIR="$REPO/.crewforge5/init"
   mkdir -p "$STATE_DIR"
   export INIT_STATE="$STATE_DIR"
   export INIT_TARGET="$TMP/config"
@@ -202,9 +202,9 @@ record_baseline() {
   local gate p rel sub
   while IFS= read -r gate; do
     [ -n "$gate" ]
-    # Gates address the plugin through ${CREWFORGE_ROOT} — no machine paths.
-    for p in $(printf '%s\n' "$gate" | grep -o '\${CREWFORGE_ROOT}[^" ]*'); do
-      rel="${p#\$\{CREWFORGE_ROOT\}/}"
+    # Gates address the plugin through ${CREWFORGE5_ROOT} — no machine paths.
+    for p in $(printf '%s\n' "$gate" | grep -o '\${CREWFORGE5_ROOT}[^" ]*'); do
+      rel="${p#\$\{CREWFORGE5_ROOT\}/}"
       [ -f "$ROOT/$rel" ] || { echo "gate names a missing file: $rel" >&2; return 1; }
       [ -x "$ROOT/$rel" ] || { echo "gate names a non-executable file: $rel" >&2; return 1; }
     done
@@ -257,10 +257,10 @@ print(len(re.sub(r"\s+", " ", m.group(1)).strip()))
   done < <(find "$INIT_DIR" -type f ! -name 'SKILL.md')
 }
 
-@test "SKILL.md and phase docs use the namespaced /crewforge:init form" {
-  grep -q '/crewforge:init' "$SKILL_MD"
+@test "SKILL.md and phase docs use the namespaced /crewforge5:init form" {
+  grep -q '/crewforge5:init' "$SKILL_MD"
   # A bare `/init` reaches Claude Code's built-in CLAUDE.md initializer.
-  run grep -rn '[^:a-z]/init\b' "$SKILL_MD" "$INIT_DIR/phases"
+  run grep -rn '[^:a-z0-9]/init\b' "$SKILL_MD" "$INIT_DIR/phases"
   [ "$status" -ne 0 ]
 }
 

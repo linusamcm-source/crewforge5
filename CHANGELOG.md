@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.3.0 — 2026-08-14
+
+Renamed to `crewforge5`. This is a breaking rename, not a cosmetic one: the
+command namespace, the environment contract and the per-repo state directory
+all move, and nothing forwards from the old names.
+
+### Changed
+
+- The three entry points are `/crewforge5:init`, `/crewforge5:plan` and
+  `/crewforge5:execute`. The old `/crewforge:*` names resolve to nothing.
+- `CREWFORGE_ROOT` is now `CREWFORGE5_ROOT`, and `CREWFORGE_HOOKS` is now
+  `CREWFORGE5_HOOKS`. Anything exporting the old names — a shell profile, a CI
+  job, a wrapper script — sets a variable nothing reads.
+- The per-repo state directory is `.crewforge5/` rather than `.crewforge/`.
+- `hooks/crewforge-root.sh` is `hooks/crewforge5-root.sh`, and `hooks.json`
+  points at the new path.
+- The always-loaded catalogue measures **2172 chars / ~543 tok / 12 entries** —
+  two tokens more than 0.2.0, entirely from the longer name in the three
+  descriptions. `BUDGET` is unchanged at 600, so the gate passes with 57 tokens
+  of headroom.
+- `scripts/tests/init_flow.bats` guarded against a bare `/init` with
+  `[^:a-z]/init`, which the digit in `.crewforge5/init/` trips. The class
+  admits digits.
+
+### Migration
+
+A repo already onboarded under the old name keeps its history in a directory
+nothing looks at. Move it before the next flow runs:
+
+```bash
+mv .crewforge .crewforge5
+```
+
+An installed copy of the plugin is registered under the old marketplace and
+plugin name. Remove it and install `crewforge5` from the renamed repository —
+there is no in-place upgrade path across a name change.
+
 ## 0.2.0 — 2026-08-13
 
 Condensed to three entry points. The always-loaded catalogue went from
@@ -15,7 +52,7 @@ all 27 skills are still on disk and still callable by name.
 
 ### Added
 
-- `/crewforge:init`, `/crewforge:plan`, `/crewforge:execute` — the only three
+- `/crewforge5:init`, `/crewforge5:plan`, `/crewforge5:execute` — the only three
   skills left in the catalogue. Each is a state machine over a `phases.json`
   manifest, driven by the shared `scripts/flow/` driver: a phase is offered,
   its gate is run, and the verdict is written to state before the next phase.
@@ -35,8 +72,10 @@ all 27 skills are still on disk and still callable by name.
 - `scripts/budget_check.sh` now asserts *shape* as well as cost: `init`, `plan`
   and `execute` are the only listed skills, checked in both directions. A
   fourth entry point with a cheap description used to pay its tokens and walk
-  straight through. `BUDGET` is 541 with zero slack, so the next description
-  that grows is a decision somebody makes rather than drift nobody notices.
+  straight through. `BUDGET` is 600 against a measured 541 — one description's
+  worth of headroom, bounded by `scripts/tests/budget_check.bats` so it cannot
+  quietly become a blank cheque, and a whole new listed surface still cannot
+  slip in unpriced.
 - `scripts/validate_all.sh` invokes `budget_check.sh`, so one command answers
   the whole release question instead of a local run reporting every component
   clean on a tree that was over budget.
@@ -48,7 +87,7 @@ all 27 skills are still on disk and still callable by name.
 
 - Nothing was deleted. Every skill and agent that shipped in 0.1.0 is still on
   disk, still validated, still invocable by its own name.
-- `team-sprint`'s phase docs are untouched. `/crewforge:execute` wraps them and
+- `team-sprint`'s phase docs are untouched. `/crewforge5:execute` wraps them and
   adds two phases at the end (integration diagram, distilled learnings) rather
   than forking their content.
 
@@ -59,11 +98,11 @@ this is the half of it that is general, extracted so it installs anywhere.
 
 ### Added
 
-- 25 skills and 7 agents, namespaced under `crewforge:`. No skill was renamed —
+- 25 skills and 7 agents, namespaced under `crewforge5:`. No skill was renamed —
   the plugin name is already the prefix.
 - `rules/` — the recon ladder, verification discipline, git hygiene and the
   subagent delivery contract, as plugin-owned files. Installed by
-  `/crewforge:sprint-init`, by symlink, only when asked. Nothing is ever written
+  `/crewforge5:sprint-init`, by symlink, only when asked. Nothing is ever written
   to your `CLAUDE.md`.
 - `scripts/budget_check.sh` — release gate on always-loaded context. The bundle
   measures ~1,141 tokens against a 1,200 budget. Three skills were hidden behind
@@ -74,8 +113,8 @@ this is the half of it that is general, extracted so it installs anywhere.
   name its path implies.
 - `scripts/sprint_init.sh` — report / install / uninstall for the rule files,
   with a contradiction check that refuses to install over a conflicting rule.
-- `hooks/crewforge-root.sh` — publishes the install path once per session as
-  `$CREWFORGE_ROOT`, because `${CLAUDE_PLUGIN_ROOT}` is not visible to the Bash
+- `hooks/crewforge5-root.sh` — publishes the install path once per session as
+  `$CREWFORGE5_ROOT`, because `${CLAUDE_PLUGIN_ROOT}` is not visible to the Bash
   tool.
 - `crew_copy.sh` — carries `.claude/agents/` and `.claude/crews/` into **each**
   worktree at node start. A sprint that generates its crew after a node worktree
@@ -96,7 +135,7 @@ this is the half of it that is general, extracted so it installs anywhere.
 
 - All `~/.claude` and `/Users/...` coupling removed from shipped skills, agents
   and hooks — 42 files at the start, none at the end.
-- `ledger.sh` writes to `${XDG_STATE_HOME:-~/.local/state}/crewforge/ledger`
+- `ledger.sh` writes to `${XDG_STATE_HOME:-~/.local/state}/crewforge5/ledger`
   rather than assuming a `~/.claude` exists; `ceiling.sh` resolves its targets
   from the tree it ships in.
 - `agents/architect-review.md` → `architect-reviewer.md`, matching the name its

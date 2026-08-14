@@ -15,7 +15,7 @@ compute against.
 3. Record the confirmed goal, and nothing else:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh" plan set goal "<confirmed goal>"
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh" plan set goal "<confirmed goal>"
    ```
 
 4. Optionally record `scope` and `plan_dir` alongside it if the user volunteered

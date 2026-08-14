@@ -193,7 +193,7 @@ Otherwise, show the user the summary table and overall grade. Then:
 2. **If grade is below A** (B, C, D, or F): hand off to **skill-rectifier** exactly once,
    passing the validation report path and the target skill path. It is hidden from the
    catalogue, so the `Skill` tool cannot reach it — resolve it with
-   `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-rectifier`
+   `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-rectifier`
    and honour the answer (`MODE=inline` — read the body and follow it here).
    Do not ask the user — this is mandatory. **The rectifier owns the loop
    from here**: it applies fixes, re-runs this validator in report-only mode, and
@@ -207,6 +207,6 @@ if your prose summary and grade.sh disagree, grade.sh wins. Warnings that persis
 multiple rounds indicate instructions that genuinely need human judgment, at which point
 the rectifier escalates rather than spinning forever.
 
-The skill-rectifier is at `${CREWFORGE_ROOT}/skills/skill-rectifier/` — it handles the full
+The skill-rectifier is at `${CREWFORGE5_ROOT}/skills/skill-rectifier/` — it handles the full
 fix workflow including before/after diffs, the re-validation loop, and deferred items
 that need human review.

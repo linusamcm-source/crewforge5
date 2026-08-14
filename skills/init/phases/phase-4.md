@@ -8,11 +8,11 @@ rectifier is allowed to touch anything.
 Run the structural half first, since it is mechanical and needs no model:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/validate_all.sh"
+bash "${CREWFORGE5_ROOT}/scripts/validate_all.sh"
 ```
 
 That sweep is pinned to the plugin's **own** tree — it resolves its root from
-its own location and takes no target — so it proves CrewForge is clean, not the
+its own location and takes no target — so it proves CrewForge5 is clean, not the
 config root under audit. `INIT_TARGET` is covered by the per-component pass
 below, which the gate re-runs. Both are needed: a broken plugin cannot be
 trusted to judge anything else.
@@ -23,7 +23,7 @@ them — spawn each through the `Agent` tool with the resolved body as the promp
 and never read it inline:
 
 ```bash
-RESOLVE="${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh"
+RESOLVE="${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
 "$RESOLVE" --load-mode skill-validator    # MODE=agent AGENT=general-purpose
 "$RESOLVE" --load-mode agent-validator    # MODE=agent AGENT=general-purpose
 ```

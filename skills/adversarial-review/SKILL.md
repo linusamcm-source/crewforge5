@@ -173,7 +173,7 @@ callers, locate a symbol, scan for a pattern). It is hidden from the catalogue,
 so the `Skill` tool cannot get to it — resolve it:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
 ```
 
 It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
@@ -202,7 +202,7 @@ file block is `<file path="...">…</file>`). One pack grep replaces 10+ live
 Freshness checks are mechanical — never eyeball mtimes:
 
 ```bash
-bash ${CREWFORGE_ROOT}/skills/adversarial-review/scripts/evidence-fresh.sh \
+bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/evidence-fresh.sh \
   "${REPOMIX_PACK:-.repomix-output.xml}" <plan-file>   # exit 1 = stale, quote its output
 ```
 
@@ -327,7 +327,7 @@ If new findings appear, run another round. Otherwise, finish.
 - **The round-exit decision is mechanical, not yours.** Write each round's
   findings one per line (`CRITICAL: ...` / `HIGH: ...` / `MEDIUM: ...` /
   `LOW: ...` / `NIT: ...`) to a scratch file and run
-  `bash ${CREWFORGE_ROOT}/skills/adversarial-review/scripts/round-gate.sh <file>`.
+  `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/round-gate.sh <file>`.
   Honour its verdict: `continue` = another round; `stop-early` = zero
   CRITICAL/HIGH, batch remaining LOW/NIT into a final polish pass;
   `done-clean` = finish. Never talk yourself into stopping while the gate
@@ -371,9 +371,9 @@ Prior runs of adversarial review fabricated load-bearing claims (asserted files/
 
 1. **Every factual claim about the codebase MUST be backed by a tool call you actually ran in this session.** No claim from memory, training data, or prior conversation. If you did not Read/Grep/Glob it this session, you do not know it. ("From memory" here means *your own* recollection or training — NOT a `claude-mem` retrieval. A `memory_search`/`observation_search`/`get_observations` call IS an in-session tool call, and its observations are valid evidence for *history/intent* claims; they do not, however, substitute for verifying *current code* with Read/Grep/graphify. See § Working With `claude-mem`.)
 2. **Every finding MUST quote the verifying evidence.** State the tool you invoked (Read, Grep, Glob, Bash) and the target, then quote the literal output the tool returned (truncated if large, never paraphrased). The output you quote must be the actual `tool_result` content from this session — not a reconstructed shape, not a guess, not a markdown fence describing a hypothetical command.
-3. **Negative claims ("X does not exist") require triple verification.** Run all three before asserting non-existence: exact-name Grep, case-insensitive Grep (`-i`), Glob for filename patterns (`**/X*`, `**/*X*`). Quote all three results. If any is non-zero, the claim is false. Mechanised — one call runs all three and renders the verdict: `bash ${CREWFORGE_ROOT}/skills/adversarial-review/scripts/verify-negative.sh '<term>' [dir]` (exit 0 = confirmed absent; quote its full output as the evidence).
+3. **Negative claims ("X does not exist") require triple verification.** Run all three before asserting non-existence: exact-name Grep, case-insensitive Grep (`-i`), Glob for filename patterns (`**/X*`, `**/*X*`). Quote all three results. If any is non-zero, the claim is false. Mechanised — one call runs all three and renders the verdict: `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/verify-negative.sh '<term>' [dir]` (exit 0 = confirmed absent; quote its full output as the evidence).
 4. **Line-number citations must be Read-verified, not Grep-inferred.** Grep can show a line but its surrounding context may contradict the claim. Read the file at the cited range before quoting.
-5. **Repomix / packed-codebase artifacts must be freshness-checked.** If using `.repomix-output.xml`, `graphify-out/graph.json`, or any packed/derived snapshot, run `bash ${CREWFORGE_ROOT}/skills/adversarial-review/scripts/evidence-fresh.sh <artifact> <spec-file>` — it compares the artifact against the spec's mtime and the newest tracked source file, and exits 1 when stale. If stale, refuse to use it and demand a refresh, or fall back to direct Read/Grep. A graphify edge or `source_location` is evidence only when the graph is fresh; a stale graph is treated like a stale pack.
+5. **Repomix / packed-codebase artifacts must be freshness-checked.** If using `.repomix-output.xml`, `graphify-out/graph.json`, or any packed/derived snapshot, run `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/evidence-fresh.sh <artifact> <spec-file>` — it compares the artifact against the spec's mtime and the newest tracked source file, and exits 1 when stale. If stale, refuse to use it and demand a refresh, or fall back to direct Read/Grep. A graphify edge or `source_location` is evidence only when the graph is fresh; a stale graph is treated like a stale pack.
 6. **Tool-success must be confirmed by inspecting the tool result.** After SendMessage, verify the returned tool result indicates the message was accepted (not just that no error was thrown). Do NOT report a deliverable as complete on the basis of "tool call returned" alone — read what came back.
 7. **If a claim cannot be verified, mark it `UNVERIFIED` and downgrade severity by one level.** Do not promote unverified claims to CRITICAL/HIGH. Better to flag a possible issue with caveat than to fabricate.
 

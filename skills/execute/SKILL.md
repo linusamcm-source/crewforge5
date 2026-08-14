@@ -1,15 +1,15 @@
 ---
 name: execute
 model: opus
-description: Drive a reviewed plan to a merged commit — TDD agent fleet in an isolated worktree, coverage, AC/DoD and review-fleet gates, then an integration diagram and distilled learnings. Use on /crewforge:execute, "run a sprint", "execute this plan"
+description: Drive a reviewed plan to a merged commit — TDD agent fleet in an isolated worktree, coverage, AC/DoD and review-fleet gates, then an integration diagram and distilled learnings. Use on /crewforge5:execute, "run a sprint", "execute this plan"
 ---
-You are running `crewforge:execute`: a stamped plan in, a merged commit out. The eight phases that do the work are `team-sprint`'s, unchanged and loaded from where they live; this skill is the state machine that offers them one at a time, records each gate's verdict, and adds the two phases team-sprint never had — an integration diagram of what actually merged, and a distillation pass over what the run taught.
+You are running `crewforge5:execute`: a stamped plan in, a merged commit out. The eight phases that do the work are `team-sprint`'s, unchanged and loaded from where they live; this skill is the state machine that offers them one at a time, records each gate's verdict, and adds the two phases team-sprint never had — an integration diagram of what actually merged, and a distillation pass over what the run taught.
 
-The plan must already be adversarial-clean. Reviewing it is `crewforge:plan`'s job, and Phase 1 hard-STOPs a plan nobody reviewed.
+The plan must already be adversarial-clean. Reviewing it is `crewforge5:plan`'s job, and Phase 1 hard-STOPs a plan nobody reviewed.
 
 ## Path aliases
 
-- `$FLOW` — `${CREWFORGE_ROOT}/scripts/flow/`, the shared driver: `flow_next.sh`, `flow_gate.sh`, `flow_state.sh`, `subskill_resolve.sh`.
+- `$FLOW` — `${CREWFORGE5_ROOT}/scripts/flow/`, the shared driver: `flow_next.sh`, `flow_gate.sh`, `flow_state.sh`, `subskill_resolve.sh`.
 - `$SKILL` — this skill's install dir, holding `phases.json` and `scripts/phase_gate.sh`.
 
 ## Intake gate — ask before Phase 0
@@ -36,7 +36,7 @@ bash $FLOW/flow_next.sh execute        # STATUS=NEXT PHASE=<id> DOC=<absolute pa
 bash $FLOW/flow_gate.sh execute <id>   # STATUS=PASS|FAIL, recorded in state.json
 ```
 
-Repeat until `flow_next.sh` prints `STATUS=DONE`. A failed gate is re-offered, not advanced past — fix what it reported and gate again. State lives at `<repo-root>/.crewforge/execute/state.json`; resuming a sprint is just running `flow_next.sh` again.
+Repeat until `flow_next.sh` prints `STATUS=DONE`. A failed gate is re-offered, not advanced past — fix what it reported and gate again. State lives at `<repo-root>/.crewforge5/execute/state.json`; resuming a sprint is just running `flow_next.sh` again.
 
 ## Phases
 
@@ -75,5 +75,5 @@ bash $FLOW/subskill_resolve.sh use-repo-code               # the absolute SKILL.
 - **Worktree isolation is absolute.** Sprint operations never touch the main working tree.
 - **A gate verdict is recorded, not remembered.** `flow_gate.sh` writes it to `state.json`; a verdict announced in prose and not gated did not happen.
 - **Spawners block-collect-close every child.** Never end a turn with a live child — it sleeps forever.
-- **Phase 1 has no override.** An unstamped plan goes back to `crewforge:plan`.
+- **Phase 1 has no override.** An unstamped plan goes back to `crewforge5:plan`.
 - **No force-push and no main-branch writes** without explicit user confirmation.

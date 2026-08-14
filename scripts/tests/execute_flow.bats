@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# execute_flow.bats — contract for `crewforge:execute`.
+# execute_flow.bats — contract for `crewforge5:execute`.
 #
 # execute wraps team-sprint rather than forking it: phases 0–7 are team-sprint's
 # own phase docs, reached through the Story 1 resolver, and only phases 8
@@ -30,11 +30,11 @@ setup() {
   # symlink, so a test that needs a sub-skill absent just removes one link
   # instead of rebuilding the bundle. scripts/ is linked too, so a fixture that
   # replaces a link with a real copy still finds the shared driver beside it.
-  export CREWFORGE_ROOT="$TMP/plugin"
-  mkdir -p "$CREWFORGE_ROOT/skills"
-  ln -s "$ROOT/scripts" "$CREWFORGE_ROOT/scripts"
+  export CREWFORGE5_ROOT="$TMP/plugin"
+  mkdir -p "$CREWFORGE5_ROOT/skills"
+  ln -s "$ROOT/scripts" "$CREWFORGE5_ROOT/scripts"
   for d in "$ROOT"/skills/*/; do
-    ln -s "${d%/}" "$CREWFORGE_ROOT/skills/$(basename "$d")"
+    ln -s "${d%/}" "$CREWFORGE5_ROOT/skills/$(basename "$d")"
   done
 
   # Sandbox HOME so neither the resolver's third root nor the ledger reaches the
@@ -49,7 +49,7 @@ setup() {
   git config user.name "test"
   git commit -q --allow-empty -m "init"
 
-  STATE="$TMP/repo/.crewforge/execute/state.json"
+  STATE="$TMP/repo/.crewforge5/execute/state.json"
 
   # The repo's own fixture plan, under a filename that carries its story id
   # (Phase 0's path contract) and stamped as the planner would stamp it — the
@@ -93,8 +93,8 @@ record_plan() { bash "$FLOW_STATE" execute set plan "$PLAN"; }
 # Replace the symlinked skill with a writable copy, so a test can flip a
 # manifest field without editing the shipped file.
 _own_execute() {
-  rm "$CREWFORGE_ROOT/skills/execute"
-  cp -R "$ROOT/skills/execute" "$CREWFORGE_ROOT/skills/execute"
+  rm "$CREWFORGE5_ROOT/skills/execute"
+  cp -R "$ROOT/skills/execute" "$CREWFORGE5_ROOT/skills/execute"
 }
 
 # --- the manifest ------------------------------------------------------------
@@ -180,7 +180,7 @@ _own_execute() {
 # --- phase 0 -----------------------------------------------------------------
 
 @test "phase 0 fails when a required sub-skill is missing from every root" {
-  rm "$CREWFORGE_ROOT/skills/use-repo-code"
+  rm "$CREWFORGE5_ROOT/skills/use-repo-code"
   record_plan
   _split_run bash "$FLOW_GATE" execute 0
   [ "$RC" -ne 0 ]
@@ -265,9 +265,9 @@ _driver_verdicts() {
 
 @test "phase 8 not required and no diagram tool: SKIP, and the flow advances" {
   _own_execute
-  jq '(.[] | select(.id == "8") | .required) |= false' "$CREWFORGE_ROOT/skills/execute/phases.json" > "$TMP/p.json"
-  mv "$TMP/p.json" "$CREWFORGE_ROOT/skills/execute/phases.json"
-  rm "$CREWFORGE_ROOT/skills/drawio"
+  jq '(.[] | select(.id == "8") | .required) |= false' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
+  mv "$TMP/p.json" "$CREWFORGE5_ROOT/skills/execute/phases.json"
+  rm "$CREWFORGE5_ROOT/skills/drawio"
   drive_to_8
 
   _split_run bash "$FLOW_GATE" execute 8
@@ -284,9 +284,9 @@ _driver_verdicts() {
 
 @test "phase 8 required and no diagram tool: FAIL" {
   _own_execute
-  jq '(.[] | select(.id == "8") | .required) |= true' "$CREWFORGE_ROOT/skills/execute/phases.json" > "$TMP/p.json"
-  mv "$TMP/p.json" "$CREWFORGE_ROOT/skills/execute/phases.json"
-  rm "$CREWFORGE_ROOT/skills/drawio"
+  jq '(.[] | select(.id == "8") | .required) |= true' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
+  mv "$TMP/p.json" "$CREWFORGE5_ROOT/skills/execute/phases.json"
+  rm "$CREWFORGE5_ROOT/skills/drawio"
   drive_to_8
 
   _split_run bash "$FLOW_GATE" execute 8
@@ -303,8 +303,8 @@ _driver_verdicts() {
 
 @test "phase 8 required with the tool present but no diagram recorded: FAIL" {
   _own_execute
-  jq '(.[] | select(.id == "8") | .required) |= true' "$CREWFORGE_ROOT/skills/execute/phases.json" > "$TMP/p.json"
-  mv "$TMP/p.json" "$CREWFORGE_ROOT/skills/execute/phases.json"
+  jq '(.[] | select(.id == "8") | .required) |= true' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
+  mv "$TMP/p.json" "$CREWFORGE5_ROOT/skills/execute/phases.json"
   record_plan
 
   _split_run bash "$FLOW_GATE" execute 8
@@ -337,7 +337,7 @@ _driver_verdicts() {
     "STATUS=SKIP REASON=ledger-empty") ;;
     *) return 1 ;;
   esac
-  [ ! -d "$HOME/.local/state/crewforge/ledger" ]
+  [ ! -d "$HOME/.local/state/crewforge5/ledger" ]
   [ "$(git -C "$TMP/repo" status --porcelain)" = "$before" ]
 }
 

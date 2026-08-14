@@ -1,9 +1,9 @@
 ---
-description: Install CrewForge's rule files into this repo or user config, after reporting conflicts.
+description: Install CrewForge5's rule files into this repo or user config, after reporting conflicts.
 argument-hint: "[report|install|uninstall] [--user]"
 ---
 
-Run the rules installer for CrewForge and report what it did.
+Run the rules installer for CrewForge5 and report what it did.
 
 Current state:
 

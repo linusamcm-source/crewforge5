@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# crewforge-root.sh — SessionStart announcement of the plugin's install path.
+# crewforge5-root.sh — SessionStart announcement of the plugin's install path.
 #
 # WHY THIS EXISTS. `${CLAUDE_PLUGIN_ROOT}` is expanded by the harness inside
 # hook and command strings; it is NOT an environment variable the Bash tool
@@ -20,7 +20,7 @@ ROOT="${1:-${CLAUDE_PLUGIN_ROOT:-}}"
 [ -n "$ROOT" ] || exit 0
 [ -d "$ROOT" ] || exit 0
 
-STATE="${CLAUDE_PLUGIN_DATA:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge}"
+STATE="${CLAUDE_PLUGIN_DATA:-${XDG_STATE_HOME:-$HOME/.local/state}/crewforge5}"
 mkdir -p "$STATE" && printf '%s\n' "$ROOT" > "$STATE/root" || true
 
 python3 -c '
@@ -28,6 +28,6 @@ import json, sys
 print(json.dumps({"hookSpecificOutput":{
   "hookEventName":"SessionStart",
   "additionalContext":
-    f"CREWFORGE_ROOT={sys.argv[1]}"}}))
+    f"CREWFORGE5_ROOT={sys.argv[1]}"}}))
 ' "$ROOT"
 exit 0

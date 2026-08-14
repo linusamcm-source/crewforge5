@@ -74,7 +74,7 @@ single source of truth for the divergence method. It is hidden from the
 catalogue, so the `Skill` tool cannot reach it; resolve it instead:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode adhd
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode adhd
 ```
 
 It answers `MODE=inline`, so read the body at the path it names and follow it
@@ -113,7 +113,7 @@ reasons, and the three deepened sketches.
 ## Phase 2 — Grill (inline)
 
 Load `grill-me` — hidden from the catalogue, so resolve it:
-`bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode grill-me`
+`bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode grill-me`
 answers `MODE=inline`, so read the body it names. Then walk the decision tree in
 dependency order — a decision is askable only when everything in its
 `depends_on` is ratified.
@@ -178,7 +178,7 @@ same feature. The decision ledger always follows the plan's number:
 
 Summarize both to the user. If the user wants the plan executed by
 /team-sprint, load `team-sprint-planner` — hidden from the catalogue, so
-resolve it: `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh"
+resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
 --load-mode team-sprint-planner` answers `MODE=inline`, so read the body it
 names — and give it BOTH artifacts —
 the plan file and the decision ledger — as source docs: the planner owns
