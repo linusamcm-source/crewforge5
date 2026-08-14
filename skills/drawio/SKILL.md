@@ -33,9 +33,37 @@ If the diagram type or export format isn't stated in the request, call **AskUser
 
 Use the export answer to drive the "Choosing the output format" step below.
 
+## House rules — apply to every diagram, always
+
+These four rules are not optional and are not overridden by any template, example, or shape-library default elsewhere in this skill. If a copied style string contradicts them, edit the string.
+
+### 1. Edge clearance — no edge crosses a node
+
+No edge may pass over, under, or through any node. The single exception: an edge connecting to a node **inside** a container may cross that container's own boundary (a parent it is entering or leaving). Crossing any *other* node, including any other container, is a defect.
+
+Enforce in this order — placement, then connection-point sides, then waypoints (full procedure in the Edges section of reference.md). Edge-over-edge crossings are acceptable; edge-over-node is not.
+
+### 2. Spacing — every connection and every character readable
+
+Leave enough empty space that no edge label overlaps a node, another edge, or another label, and all node text fits inside its node. When a gap must carry a labeled edge or several edges, widen it — skip a grid lane rather than tighten. Whitespace is free; an unreadable diagram is worthless.
+
+### 3. Visual style — rounded, shadowed, 2px, on everything
+
+Every vertex and every edge carries all three:
+
+```
+rounded=1;shadow=1;strokeWidth=2;
+```
+
+Also set `shadow="1"` on the `mxGraphModel` element for the page-level shadow. Shapes whose geometry has no corners to round (ellipses, cylinders, platform icons) still take `shadow=1;strokeWidth=2;`.
+
+### 4. Platform icons — use the real icon set
+
+When a diagram names a platform or product with a shipped draw.io icon library — AWS, Azure, GCP, Kubernetes, Cisco, and others — use that library's shapes, not labeled rectangles. Verified style strings for AWS / Azure / GCP are in the "Platform icon sets" section of reference.md. Platform icons keep their library fill/stroke colours; add `shadow=1;strokeWidth=2;` and leave the rest alone. Fall back to a generic shape only when no icon exists for that component.
+
 ## How to create a diagram
 
-1. **Generate draw.io XML** in mxGraphModel format for the requested diagram. **Edge-clearance rule (always): no edge may ever pass over a node.** Every edge must take a logical, easy-to-read path from its source node to its target. Achieve this first through placement — position nodes on the grid so each edge has a clear channel — and, where an edge would otherwise cross an intermediate node, route it around via connection-point sides or waypoints (see the Edges section of reference.md). **Spacing rule (always): leave enough space that every connection and every piece of text is clearly readable.** No edge label may overlap a node, another edge, or another label; node text must fit inside its node. If a channel must carry edges with labels, widen the gap between nodes — whitespace is free, an unreadable diagram is worthless
+1. **Generate draw.io XML** in mxGraphModel format for the requested diagram, obeying the House rules below
 2. **Write the XML** to a `.drawio` file in the current working directory using the Write tool
 3. **If the user requested an export format** (png, svg, pdf), locate the draw.io CLI (see below), export with `--embed-diagram`, then delete the source `.drawio` file **only after confirming the export file was actually created**. If the CLI is not found **or the export produces no output file** (e.g. headless session — see the GUI-session caveat below), keep the `.drawio` file and tell the user they can install/open the draw.io desktop app to export, or open the `.drawio` file directly
 4. **Open the result** — the exported file if exported, or the `.drawio` file otherwise. If the open command fails, print the file path so the user can open it manually

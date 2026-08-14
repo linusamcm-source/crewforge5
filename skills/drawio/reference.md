@@ -17,7 +17,7 @@ Your job is to declare the **logical structure** of the diagram — what nodes e
 - Do NOT enumerate columns ("customer lane columns 0-10, web app 1-7"). Place a node, move on.
 - Do NOT add `<Array as="points">` waypoints. Edges are routed automatically. (Exception: keeping an edge from crossing a node in the no-viewer path — see Edges.)
 - Do NOT set `exitX` / `exitY` / `entryX` / `entryY` connection-point overrides unless you have specific geometric intent. Steering an edge around a node it would otherwise cross IS specific geometric intent.
-- Do NOT verify, re-check, or adjust coordinates after placing a node.
+- Do NOT verify, re-check, or adjust coordinates after placing a node — with one exception: the edge-clearance sweep (see Edges) is required, and any collision it finds gets fixed.
 - Do NOT narrate "building the diagram / finalizing the XML / now let me…". Just emit XML.
 - Do NOT write out lists of node positions as planning text. Emit them as `<mxCell>` elements directly.
 
@@ -29,25 +29,38 @@ Your job is to declare the **logical structure** of the diagram — what nodes e
 
 **Rigid grid — use for every XML diagram:**
 
-- Column x = `col_index * 180 + 40`  (col 0 = 40, col 1 = 220, col 2 = 400, …)
-- Row y = `row_index * 120 + 40`     (row 0 = 40, row 1 = 160, row 2 = 280, …)
-- Node size: rectangles `140×60`, diamonds `140×80`, circles `60×60`, documents `120×80`, cylinders `100×70`
+- Column x = `col_index * 220 + 40`  (col 0 = 40, col 1 = 260, col 2 = 480, …)
+- Row y = `row_index * 160 + 40`     (row 0 = 40, row 1 = 200, row 2 = 360, …)
+- Node size: rectangles `140×60`, diamonds `140×80`, circles `60×60`, documents `120×80`, cylinders `100×70`, platform icons `78×78`
 
-Pick a `(col, row)` for each node. Don't think about centers, gaps, or overlap — ELK handles routing between rough positions. Slight misalignment is invisible in the result.
+The pitch exceeds the node size on purpose: the leftover strip between two grid slots (80px horizontal, 100px vertical) is a **routing channel**. Edges travel in channels; nodes never sit in them.
+
+Pick a `(col, row)` for each node.
 
 **The grid pitch is a minimum, not a target.** When a gap between two nodes must carry a labeled edge, more than one edge, or a node whose text needs a bigger box, skip a grid lane (leave a column/row empty) or double the pitch for that region. Every connection and every label must sit fully in empty space — readable at a glance, touching nothing.
+
+## Mandatory style contract
+
+Every vertex and every edge in every diagram carries `rounded=1;shadow=1;strokeWidth=2;` in its style, and the `mxGraphModel` element carries `shadow="1"`. The examples throughout this file show these tokens; when copying a style string from a shape library (AWS/Azure/GCP sidebars, `search_shapes` output), append `shadow=1;strokeWidth=2;` to it. Shapes with no corners to round still take shadow and stroke width.
+
+The only cells exempt are ones that draw nothing: invisible `group;` containers, `shape=tableRow`, transparent table cells (`fillColor=none`), and bare `text;` labels. A shadow on an invisible box renders as a floating smudge.
+
+```xml
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" page="1" shadow="1" adaptiveColors="auto">
+```
 
 ## General principles
 
 - **Use proper draw.io shapes and connectors** — choose the semantically correct shape for each element (e.g., `shape=cylinder3` for databases and tanks, `rhombus` for decisions, `shape=mxgraph.pid2valves.*` for valves in P&IDs). draw.io has extensive shape libraries; prefer domain-appropriate shapes over generic rectangles.
 - **Decide whether to search for shapes** — before generating a diagram, decide if it needs domain-specific shapes from draw.io's extended libraries. **Skip `search_shapes`** for standard diagram types that use basic geometric shapes: flowcharts, UML (class, sequence, state, activity), ERD, org charts, mind maps, Venn diagrams, timelines, wireframes, and any diagram using only rectangles, diamonds, circles, cylinders, and arrows. Also skip if the user explicitly asks to use basic/simple shapes or says not to search. **Use `search_shapes`** when the diagram requires industry-specific or branded icons: cloud architecture (AWS, Azure, GCP), network topology (Cisco, rack equipment), P&ID (valves, instruments, vessels), electrical/circuit diagrams, Kubernetes, BPMN with specific task types, or any domain where the user expects realistic/standardized symbols rather than labeled boxes.
+- **Platform components always get the platform's icon** — a diagram naming AWS, Azure, GCP, Kubernetes, or Cisco components uses that library's shapes, never a labelled rectangle. When `search_shapes` is unavailable (the default CLI path), use the verified style strings in "Platform icon sets" below.
 - **Match the language of labels to the user's language** — if the user writes in German, French, Japanese, etc., all diagram labels, titles, and annotations should be in that same language.
 
 ## Common styles
 
 **Rounded rectangle:**
 ```xml
-<mxCell id="2" value="Label" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxCell id="2" value="Label" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="1">
   <mxGeometry x="100" y="100" width="120" height="60" as="geometry"/>
 </mxCell>
 ```
@@ -55,7 +68,7 @@ Pick a `(col, row)` for each node. Don't think about centers, gaps, or overlap �
 **Diamond (decision):**
 
 ```xml
-<mxCell id="3" value="Condition?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxCell id="3" value="Condition?" style="rhombus;rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="1">
   <mxGeometry x="100" y="200" width="120" height="80" as="geometry"/>
 </mxCell>
 ```
@@ -63,7 +76,7 @@ Pick a `(col, row)` for each node. Don't think about centers, gaps, or overlap �
 **Arrow (edge):**
 
 ```xml
-<mxCell id="4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="2" target="3" parent="1">
+<mxCell id="4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;" edge="1" source="2" target="3" parent="1">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 ```
@@ -71,7 +84,7 @@ Pick a `(col, row)` for each node. Don't think about centers, gaps, or overlap �
 **Labeled arrow:**
 
 ```xml
-<mxCell id="5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="3" target="6" parent="1">
+<mxCell id="5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;" edge="1" source="3" target="6" parent="1">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 ```
@@ -80,7 +93,9 @@ Pick a `(col, row)` for each node. Don't think about centers, gaps, or overlap �
 
 | Property                                                  | Values        | Use for                                                                            |
 | --------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
-| `rounded=1`                                             | 0 or 1        | Rounded corners                                                                    |
+| `rounded=1`                                             | 0 or 1        | Rounded corners — mandatory on every vertex and edge                              |
+| `shadow=1`                                              | 0 or 1        | Drop shadow — mandatory on every vertex and edge                                  |
+| `strokeWidth=2`                                         | number        | Line width — mandatory 2 on every vertex and edge                                 |
 | `whiteSpace=wrap`                                       | wrap          | Text wrapping                                                                      |
 | `fillColor=#dae8fc`                                     | Hex color     | Background color                                                                   |
 | `strokeColor=#6c8ebf`                                   | Hex color     | Border color                                                                       |
@@ -107,7 +122,7 @@ HTML in attribute values must be **XML-escaped**: `<` → `&lt;`, `>` → `&gt;`
 
 ```xml
 <mxCell value="<b>Title</b><br>Description"
-        style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="1">
   <mxGeometry x="100" y="100" width="120" height="60" as="geometry"/>
 </mxCell>
 ```
@@ -137,11 +152,30 @@ HTML in attribute values must be **XML-escaped**: `<` → `&lt;`, `>` → `&gt;`
 
 Just declare `source` and `target` and let ELK do the routing. The ELK pass also reverts itself if it made routing worse — so your edges are at worst unchanged, never worse.
 
-**No-viewer path (default): you are the router — no edge may ever pass over a node.** When exporting via the desktop CLI (no `drawio-mcp`, no ELK pass — see the runtime note at the top), the raw XML is exactly what renders, and nothing will fix a collision for you. Enforce edge clearance yourself, in this order:
+**No-viewer path (default): you are the router — no edge may ever pass over a node.** When exporting via the desktop CLI (no `drawio-mcp`, no ELK pass — see the runtime note at the top), the raw XML is exactly what renders, and nothing will fix a collision for you.
 
-1. **Placement first.** Put connected nodes in adjacent grid columns/rows so the default orthogonal path between them is unobstructed. Most collisions are placement problems, not routing problems.
-2. **Connection-point sides second.** If an edge would clip an intermediate node, set `exitX`/`exitY`/`entryX`/`entryY` so it leaves and enters on sides facing an empty channel.
-3. **Waypoints last.** If placement and sides can't avoid the collision, add an `<Array as="points">` waypoint routing the edge through an empty grid lane (the gaps between columns/rows are your channels).
+**The one exception — parent containment.** An edge whose source or target sits inside a container may cross *that container's* boundary; that is the normal, correct way to connect into a group and needs no avoidance. Everything else is a defect: a line over a sibling node, over an unrelated container, or clipping the corner of a node it does not connect to. Edge-over-edge crossings are fine and are never a reason to add a bend.
+
+Enforce clearance in this order:
+
+1. **Placement first.** Put connected nodes in adjacent grid columns/rows so the default orthogonal path between them runs down an empty channel. Most collisions are placement problems, not routing problems. If two connected nodes are far apart with nodes in between, either move them adjacent or reserve an empty row/column as the through-channel before routing.
+2. **Connection-point sides second.** If an edge would still clip a node, set `exitX`/`exitY`/`entryX`/`entryY` so it leaves and enters on sides facing an empty channel — e.g. a downstream node two columns right and one row down: exit right (`exitX=1;exitY=0.5;`), enter top (`entryX=0.5;entryY=0;`).
+3. **Waypoints last.** If placement and sides can't avoid the collision, add an `<Array as="points">` waypoint steering the edge through an empty grid lane. Waypoints go at channel centres — halfway between two occupied columns/rows — never inside a node's bounding box.
+
+```xml
+<mxCell id="e9" value="retry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="n3" target="n7">
+  <mxGeometry relative="1" as="geometry">
+    <Array as="points">
+      <mxPoint x="420" y="230"/>
+      <mxPoint x="420" y="400"/>
+    </Array>
+  </mxGeometry>
+</mxCell>
+```
+
+**Long back-edges (loops, error paths, feedback) get their own lane.** They are the most common source of node collisions. Route them around the outside of the diagram — a channel below the bottom row or beside the last column — rather than back through the middle of the flow.
+
+**Before emitting, sweep every edge once.** For each edge, take its source and target rectangles and the straight/orthogonal path between them, and check no third node's box lies on that path. Any hit: fix it with step 1, 2, or 3 above. This is the one check worth doing after placement — skip the general "verify coordinates" prohibition for it.
 
 Every edge must read as a logical, easy-to-follow path from its source node to its target — no line through a box, no ambiguous mid-node crossings.
 
@@ -167,6 +201,84 @@ Every edge must read as a logical, easy-to-follow path from its source node to i
 - `strokeColor=#...`, `strokeWidth=2` — color/width
 - Edge labels: set `value` directly on the edge cell
 
+## Platform icon sets
+
+When a diagram names a cloud platform or product that draw.io ships icons for, use the icon — never a rectangle labelled "S3" or "Cosmos DB". These libraries are bundled with the desktop app, so they render in CLI exports with no network access.
+
+Rules for all three:
+
+- Keep the library's own `fillColor` / `strokeColor` — those are the brand colours. Do not recolour.
+- Append `shadow=1;strokeWidth=2;` to the library style string.
+- Icons are square: `78×78` (or `50×50` for dense diagrams). `aspect=fixed` keeps them square — leave it in.
+- Labels sit **below** the icon (`verticalLabelPosition=bottom;verticalAlign=top;`), so reserve vertical space in the grid: the label eats ~20px under the box and must not touch the row beneath.
+- If `search_shapes` is available (drawio-mcp connected), use it to confirm the exact shape name. Without it, use a name you are confident of from the list below, or fall back to the platform's group/generic icon rather than inventing a name — an unknown shape name renders as an empty box.
+
+### AWS (`mxgraph.aws4`)
+
+**Service icon** — the plain glyph, brand colour by service category:
+
+```xml
+<mxCell id="s3" value="S3 Bucket" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shadow=1;strokeWidth=2;shape=mxgraph.aws4.s3;" vertex="1" parent="1">
+  <mxGeometry x="40" y="40" width="78" height="78" as="geometry"/>
+</mxCell>
+```
+
+**Resource icon** — the rounded coloured tile with the glyph inside (the standard AWS architecture-diagram element):
+
+```xml
+<mxCell id="lam" value="Lambda" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shadow=1;strokeWidth=2;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" vertex="1" parent="1">
+  <mxGeometry x="260" y="40" width="78" height="78" as="geometry"/>
+</mxCell>
+```
+
+Category fill colours: compute `#ED7100`, storage `#7AA116`, database `#C925D1`, networking `#8C4FFF`, security `#DD344C`, analytics `#8C4FFF`, management `#E7157B`, general `#232F3E`.
+
+**Group container** — VPC, region, account, subnet, security group. This is a real container (`container=1;pointerEvents=0;`), so children set `parent="<group_id>"`:
+
+```xml
+<mxCell id="vpc" value="VPC" style="sketch=0;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shadow=1;strokeWidth=2;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_vpc2;strokeColor=#8C4FFF;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#AAB7B8;dashed=0;" vertex="1" parent="1">
+  <mxGeometry x="40" y="40" width="640" height="360" as="geometry"/>
+</mxCell>
+```
+
+Group icon names: `group_aws_cloud`, `group_aws_cloud_alt`, `group_region`, `group_vpc2`, `group_security_group`, `group_auto_scaling_group`, `group_account`.
+
+### Azure (`img/lib/azure2`)
+
+Azure icons are **image shapes**, not stencils — the style points at a bundled SVG:
+
+```xml
+<mxCell id="func" value="Function App" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;shadow=1;strokeWidth=2;image=img/lib/azure2/compute/Function_Apps.svg;" vertex="1" parent="1">
+  <mxGeometry x="40" y="40" width="68" height="68" as="geometry"/>
+</mxCell>
+```
+
+The path is `img/lib/azure2/<category>/<Name>.svg` — category folders include `compute`, `storage`, `databases`, `networking`, `identity`, `security`, `ai_machine_learning`, `analytics`, `integration`, `containers`, `devops`, `management_governance`, `web`, `iot`, `general`. Names are Title_Case with underscores (`Azure_Machine_Learning.svg`, `Function_Apps.svg`). Confirm names with `search_shapes` when it is available; if unsure, prefer a generic rounded rectangle in Azure blue (`fillColor=#0078D4;fontColor=#ffffff;strokeColor=#005A9E;`) over a guessed filename, because a missing image renders blank.
+
+For Azure grouping (subscription, resource group, VNet), use a plain swimlane container in the platform's colour — Azure has no group-stencil equivalent to AWS.
+
+### GCP (`mxgraph.gcp2`)
+
+```xml
+<mxCell id="run" value="Cloud Run" style="sketch=0;html=1;aspect=fixed;strokeColor=none;fillColor=#3B8DF1;verticalAlign=top;labelPosition=center;verticalLabelPosition=bottom;align=center;fontSize=12;shadow=1;strokeWidth=2;shape=mxgraph.gcp2.cloud_run;" vertex="1" parent="1">
+  <mxGeometry x="40" y="40" width="66" height="58" as="geometry"/>
+</mxCell>
+```
+
+Shape names are lowercase with underscores (`compute_engine`, `cloud_storage`, `cloud_run`, `bigquery`, `pubsub`, `cloud_sql`, `cloud_monitoring`). GCP product icons are blue `#3B8DF1`; category icons live under `mxgraph.gcp3.*` in grey `#9aa0a6`.
+
+GCP grouping cards (project, zone) use a rounded card container:
+
+```xml
+<mxCell id="proj" value="Project" style="sketch=0;rounded=1;absoluteArcSize=1;arcSize=2;html=1;strokeColor=#dddddd;fillColor=#ffffff;gradientColor=none;dashed=0;fontSize=12;fontColor=#9E9E9E;align=left;verticalAlign=top;spacing=10;spacingTop=-4;whiteSpace=wrap;container=1;pointerEvents=0;shadow=1;strokeWidth=2;" vertex="1" parent="1">
+  <mxGeometry x="40" y="40" width="560" height="320" as="geometry"/>
+</mxCell>
+```
+
+### Other platforms
+
+Same pattern applies to Kubernetes (`mxgraph.kubernetes.*`), Cisco (`mxgraph.cisco19.*`), and the other bundled libraries. Reach for `search_shapes` to get the exact style string when the MCP server is connected; otherwise use a generic shape rather than a guessed stencil name.
+
 ## Containers and groups
 
 For architecture diagrams or any diagram with nested elements, use draw.io's proper parent-child containment — do **not** just place shapes on top of larger shapes.
@@ -185,7 +297,7 @@ Set `parent="containerId"` on child cells. Children use **relative coordinates**
 
 ### Key rules
 
-- **Edges to children inside containers naturally cross the container boundary** — this is correct and expected. Do not add extra waypoints or complex routing to avoid a parent container when connecting to shapes inside it.
+- **Edges to children inside containers naturally cross the container boundary** — this is correct and expected, and it is the *only* sanctioned exception to the no-edge-over-a-node rule. Do not add extra waypoints or complex routing to avoid a parent container when connecting to shapes inside it. It does not license crossing any *other* container: an edge that must pass a container it is not entering routes around it.
 - **Always add `pointerEvents=0;`** to container styles that should not capture connections being rewired between children
 - Only omit `pointerEvents=0` when the container itself needs to be connectable — in that case, use `swimlane` style which handles this correctly (the client area is transparent for mouse events while the header remains connectable)
 - Children must set `parent="containerId"` and use coordinates **relative to the container**
@@ -193,13 +305,13 @@ Set `parent="containerId"` on child cells. Children use **relative coordinates**
 ### Example: Architecture container with swimlane
 
 ```xml
-<mxCell id="svc1" value="User Service" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+<mxCell id="svc1" value="User Service" style="swimlane;rounded=1;shadow=1;strokeWidth=2;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
   <mxGeometry x="100" y="100" width="300" height="200" as="geometry"/>
 </mxCell>
-<mxCell id="api1" value="REST API" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="svc1">
+<mxCell id="api1" value="REST API" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="svc1">
   <mxGeometry x="20" y="40" width="120" height="60" as="geometry"/>
 </mxCell>
-<mxCell id="db1" value="Database" style="shape=cylinder3;whiteSpace=wrap;html=1;" vertex="1" parent="svc1">
+<mxCell id="db1" value="Database" style="shape=cylinder3;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="svc1">
   <mxGeometry x="160" y="40" width="120" height="60" as="geometry"/>
 </mxCell>
 ```
@@ -210,7 +322,7 @@ Set `parent="containerId"` on child cells. Children use **relative coordinates**
 <mxCell id="grp1" value="" style="group;" vertex="1" parent="1">
   <mxGeometry x="100" y="100" width="300" height="200" as="geometry"/>
 </mxCell>
-<mxCell id="c1" value="Component A" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="grp1">
+<mxCell id="c1" value="Component A" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="grp1">
   <mxGeometry x="10" y="10" width="120" height="60" as="geometry"/>
 </mxCell>
 ```
@@ -223,25 +335,25 @@ Use **flat swimlanes** at `parent="1"`, stacked vertically. One row of nodes per
 
 - Lane size: `x=0, y=lane_index*150, width=CANVAS_W, height=150`
 - Lane style: `swimlane;horizontal=0;startSize=110;fillColor=<pastel>;html=1;`
-- Child nodes inside a lane: `parent="<lane_id>"`, `x = 120 + col*180`, `y = 45` (always 45), size 140×60 (or 140×80 for diamonds)
+- Child nodes inside a lane: `parent="<lane_id>"`, `x = 120 + col*220`, `y = 45` (always 45), size 140×60 (or 140×80 for diamonds)
 - Cross-lane edges: `parent="1"` (not inside a lane)
 
-Pick `CANVAS_W = max_col * 180 + 300`. Choose lane colors from `#f5f5f5, #e8f4f8, #fff0e6, #e8f5e9, #fff9e6, #fce4ec` in that order.
+Pick `CANVAS_W = max_col * 220 + 300`. Choose lane colors from `#f5f5f5, #e8f4f8, #fff0e6, #e8f5e9, #fff9e6, #fce4ec` in that order.
 
 ```xml
-<mxCell id="lane1" value="Customer" style="swimlane;horizontal=0;startSize=110;fillColor=#f5f5f5;html=1;" vertex="1" parent="1">
+<mxCell id="lane1" value="Customer" style="swimlane;rounded=1;shadow=1;strokeWidth=2;horizontal=0;startSize=110;fillColor=#f5f5f5;html=1;" vertex="1" parent="1">
   <mxGeometry x="0" y="0" width="1800" height="150" as="geometry"/>
 </mxCell>
-<mxCell id="n1" value="Place Order" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
+<mxCell id="n1" value="Place Order" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
   <mxGeometry x="120" y="45" width="140" height="60" as="geometry"/>
 </mxCell>
-<mxCell id="lane2" value="System" style="swimlane;horizontal=0;startSize=110;fillColor=#e8f4f8;html=1;" vertex="1" parent="1">
+<mxCell id="lane2" value="System" style="swimlane;rounded=1;shadow=1;strokeWidth=2;horizontal=0;startSize=110;fillColor=#e8f4f8;html=1;" vertex="1" parent="1">
   <mxGeometry x="0" y="150" width="1800" height="150" as="geometry"/>
 </mxCell>
-<mxCell id="n2" value="Validate" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
-  <mxGeometry x="300" y="45" width="140" height="60" as="geometry"/>
+<mxCell id="n2" value="Validate" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+  <mxGeometry x="340" y="45" width="140" height="60" as="geometry"/>
 </mxCell>
-<mxCell id="e1" edge="1" parent="1" source="n1" target="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxCell id="e1" edge="1" parent="1" source="n1" target="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 ```
@@ -260,25 +372,25 @@ For diagrams with **nested groupings** — VPC → Availability Zone → EC2 ins
 - For industry-specific icons (AWS/Azure/GCP logos, Cisco equipment, etc.), call `search_shapes` to get the exact `style` string and substitute it into a regular vertex — the container structure stays the same.
 
 ```xml
-<mxCell id="vpc" value="VPC" style="swimlane;startSize=24;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+<mxCell id="vpc" value="VPC" style="swimlane;rounded=1;shadow=1;strokeWidth=2;startSize=24;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
   <mxGeometry x="0" y="0" width="720" height="360" as="geometry"/>
 </mxCell>
-<mxCell id="az1" value="AZ us-east-1a" style="swimlane;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="vpc">
+<mxCell id="az1" value="AZ us-east-1a" style="swimlane;rounded=1;shadow=1;strokeWidth=2;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="vpc">
   <mxGeometry x="20" y="36" width="320" height="300" as="geometry"/>
 </mxCell>
-<mxCell id="web1" value="web-1" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="az1">
+<mxCell id="web1" value="web-1" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="az1">
   <mxGeometry x="30" y="40" width="120" height="60" as="geometry"/>
 </mxCell>
-<mxCell id="db1" value="db-1" style="shape=cylinder3;whiteSpace=wrap;html=1;" vertex="1" parent="az1">
+<mxCell id="db1" value="db-1" style="shape=cylinder3;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="az1">
   <mxGeometry x="180" y="40" width="100" height="70" as="geometry"/>
 </mxCell>
-<mxCell id="az2" value="AZ us-east-1b" style="swimlane;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="vpc">
+<mxCell id="az2" value="AZ us-east-1b" style="swimlane;rounded=1;shadow=1;strokeWidth=2;startSize=24;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="vpc">
   <mxGeometry x="360" y="36" width="340" height="300" as="geometry"/>
 </mxCell>
-<mxCell id="web2" value="web-2" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="az2">
+<mxCell id="web2" value="web-2" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="az2">
   <mxGeometry x="30" y="40" width="120" height="60" as="geometry"/>
 </mxCell>
-<mxCell id="e1" edge="1" parent="1" source="web1" target="web2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxCell id="e1" edge="1" parent="1" source="web1" target="web2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 ```
@@ -316,13 +428,13 @@ Cross-functional flowcharts show a process across **two axes at once** — actor
 <mxCell id="r1" style="shape=tableRow;horizontal=0;startSize=0;collapsible=0;" vertex="1" parent="tbl">
   <mxGeometry y="40" width="900" height="140" as="geometry"/>
 </mxCell>
-<mxCell id="a1" value="Customer" style="fillColor=#dae8fc;fontStyle=1;" vertex="1" parent="r1">
+<mxCell id="a1" value="Customer" style="rounded=1;shadow=1;strokeWidth=2;fillColor=#dae8fc;fontStyle=1;" vertex="1" parent="r1">
   <mxGeometry width="140" height="140" as="geometry"/>
 </mxCell>
 <mxCell id="c_cust_order" style="fillColor=none;" vertex="1" parent="r1">
   <mxGeometry x="140" width="380" height="140" as="geometry"/>
 </mxCell>
-<mxCell id="t_place" value="Place Order" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="c_cust_order">
+<mxCell id="t_place" value="Place Order" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="c_cust_order">
   <mxGeometry x="120" y="40" width="140" height="60" as="geometry"/>
 </mxCell>
 <mxCell id="c_cust_fulfill" style="fillColor=none;" vertex="1" parent="r1">
@@ -331,25 +443,25 @@ Cross-functional flowcharts show a process across **two axes at once** — actor
 <mxCell id="r2" style="shape=tableRow;horizontal=0;startSize=0;collapsible=0;" vertex="1" parent="tbl">
   <mxGeometry y="180" width="900" height="140" as="geometry"/>
 </mxCell>
-<mxCell id="a2" value="System" style="fillColor=#d5e8d4;fontStyle=1;" vertex="1" parent="r2">
+<mxCell id="a2" value="System" style="rounded=1;shadow=1;strokeWidth=2;fillColor=#d5e8d4;fontStyle=1;" vertex="1" parent="r2">
   <mxGeometry width="140" height="140" as="geometry"/>
 </mxCell>
 <mxCell id="c_sys_order" style="fillColor=none;" vertex="1" parent="r2">
   <mxGeometry x="140" width="380" height="140" as="geometry"/>
 </mxCell>
-<mxCell id="t_validate" value="Validate" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="c_sys_order">
+<mxCell id="t_validate" value="Validate" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="c_sys_order">
   <mxGeometry x="120" y="40" width="140" height="60" as="geometry"/>
 </mxCell>
 <mxCell id="c_sys_fulfill" style="fillColor=none;" vertex="1" parent="r2">
   <mxGeometry x="520" width="380" height="140" as="geometry"/>
 </mxCell>
-<mxCell id="t_ship" value="Ship" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="c_sys_fulfill">
+<mxCell id="t_ship" value="Ship" style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="c_sys_fulfill">
   <mxGeometry x="120" y="40" width="140" height="60" as="geometry"/>
 </mxCell>
-<mxCell id="e1" edge="1" parent="1" source="t_place" target="t_validate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxCell id="e1" edge="1" parent="1" source="t_place" target="t_validate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="e2" edge="1" parent="1" source="t_validate" target="t_ship" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxCell id="e2" edge="1" parent="1" source="t_validate" target="t_ship" style="edgeStyle=orthogonalEdgeStyle;rounded=1;shadow=1;strokeWidth=2;html=1;">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 ```
@@ -373,7 +485,7 @@ Cell `id="0"` is the root and cell `id="1"` is the default layer — both always
     <mxCell id="0"/>
     <mxCell id="1" parent="0"/>
     <mxCell id="2" value="Annotations" parent="0"/>
-    <mxCell id="10" value="Server" style="rounded=1;html=1;" vertex="1" parent="1">
+    <mxCell id="10" value="Server" style="rounded=1;shadow=1;strokeWidth=2;html=1;" vertex="1" parent="1">
       <mxGeometry x="100" y="100" width="120" height="60" as="geometry"/>
     </mxCell>
     <mxCell id="20" value="Note: deprecated" style="text;" vertex="1" parent="2">
@@ -401,12 +513,12 @@ Tags require wrapping `mxCell` in an `<object>` element. Tags are assigned via t
     <mxCell id="0"/>
     <mxCell id="1" parent="0"/>
     <object id="2" label="Auth Service" tags="critical v2">
-      <mxCell style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxCell style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="1">
         <mxGeometry x="100" y="100" width="120" height="60" as="geometry"/>
       </mxCell>
     </object>
     <object id="3" label="Legacy API" tags="critical deprecated">
-      <mxCell style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxCell style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="1">
         <mxGeometry x="300" y="100" width="120" height="60" as="geometry"/>
       </mxCell>
     </object>
@@ -433,7 +545,7 @@ Set `placeholders="1"` on the `<object>` to enable `%propertyName%` substitution
     <mxCell id="1" parent="0"/>
     <object id="2" label="<b>%component%</b><br>Owner: %owner%<br>Status: %status%"
             placeholders="1" component="Auth Service" owner="Team Backend" status="Active">
-      <mxCell style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxCell style="rounded=1;shadow=1;strokeWidth=2;whiteSpace=wrap;html=1;" vertex="1" parent="1">
         <mxGeometry x="100" y="100" width="160" height="80" as="geometry"/>
       </mxCell>
     </object>
