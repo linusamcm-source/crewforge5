@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.3.2 — 2026-08-15
+
+Closes the gap 0.3.1 fixed by hand: the validators now check that frontmatter
+**parses**, not merely that it has delimiters.
+
+### Added
+
+- `scripts/frontmatter_check.sh`, called by `validate_structure.sh` and
+  `validate_agent.sh`. Every other check in both scripts asks whether a field
+  appears in the text; a block that does not parse has no fields at all, so
+  those checks read a broken manifest as a clean one. That is precisely how
+  0.3.1's `skills/init/SKILL.md` defect reached a release with
+  `validate_all.sh` calling it structurally clean.
+
+  Three states, because *does not parse* and *parses but silently drops the tail
+  of a value* are different failures: exit 1 with `FAIL:`, exit 0 with `WARN:`,
+  exit 0 silent.
+
+  **No YAML library, deliberately.** `python3` is a declared dependency but
+  PyYAML is not, and a gate stricter on the maintainer's laptop than in CI is
+  one people learn to bypass. The reserved-character set was measured against
+  PyYAML one character at a time rather than reasoned out — `&` and `?` lead
+  valid plain scalars and are absent for that reason, `[` and `{` are checked
+  for balance rather than banned, since `tools: [Read, Write]` is legal. 28
+  constructed cases, zero disagreements with PyYAML, all 35 shipped manifests
+  clean.
+
+### Fixed
+
+- The init flow's own *repaired* fixture carried an `<example>` block whose
+  `Context: ` broke the same way. The test asserting a structurally clean
+  component was asserting it over a manifest that loaded empty.
+- `validate_agent.sh` emitted unescaped quotes in its JSON `detail` strings — it
+  had no `json_escape` at all. Nothing had exposed it until parse-failure
+  messages started quoting the offending value, at which point `init_gate.sh`
+  truncated the line at the first bare quote.
+
+`bats scripts/tests/` is now 236.
+
 ## 0.3.1 — 2026-08-15
 
 Bug fixes to the validators' mechanical half. No interface change.
