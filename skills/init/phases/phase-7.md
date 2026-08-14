@@ -7,9 +7,9 @@ Re-measure, and write down what actually changed.
 Re-run the measurements from phase 1 against the tree as it now stands:
 
 ```bash
-python3 "${CREWFORGE_ROOT}/skills/token-slim/scripts/baseline.py" \
+python3 "${CREWFORGE5_ROOT}/skills/token-slim/scripts/baseline.py" \
   --skills-dir "$INIT_TARGET/skills" --report
-bash "${CREWFORGE_ROOT}/scripts/budget_check.sh" --verbose
+bash "${CREWFORGE5_ROOT}/scripts/budget_check.sh" --verbose
 ```
 
 Write `$INIT_STATE/report.md`. It must carry the three measured numbers as

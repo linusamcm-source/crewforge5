@@ -16,7 +16,7 @@ When the diagram describes real code — architecture, ER, class, sequence, call
 2. **Otherwise, ground it with `use-repo-code`** — grep the repomix snapshot for the components, callers, symbols, and relationships the diagram needs, instead of reading files one by one or assuming layout. It is hidden from the catalogue, so resolve it rather than reaching for the `Skill` tool:
 
    ```bash
-   bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+   bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
    ```
 
    It answers `MODE=agent` — spawn it through the `Agent` tool with the type its frontmatter names, and take back only the nodes and edges. Reading its body inline would drag the whole pack in behind it.

@@ -16,9 +16,9 @@ Escalation ladder — the convention `team-sprint-planner`, `adversarial-review`
 | 3 | full index rebuild | index missing or stale |
 
 Tier 1 greps the pack with **explicit `rtk grep`**, not bare grep —
-the hook is best-effort; see the rtk notes in the CrewForge README. `${CREWFORGE_ROOT}/skills/use-repo-code/scripts/pack.sh 0` forces a fresh
+the hook is best-effort; see the rtk notes in the CrewForge5 README. `${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/pack.sh 0` forces a fresh
 pack when grounding a plan or review. Tiers 1–2 route through
-`${CREWFORGE_ROOT}/skills/team-sprint/scripts/recon.sh`, which names its provider and freshness, so a
+`${CREWFORGE5_ROOT}/skills/team-sprint/scripts/recon.sh`, which names its provider and freshness, so a
 provider that cannot parse the language degrades visibly instead of answering an empty "no
 callers"; its header documents the rest. Tier 2 otherwise uses `graphify query` / `path` /
 `explain`; on `/graphify`, invoke the Skill tool before anything else.

@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/crewforge-root.sh\" \"${CLAUDE_PLUGIN_ROOT}\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/crewforge5-root.sh\" \"${CLAUDE_PLUGIN_ROOT}\"",
             "timeout": 5
           },
           {

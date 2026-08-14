@@ -4,7 +4,7 @@
 
 Condensed to three entry points. The always-loaded catalogue went from
 **4390 chars / ~1,098 tok / 23 entries** to
-**2165 chars / ~541 tok / 12 entries** — both figures from
+**2172 chars / ~543 tok / 12 entries** — both figures from
 `scripts/budget_check.sh`, which is what a session actually carries, not a
 count of directories under `skills/`.
 
@@ -15,7 +15,7 @@ all 27 skills are still on disk and still callable by name.
 
 ### Added
 
-- `/crewforge:init`, `/crewforge:plan`, `/crewforge:execute` — the only three
+- `/crewforge5:init`, `/crewforge5:plan`, `/crewforge5:execute` — the only three
   skills left in the catalogue. Each is a state machine over a `phases.json`
   manifest, driven by the shared `scripts/flow/` driver: a phase is offered,
   its gate is run, and the verdict is written to state before the next phase.
@@ -48,7 +48,7 @@ all 27 skills are still on disk and still callable by name.
 
 - Nothing was deleted. Every skill and agent that shipped in 0.1.0 is still on
   disk, still validated, still invocable by its own name.
-- `team-sprint`'s phase docs are untouched. `/crewforge:execute` wraps them and
+- `team-sprint`'s phase docs are untouched. `/crewforge5:execute` wraps them and
   adds two phases at the end (integration diagram, distilled learnings) rather
   than forking their content.
 
@@ -59,11 +59,11 @@ this is the half of it that is general, extracted so it installs anywhere.
 
 ### Added
 
-- 25 skills and 7 agents, namespaced under `crewforge:`. No skill was renamed —
+- 25 skills and 7 agents, namespaced under `crewforge5:`. No skill was renamed —
   the plugin name is already the prefix.
 - `rules/` — the recon ladder, verification discipline, git hygiene and the
   subagent delivery contract, as plugin-owned files. Installed by
-  `/crewforge:sprint-init`, by symlink, only when asked. Nothing is ever written
+  `/crewforge5:sprint-init`, by symlink, only when asked. Nothing is ever written
   to your `CLAUDE.md`.
 - `scripts/budget_check.sh` — release gate on always-loaded context. The bundle
   measures ~1,141 tokens against a 1,200 budget. Three skills were hidden behind
@@ -74,8 +74,8 @@ this is the half of it that is general, extracted so it installs anywhere.
   name its path implies.
 - `scripts/sprint_init.sh` — report / install / uninstall for the rule files,
   with a contradiction check that refuses to install over a conflicting rule.
-- `hooks/crewforge-root.sh` — publishes the install path once per session as
-  `$CREWFORGE_ROOT`, because `${CLAUDE_PLUGIN_ROOT}` is not visible to the Bash
+- `hooks/crewforge5-root.sh` — publishes the install path once per session as
+  `$CREWFORGE5_ROOT`, because `${CLAUDE_PLUGIN_ROOT}` is not visible to the Bash
   tool.
 - `crew_copy.sh` — carries `.claude/agents/` and `.claude/crews/` into **each**
   worktree at node start. A sprint that generates its crew after a node worktree
@@ -96,7 +96,7 @@ this is the half of it that is general, extracted so it installs anywhere.
 
 - All `~/.claude` and `/Users/...` coupling removed from shipped skills, agents
   and hooks — 42 files at the start, none at the end.
-- `ledger.sh` writes to `${XDG_STATE_HOME:-~/.local/state}/crewforge/ledger`
+- `ledger.sh` writes to `${XDG_STATE_HOME:-~/.local/state}/crewforge5/ledger`
   rather than assuming a `~/.claude` exists; `ceiling.sh` resolves its targets
   from the tree it ships in.
 - `agents/architect-review.md` → `architect-reviewer.md`, matching the name its

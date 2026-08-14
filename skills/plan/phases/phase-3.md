@@ -8,10 +8,10 @@ user decides; you stress-test.
 1. Load the `grill-me` skill body for the questioning mechanic:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" grill-me
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" grill-me
    ```
 
-2. Work `.crewforge/plan/frames.md` top to bottom. For each decision:
+2. Work `.crewforge5/plan/frames.md` top to bottom. For each decision:
    **ask one question at a time**, in a single `AskUserQuestion` call, and
    wait for the answer before composing the next one.
    Batching questions is what makes a grilling feel like a form: the interesting
@@ -19,7 +19,7 @@ user decides; you stress-test.
    cannot be written in advance.
 3. Push back once on a weak answer, with the evidence from phase 1. If the user
    holds, record their decision — capitulation and nagging are both failures.
-4. Append each ratified answer to `.crewforge/plan/decisions.md`:
+4. Append each ratified answer to `.crewforge5/plan/decisions.md`:
 
    ```markdown
    ## D1 — <decision>
@@ -27,10 +27,10 @@ user decides; you stress-test.
    ```
 
 This is why the flow stays inline. A forked subagent has no user to ask, so
-`crewforge:plan` declares no `context: fork` and no `agent:` frontmatter.
+`crewforge5:plan` declares no `context: fork` and no `agent:` frontmatter.
 
 ## Gate
 
-`test -s .crewforge/plan/decisions.md` — every decision framed in phase 2 has a
+`test -s .crewforge5/plan/decisions.md` — every decision framed in phase 2 has a
 recorded answer here before you run the gate. An unanswered decision goes into
 the plan as an assumption nobody agreed to.

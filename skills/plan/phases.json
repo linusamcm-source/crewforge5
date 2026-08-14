@@ -3,28 +3,28 @@
     "id": "0",
     "title": "Intake",
     "doc": "phases/phase-0.md",
-    "gate": "bash \"${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh\" plan get goal",
+    "gate": "bash \"${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh\" plan get goal",
     "required": true
   },
   {
     "id": "1",
     "title": "Ground",
     "doc": "phases/phase-1.md",
-    "gate": "m=\"$(. \"${CREWFORGE_ROOT:-.}/skills/team-sprint/scripts/lib.sh\"; read_config_scalar \"${TEAM_SPRINT_CONFIG:-team-sprint.config.yaml}\" repomix_max_age_minutes)\"; case \"$m\" in ''|*[!0-9]*) m=240;; esac; bash \"${CREWFORGE_ROOT:-.}/skills/team-sprint/scripts/repomix_refresh.sh\" --max-age-minutes \"$m\" || bash \"${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh\" plan get ground_degraded | grep -E '^DEGRADED.*[Gg]rep'",
+    "gate": "m=\"$(. \"${CREWFORGE5_ROOT:-.}/skills/team-sprint/scripts/lib.sh\"; read_config_scalar \"${TEAM_SPRINT_CONFIG:-team-sprint.config.yaml}\" repomix_max_age_minutes)\"; case \"$m\" in ''|*[!0-9]*) m=240;; esac; bash \"${CREWFORGE5_ROOT:-.}/skills/team-sprint/scripts/repomix_refresh.sh\" --max-age-minutes \"$m\" || bash \"${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh\" plan get ground_degraded | grep -E '^DEGRADED.*[Gg]rep'",
     "required": true
   },
   {
     "id": "2",
     "title": "Diverge",
     "doc": "phases/phase-2.md",
-    "gate": "test -s .crewforge/plan/frames.md",
+    "gate": "test -s .crewforge5/plan/frames.md",
     "required": true
   },
   {
     "id": "3",
     "title": "Grill",
     "doc": "phases/phase-3.md",
-    "gate": "test -s .crewforge/plan/decisions.md",
+    "gate": "test -s .crewforge5/plan/decisions.md",
     "required": true
   },
   {
@@ -45,21 +45,21 @@
     "id": "6",
     "title": "Draft",
     "doc": "phases/phase-6.md",
-    "gate": "p=\"$(bash \"${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh\" plan get plan_path)\" && bash \"${CREWFORGE_ROOT:-.}/skills/team-sprint/scripts/validate_plan_path.sh\" \"$p\" && bash \"${CREWFORGE_ROOT:-.}/skills/team-sprint-planner/scripts/plan_readback.sh\" \"$p\"",
+    "gate": "p=\"$(bash \"${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh\" plan get plan_path)\" && bash \"${CREWFORGE5_ROOT:-.}/skills/team-sprint/scripts/validate_plan_path.sh\" \"$p\" && bash \"${CREWFORGE5_ROOT:-.}/skills/team-sprint-planner/scripts/plan_readback.sh\" \"$p\"",
     "required": true
   },
   {
     "id": "7",
     "title": "Review",
     "doc": "phases/phase-7.md",
-    "gate": "p=\"$(bash \"${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh\" plan get plan_path)\" && bash \"${CREWFORGE_ROOT:-.}/skills/team-sprint/scripts/findings_gate.sh\" \"$p\" && grep -qE '^<!-- adversarial-review: status=(clean|user-override) ' \"$p\"",
+    "gate": "p=\"$(bash \"${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh\" plan get plan_path)\" && bash \"${CREWFORGE5_ROOT:-.}/skills/team-sprint/scripts/findings_gate.sh\" \"$p\" && grep -qE '^<!-- adversarial-review: status=(clean|user-override) ' \"$p\"",
     "required": true
   },
   {
     "id": "8",
     "title": "Verify",
     "doc": "phases/phase-8.md",
-    "gate": "p=\"$(bash \"${CREWFORGE_ROOT:-.}/scripts/flow/flow_state.sh\" plan get plan_path)\" && bash \"${CREWFORGE_ROOT:-.}/skills/master_plan/scripts/check_coverage.sh\" docs/plans/GOAL_IMPACT.md \"$p\"",
+    "gate": "p=\"$(bash \"${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh\" plan get plan_path)\" && bash \"${CREWFORGE5_ROOT:-.}/skills/master_plan/scripts/check_coverage.sh\" docs/plans/GOAL_IMPACT.md \"$p\"",
     "required": true
   }
 ]

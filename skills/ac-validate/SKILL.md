@@ -100,7 +100,7 @@ For each story with UI-testable ACs, drive the browser with `playwright-cli`. It
 from the catalogue, so the `Skill` tool cannot reach it — resolve it once, up front:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode playwright-cli
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode playwright-cli
 ```
 
 It answers `MODE=inline`, so read the body at the path it names and drive it from here.

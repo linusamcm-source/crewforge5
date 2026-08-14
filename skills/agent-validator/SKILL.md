@@ -68,7 +68,7 @@ Confirm the path with the user before proceeding.
 
 Run the bundled validation script for mechanical checks:
 ```bash
-bash ${CREWFORGE_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>
+bash ${CREWFORGE5_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>
 ```
 
 Then supplement with these manual checks:
@@ -143,7 +143,7 @@ Show the user the summary table and overall grade. Then:
 2. **If grade is below A** (B, C, D, or F): automatically hand off to **agent-rectifier**
    with this validation report and the target agent path. It is hidden from the catalogue,
    so the `Skill` tool cannot reach it — resolve it with
-   `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-rectifier`
+   `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-rectifier`
    and honour the answer (`MODE=inline` — read the body and follow it here).
    Do not ask the user for confirmation — this is mandatory. The rectifier applies fixes
    and then re-runs this validator for full re-validation. This creates a self-healing
@@ -161,5 +161,5 @@ Show the user the summary table and overall grade. Then:
 3. After the loop completes, present the final grade A confirmation with the total number
    of rounds and fixes applied.
 
-The agent-rectifier is at `${CREWFORGE_ROOT}/skills/agent-rectifier/` — it handles the full fix
+The agent-rectifier is at `${CREWFORGE5_ROOT}/skills/agent-rectifier/` — it handles the full fix
 workflow including before/after diffs and deferred items that need human review.

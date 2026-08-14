@@ -25,13 +25,13 @@ new skills to a repo. Works on any directory of `<skill>/SKILL.md` folders —
 All take explicit paths — nothing is hardcoded to one repo:
 
 ```bash
-SCRIPTS=${CREWFORGE_ROOT}/skills/token-slim/scripts
+SCRIPTS=${CREWFORGE5_ROOT}/skills/token-slim/scripts
 python3 $SCRIPTS/baseline.py --skills-dir <dir> --out <work>/baseline.json   # snapshot
 python3 $SCRIPTS/baseline.py --skills-dir <dir> --report                     # live measure
 bash    $SCRIPTS/check.sh <skill> <dir> <work>/baseline.json [desc-cap]     # per-skill gate
 python3 $SCRIPTS/sweep.py --skills-dir <dir> --baseline <work>/baseline.json \
         [--ceilings <work>/ceilings.json] [--max-total N]                    # totals gate
-bats    ${CREWFORGE_ROOT}/skills/token-slim/tests                                    # harness self-test
+bats    ${CREWFORGE5_ROOT}/skills/token-slim/tests                                    # harness self-test
 python3 $SCRIPTS/mech-candidates.py --skills-dir <dir> [--min-hits N]        # sandwich candidates
 ```
 

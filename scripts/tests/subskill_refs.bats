@@ -202,7 +202,7 @@ invocation_sites() {
   for d in "$ROOT"/skills/*/; do
     n="$(basename "$d")"
     grep -q '^disable-model-invocation:[[:space:]]*true' "$d/SKILL.md" || continue
-    CREWFORGE_ROOT="$ROOT" bash "$preflight" --probe-only "$n" || {
+    CREWFORGE5_ROOT="$ROOT" bash "$preflight" --probe-only "$n" || {
       echo "preflight reports hidden sub-skill '$n' as absent"
       return 1
     }
@@ -217,7 +217,7 @@ invocation_sites() {
   local n bad=""
   while IFS= read -r n; do
     [ -n "$n" ] || continue
-    CREWFORGE_ROOT="$ROOT" bash "$RESOLVE" --probe "$n" || bad="$bad $n"
+    CREWFORGE5_ROOT="$ROOT" bash "$RESOLVE" --probe "$n" || bad="$bad $n"
   done < <(grep -rhoE 'subskill_resolve\.sh"? (--load-mode |--probe )?[a-z0-9_-]+' \
              --include='*.md' "$ROOT/skills" "$ROOT/agents" \
            | sed -E 's/.*subskill_resolve\.sh"? (--load-mode |--probe )?//' \

@@ -1,16 +1,16 @@
 ---
 name: plan
 model: opus
-description: Goal to an adversarial-clean, /team-sprint-ready plan file. Use on /crewforge:plan, "plan this feature", "write a sprint plan"
+description: Goal to an adversarial-clean, /team-sprint-ready plan file. Use on /crewforge5:plan, "plan this feature", "write a sprint plan"
 ---
 
-# crewforge:plan
+# crewforge5:plan
 
-You take a goal and hand back a plan file that `crewforge:execute` will run
+You take a goal and hand back a plan file that `crewforge5:execute` will run
 without argument: grounded in citations, ratified by the user, honest about the
 debt it inherits, and stamped adversarial-clean.
 
-Invoke it as **`/crewforge:plan`**. Bare `/plan` is not this skill.
+Invoke it as **`/crewforge5:plan`**. Bare `/plan` is not this skill.
 
 ## How this runs
 
@@ -20,9 +20,9 @@ state and decides what comes next, so an interrupted planning session resumes
 where it stopped instead of starting over.
 
 ```bash
-bash "${CREWFORGE_ROOT:-.}/scripts/flow/flow_next.sh" plan     # STATUS=NEXT PHASE=<id> DOC=<path>
+bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_next.sh" plan     # STATUS=NEXT PHASE=<id> DOC=<path>
 # …read DOC, do the phase's work…
-bash "${CREWFORGE_ROOT:-.}/scripts/flow/flow_gate.sh" plan <id>  # STATUS=PASS|FAIL, recorded
+bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_gate.sh" plan <id>  # STATUS=PASS|FAIL, recorded
 ```
 
 A `FAIL` is not a suggestion. `flow_next.sh` re-offers the same phase until its
@@ -60,7 +60,7 @@ cannot reach them. Resolve a path and load it — and ask how, because a
 inline, or the isolation it exists for is destroyed:
 
 ```bash
-bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
 ```
 
 | Capability | Source skill | Reached in |
@@ -77,4 +77,4 @@ bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode use-rep
 ## Done
 
 Phase 8 reports `CLEAN` and `flow_next.sh plan` prints `STATUS=DONE`. Tell the
-user the plan is deployable and name the next command: `/crewforge:execute`.
+user the plan is deployable and name the next command: `/crewforge5:execute`.

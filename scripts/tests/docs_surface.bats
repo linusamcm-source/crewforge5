@@ -7,7 +7,7 @@
 # ever compared to itself drifts the moment a description changes.
 #
 # `/init`, `/plan` and `/execute` are all live built-ins or ambiguous in Claude
-# Code — the bare form of `/crewforge:init` reaches the built-in CLAUDE.md
+# Code — the bare form of `/crewforge5:init` reaches the built-in CLAUDE.md
 # initializer, which is a different tool doing a different job. Every trigger
 # phrase in the docs is asserted namespaced for that reason.
 
@@ -85,20 +85,20 @@ hidden_skills() {
 # --- AC: exactly three entry points, namespaced, with trigger phrases --------
 
 @test "README documents all three entry points in namespaced form" {
-  grep -q '/crewforge:init' "$README"
-  grep -q '/crewforge:plan' "$README"
-  grep -q '/crewforge:execute' "$README"
+  grep -q '/crewforge5:init' "$README"
+  grep -q '/crewforge5:plan' "$README"
+  grep -q '/crewforge5:execute' "$README"
 }
 
 @test "README never writes an entry point in the bare form" {
-  # `(/init` or ` /init` etc. — anything not preceded by `crewforge:`.
+  # `(/init` or ` /init` etc. — anything not preceded by `crewforge5:`.
   ! grep -nE '(^|[^:[:alnum:]_-])/(init|plan|execute)\b' "$README"
 }
 
 @test "README carries a trigger phrase for each entry point" {
   local s
   for s in init plan execute; do
-    grep -qE "^\| \`/crewforge:$s\` \|" "$README"
+    grep -qE "^\| \`/crewforge5:$s\` \|" "$README"
   done
 }
 
@@ -114,7 +114,7 @@ hidden_skills() {
   # A hidden skill is still reachable by slash, so it is easy to document one
   # as if it were an entry point. The catalogue shape says otherwise.
   local named
-  named="$(grep -oE '/crewforge:[a-z_-]+' "$README" | sed 's|/crewforge:||' \
+  named="$(grep -oE '/crewforge5:[a-z_-]+' "$README" | sed 's|/crewforge5:||' \
            | sort -u | tr '\n' ' ')"
   [ "$named" = "execute init plan " ]
 }

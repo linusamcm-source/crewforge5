@@ -9,7 +9,7 @@ check it.
 1. Load the `master_plan` skill body for the impact-map mechanic:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" master_plan
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" master_plan
    ```
 
    The resolver treats `-` and `_` as interchangeable, so `master-plan` reaches

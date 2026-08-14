@@ -18,9 +18,9 @@ setup() {
   OUT="$TMP/out"
   ERR="$TMP/err"
 
-  # A stray CREWFORGE_ROOT in the ambient environment would silently retarget
+  # A stray CREWFORGE5_ROOT in the ambient environment would silently retarget
   # root 1 and make every assertion below meaningless.
-  unset CREWFORGE_ROOT
+  unset CREWFORGE5_ROOT
 
   # Sandbox HOME so root 3 never reaches the developer's real catalogue.
   FAKE_HOME="$TMP/home"
@@ -57,7 +57,7 @@ _split_run() {
 
 # --- root precedence --------------------------------------------------------
 
-@test "a name present in two roots resolves to the CREWFORGE_ROOT copy" {
+@test "a name present in two roots resolves to the CREWFORGE5_ROOT copy" {
   mkdir -p "$TMP/repo/.claude/skills/token-slim"
   printf '# decoy\n' > "$TMP/repo/.claude/skills/token-slim/SKILL.md"
   _split_run token-slim
@@ -65,12 +65,12 @@ _split_run() {
   [ "$STDOUT" = "$ROOT/skills/token-slim/SKILL.md" ]
 }
 
-@test "an exported CREWFORGE_ROOT overrides the derived plugin root" {
-  # The SessionStart hook publishes CREWFORGE_ROOT as the plugin cache path,
+@test "an exported CREWFORGE5_ROOT overrides the derived plugin root" {
+  # The SessionStart hook publishes CREWFORGE5_ROOT as the plugin cache path,
   # which is nowhere near this checkout — root 1 has to follow it.
   mkdir -p "$TMP/plugin/skills/token-slim"
   printf '# installed copy\n' > "$TMP/plugin/skills/token-slim/SKILL.md"
-  export CREWFORGE_ROOT="$TMP/plugin"
+  export CREWFORGE5_ROOT="$TMP/plugin"
   _split_run token-slim
   [ "$RC" -eq 0 ]
   [ "$STDOUT" = "$TMP/plugin/skills/token-slim/SKILL.md" ]

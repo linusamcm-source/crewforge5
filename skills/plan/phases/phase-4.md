@@ -9,7 +9,7 @@ about to build on, before deciding what the plan will do about it.
    spawned through the `Agent` tool with the type its frontmatter names:
 
    ```bash
-   bash "${CREWFORGE_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode tech-debt-audit
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode tech-debt-audit
    ```
 
 2. Run it over the repo and have it write `TECH_DEBT_AUDIT.md` at the repo root.

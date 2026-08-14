@@ -70,7 +70,7 @@ Run these passes over the target environment (usually `$CLAUDE_CONFIG_DIR` and p
 - **Never apply a trim without running the retention gate over it.** Write the proposal to a scratch file and check it against the original:
 
   ```bash
-  bash "$CREWFORGE_ROOT/scripts/retention_gate.sh" CLAUDE.md /tmp/claude-md-proposed.md
+  bash "$CREWFORGE5_ROOT/scripts/retention_gate.sh" CLAUDE.md /tmp/claude-md-proposed.md
   ```
 
   A trim is measured by how much shorter it got, and the lines worth the most tokens are usually the ones worth keeping — an absolute directive nobody re-derives, the one exact command that works, a version somebody bled for. The gate fails the proposal if any `never`/`always`/`must` line, backticked command, path, version or quoted error string stopped appearing anywhere. It reads two files and returns a verdict; it cannot edit anything, so the decision to apply stays with the user.

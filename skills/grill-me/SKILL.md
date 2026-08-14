@@ -10,6 +10,6 @@ Ask the questions one at a time via **AskUserQuestion**, waiting for feedback on
 
 If a *fact* can be found by exploring the environment (filesystem, tools, etc.) explore the repo with `use-repo-code` to find relevant information to inform your questions, and use the /graphify skill to establish the relationships. Look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
 
-`use-repo-code` is hidden from the catalogue, so the `Skill` tool cannot reach it. Resolve it: `bash "${CREWFORGE_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code` answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter names. Never read its body inline — it forks to keep a whole pack out of this window, and this skill's whole point is a long interview that has room left for the answers.
+`use-repo-code` is hidden from the catalogue, so the `Skill` tool cannot reach it. Resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code` answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter names. Never read its body inline — it forks to keep a whole pack out of this window, and this skill's whole point is a long interview that has room left for the answers.
 
 Do not act on it until I confirm we have reached a shared understanding.

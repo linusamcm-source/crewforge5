@@ -54,7 +54,7 @@ Non-obvious only.
   must change the other.
 - **No machine-specific paths** in `skills/`, `agents/`, `hooks/`, `rules/`. CI
   greps for `~/.claude` and `/Users/` and fails the build. Use
-  `${CREWFORGE_ROOT}`.
+  `${CREWFORGE5_ROOT}`.
 - **Always-loaded context is a release gate.** `budget_check.sh` currently
   reports 59 tokens of headroom, so lengthening a skill or agent `description`
   can fail the build.

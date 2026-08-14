@@ -9,7 +9,7 @@ Load `token-slim` through the resolver (`MODE=inline`) for the method, then
 take the snapshot:
 
 ```bash
-python3 "${CREWFORGE_ROOT}/skills/token-slim/scripts/baseline.py" \
+python3 "${CREWFORGE5_ROOT}/skills/token-slim/scripts/baseline.py" \
   --skills-dir "$INIT_TARGET/skills" \
   --out "$INIT_STATE/baseline.json"
 ```
@@ -24,7 +24,7 @@ Also note the always-loaded total for context, which is the number this whole
 flow is trying to move:
 
 ```bash
-bash "${CREWFORGE_ROOT}/scripts/budget_check.sh" --verbose
+bash "${CREWFORGE5_ROOT}/scripts/budget_check.sh" --verbose
 ```
 
 ## Gate

@@ -13,7 +13,7 @@
 # skill" instruction has to become "resolve <X> to a path and load it".
 #
 # Search order, first hit wins:
-#   1. $CREWFORGE_ROOT/skills/<name>/SKILL.md   (plugin tree; defaults to the
+#   1. $CREWFORGE5_ROOT/skills/<name>/SKILL.md   (plugin tree; defaults to the
 #      root two levels above this script, so an uninstalled checkout works)
 #   2. <repo-root>/.claude/skills/<name>/SKILL.md   (project catalogue)
 #   3. $HOME/.claude/skills/<name>/SKILL.md         (user catalogue)
@@ -41,7 +41,7 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CREWFORGE_ROOT:-$(cd "$HERE/../.." && pwd)}"
+PLUGIN_ROOT="${CREWFORGE5_ROOT:-$(cd "$HERE/../.." && pwd)}"
 
 usage() {
   sed -n '5,9p' "$0" | sed 's/^# //' >&2

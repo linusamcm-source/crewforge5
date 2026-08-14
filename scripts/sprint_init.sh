@@ -62,7 +62,7 @@ contradictions() { # $1 = file to read
     rule="${line#*::}"
     if grep -qiE "$pat" "$1"; then
       echo "  CONFLICT  $(basename "$1"): matches /$pat/"
-      echo "            against CrewForge's $rule"
+      echo "            against CrewForge5's $rule"
       found=1
     fi
   done <<'EOF'

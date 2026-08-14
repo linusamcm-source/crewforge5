@@ -25,8 +25,8 @@ setup() {
   # A fake plugin root, so the flow manifest under test is the fixture's and
   # never this checkout's. The flow's manifest sits beside its SKILL.md, which
   # is what the Story 1 resolver finds.
-  export CREWFORGE_ROOT="$TMP/plugin"
-  FLOW_DIR="$CREWFORGE_ROOT/skills/init"
+  export CREWFORGE5_ROOT="$TMP/plugin"
+  FLOW_DIR="$CREWFORGE5_ROOT/skills/init"
   mkdir -p "$FLOW_DIR/phases"
   printf -- '---\nname: init\ndescription: fixture\n---\n# init\n' > "$FLOW_DIR/SKILL.md"
   printf '# phase 0\n' > "$FLOW_DIR/phases/phase-0.md"
@@ -51,7 +51,7 @@ JSON
   git config user.name  "test"
   git commit -q --allow-empty -m "init"
 
-  STATE="$TMP/repo/.crewforge/init/state.json"
+  STATE="$TMP/repo/.crewforge5/init/state.json"
 }
 
 teardown() {
@@ -72,7 +72,7 @@ orphans() { find "$TMP" -name 'state.json.tmp.*' 2>/dev/null | wc -l | tr -d ' '
 
 # --- flow_state: round-trip --------------------------------------------------
 
-@test "set then get round-trips through .crewforge/<flow>/state.json" {
+@test "set then get round-trips through .crewforge5/<flow>/state.json" {
   _split_run bash "$FLOW_STATE" init set phase.0.status ok
   [ "$RC" -eq 0 ]
   [ -f "$STATE" ]
@@ -97,7 +97,7 @@ orphans() { find "$TMP" -name 'state.json.tmp.*' 2>/dev/null | wc -l | tr -d ' '
   cd "$TMP/repo/sub/dir"
   bash "$FLOW_STATE" init set phase.0.status ok
   [ -f "$STATE" ]
-  [ ! -e "$TMP/repo/sub/dir/.crewforge" ]
+  [ ! -e "$TMP/repo/sub/dir/.crewforge5" ]
 }
 
 @test "set writes several dotted keys in one locked pass" {
