@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1 — 2026-08-15
+
+### Fixed
+
+- `crew-factory` security-role roster row now reuses the registry `security-reviewer`
+  (stack-agnostic, all security surfaces) instead of the retired `api-security-audit`,
+  whose removal left the reuse reference unresolvable.
+- Restored `rule_emit.sh` and guarded the test suite against writes to the live
+  repository tree (test-isolation leak into `.gitignore`).
+
 ## 0.4.0 — 2026-08-15
 
 Picks up the upstream development tree — a reorganised `team-sprint`, four new

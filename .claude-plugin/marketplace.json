@@ -11,7 +11,7 @@
       "name": "crewforge5",
       "description": "Three commands over one repo: /crewforge5:init audits and slims your Claude config, /crewforge5:plan turns a goal into an adversarially-reviewed plan, and /crewforge5:execute drives that plan to a merged commit with a generated agent crew and its quality gates.",
       "source": "./",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "category": "development",
       "keywords": [
         "agents",
