@@ -20,6 +20,20 @@
   (SC2015). Behaviour is unchanged; only 0.9 flagged them, and CI installs 0.9 on
   Linux by design.
 
+- Two skills pointed at `/home/<user>/.claude/...` for files the plugin ships:
+  `agent-rectifier` for its shared rectify loop, `team-sprint-pm-lense` for the
+  visual language it shares with `team-sprint-sa-lense`. Both references were dead
+  in every install. The path gate now greps `/home/<user>` alongside `/Users/`, so
+  the Linux form of this bug fails the build like the macOS one always did.
+- Restored the sub-skill resolution the 0.4.0 import dropped. `agent-validator`,
+  `skill-validator`, `use-repo-code` and `adversarial-review` all set
+  `disable-model-invocation: true`, so the `Skill` tool cannot reach them; the
+  rectify loop, `tech-debt-audit` and team-sprint phase 2 named them directly and
+  dead-ended. Each resolves through `scripts/flow/subskill_resolve.sh` again.
+- `context-hygiene` lost its retention gate: Pass 2 proposed CLAUDE.md trims with
+  no check that absolute directives, commands, paths or versions survived them.
+  The `retention_gate.sh` step is back.
+
 ### Removed
 
 - `docs/plans/epic-1-three-skill-condensation.md`, a superseded planning document.

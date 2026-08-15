@@ -118,7 +118,8 @@ wrong plan and discarded every finding). Two checks, in order:
    N = 0
    while True:
        N += 1
-       reviewer  = spawn general-purpose + adversarial-review skill
+       reviewer  = spawn general-purpose, seeded with the body at
+                   `subskill_resolve.sh adversarial-review` (MODE=inline),
                    over graph.json + stories.json
                    (if $adversarial_model is `inherit` omit the model arg, else pass it)
        findings  = block-collect reviewer's final agent return

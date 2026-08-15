@@ -14,7 +14,7 @@ agent-validator's Step 7 offers to fix issues and the user accepts. Never asks f
 confirmation mid-loop.
 
 **Loop: follow
-`/home/linusmcmanamey/.claude/skills/skill-rectifier/references/rectify-loop.md`**
+`${CREWFORGE5_ROOT}/skills/skill-rectifier/references/rectify-loop.md`**
 (shared with skill-rectifier; Steps 0-9, including the bounded exit conditions) with
 the parameters below.
 

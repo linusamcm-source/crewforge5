@@ -69,7 +69,7 @@ technical assessment. Three diagrams:
 
 ## Visual Language & Prioritisation Grid
 
-Palette, effort tags, shapes, and the severity-vs-effort prioritisation grid are shared with the technical assessment — load /home/linusmcmanamey/.claude/skills/team-sprint-sa-lense/references/rescue-visual-language.md and keep them identical so the two skills read as one deliverable.
+Palette, effort tags, shapes, and the severity-vs-effort prioritisation grid are shared with the technical assessment — load ${CREWFORGE5_ROOT}/skills/team-sprint-sa-lense/references/rescue-visual-language.md and keep them identical so the two skills read as one deliverable.
 
 ## Notes
 

@@ -115,8 +115,14 @@ jobs:
       - name: No path coupling to one machine
         run: |
           set -euo pipefail
-          if grep -rl -e '~/\.claude' -e '/Users/' skills/ agents/ hooks/ rules/ 2>/dev/null; then
-            echo "the files above hardcode one machine's paths"
+          # `/home/<user>` belongs here alongside `/Users/`: the Linux form slipped
+          # two dead skill references past this gate, which only knew the macOS one.
+          # `/home/runner` is excluded — CI's own checkout path is not coupling.
+          hits="$(grep -rn -e '~/\.claude' -e '/Users/' -e '/home/[a-z]' \
+                    skills/ agents/ hooks/ rules/ 2>/dev/null | grep -v '/home/runner' || true)"
+          if [ -n "$hits" ]; then
+            printf '%s\n' "$hits"
+            echo "the lines above hardcode one machine's paths"
             exit 1
           fi
           echo "ok — no hardcoded config paths"
