@@ -1,18 +1,21 @@
 ---
 name: adversarial-review
 model: opus
-description: Use when asked to "review", "audit", "stress-test", "find holes in", "adversarially review", or "validate" a plan/story/spec/ADR/PRD/design doc, or "is this plan solid" — runs review rounds against the current codebase to catch contradictions, drift, and missing edge cases before implementation.
+description: Catches contradictions and missing edge cases in a plan/spec/ADR vs the codebase. Use to "review", "audit", "stress-test", "find holes in", "adversarially review", "validate", "is this plan solid"
+disable-model-invocation: true
 ---
 
 # Adversarial Review
 
 ## TL;DR — Three Non-Negotiables
 
-1. **First response = real `tool_use` block** — full rules:
-   § First Action Requirement.
-2. **Every codebase claim is backed by an in-session tool call** — per
-   CLAUDE.md "Evidence rules for review and audit roles" (skill deltas:
-   § Evidence Rules).
+1. **First response = real `tool_use` block.** No placeholders, no fenced
+   pseudo-syntax, no `[Reading file]`. If you cannot invoke a tool, reply
+   `BLOCKED: <reason>` and stop. (Full rules: § First Action Requirement.)
+2. **Every codebase claim is backed by an in-session tool call.** Quote the
+   literal output. Triple-verify negatives. Read-verify line numbers. Mark
+   `UNVERIFIED` and downgrade severity if unverifiable. (Full rules:
+   § Anti-Fabrication Protocol.)
 3. **Orchestrator teammate? Deliver your report to your direct spawner via final
    agent return.** For `/team-sprint-planner` chunk reviews the spawner is the
    planner lead; for `/team-sprint` Phase 2 graph reviews it is `team-lead` —
@@ -34,8 +37,10 @@ HIGH-severity issues being caught before code ever shipped.
 This skill formalises that loop:
 
 1. Read the target document.
-2. Validate every concrete claim against the **current codebase** using the
-   `use-repo-code` skill (Repomix snapshot grep) plus live `Read`/`Grep`.
+2. Validate every concrete claim against the **current codebase** with
+   `use-repo-code` (Repomix snapshot grep) plus live `Read`/`Grep`. It is hidden
+   from the catalogue, so resolve and spawn it rather than reaching for the
+   `Skill` tool — see Step 2.
 3. Produce a severity-ranked findings list with file:line evidence.
 4. Apply surgical edits that resolve findings.
 5. Re-read and repeat until the doc reaches zero blocking findings or a hard
@@ -156,17 +161,30 @@ satisfy a gate is worse than the gap the gate was protecting against.
 **Cross-repo evidence is legitimate.** The repomix pack is repo-root-scoped, so a
 companion repository is *physically unreachable* through it no matter how diligent
 the reviewer. Read those paths live with `Read`/`Grep` using absolute paths —
-`~/Development/surf-seer/src/...` is valid review evidence, and Q2 usually cannot
+`~/Development/other-app/src/...` is valid review evidence, and Q2 usually cannot
 be answered without it. Read-only, and only paths the plan's `Boundaries:` section
 names or that Step 2a identifies as producers; this is not licence to roam the
 filesystem.
 
 ### Step 2 — Validate Each Claim Against The Codebase
 
-Use the `use-repo-code` skill for **bulk searches** across the whole tree
-(find all callers, locate a symbol, scan for a pattern) — it owns the repomix
-pack mechanics and the explicit `rtk grep` search form (see also CLAUDE.md
-Tier 1). One pack grep replaces 10+ live `Read` calls.
+Reach `use-repo-code` for **bulk searches** across the whole tree (find all
+callers, locate a symbol, scan for a pattern). It is hidden from the catalogue,
+so the `Skill` tool cannot get to it — resolve it:
+
+```bash
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+```
+
+It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
+frontmatter names. Never read its body inline: it forks so the pack stays out of
+the reviewer's window, and a review that has already swallowed the pack has no
+room left to reason about the document.
+
+Its instrument is the repomix
+pack at `${REPOMIX_PACK:-.repomix-output.xml}` (repo root, XML style: each
+file block is `<file path="...">…</file>`). One pack grep replaces 10+ live
+`Read` calls.
 
 **Pack freshness is mode-aware:**
 
@@ -178,18 +196,29 @@ Tier 1). One pack grep replaces 10+ live `Read` calls.
 - **Chunked (`/team-sprint-planner` review loop) mode** — do **NOT** delete or
   regenerate the pack. Parallel chunk reviewers share the loop-start pack so all
   findings cite the same snapshot; deleting it mid-review races the other chunks.
-  Mtime-check it instead (§ Evidence Rules) and fall back to live
+  Mtime-check it instead (Anti-Fabrication rule 5) and fall back to live
   `Read`/`Grep` if stale.
 
 Freshness checks are mechanical — never eyeball mtimes:
 
 ```bash
-bash ~/.claude/skills/adversarial-review/scripts/evidence-fresh.sh \
+bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/evidence-fresh.sh \
   "${REPOMIX_PACK:-.repomix-output.xml}" <plan-file>   # exit 1 = stale, quote its output
 ```
 
-Pack search syntax, `rtk grep` flags, and no-rtk fallbacks: see the
-`use-repo-code` skill — do not restate them here.
+**Search the pack with `rtk grep` — explicitly** (bash), not the Grep tool
+and not bare grep; do not rely on any RTK hook being installed. Concrete
+pattern:
+
+```bash
+rtk grep 'reviewRepository\.upsert' "${REPOMIX_PACK:-.repomix-output.xml}" -B 2 -A 3
+```
+
+`-B 2` surfaces the owning `<file path="...">` tag so you know which file
+matched. `rtk grep` truncates lines, caps results, and groups hits by file;
+bare grep on a pack returns full-width XML lines and floods context. If `rtk`
+is absent from PATH, fall back to `grep -nE` with tight `-m` limits or the
+built-in `Grep` tool against the pack path.
 
 **For relationship and coupling claims, use `graphify` when a graph exists.** Grep is good
 at "does this string occur"; it is poor at "what calls this", "what reaches this", and "is A
@@ -208,7 +237,7 @@ Each result reports a `source_location`; cite it as your evidence exactly like a
 graphify **augments** grep — it does not replace it. Use grep for exact text/occurrence; use
 graphify to verify the architecture/dependency claims grep answers badly. If no graph exists,
 fall back to live `Grep` for caller enumeration (and triple-verify any "nothing depends on X"
-negative — see § Evidence Rules).
+negative — see § Anti-Fabrication Protocol).
 
 **For decision, history, and convention claims, consult `claude-mem`.** Three complementary
 sources back a review: **repomix + `rtk grep` / `rtk rg` (token-filtered, via `use-repo-code`)** — the default text instrument — for exact text, **graphify** for current structure and
@@ -298,7 +327,7 @@ If new findings appear, run another round. Otherwise, finish.
 - **The round-exit decision is mechanical, not yours.** Write each round's
   findings one per line (`CRITICAL: ...` / `HIGH: ...` / `MEDIUM: ...` /
   `LOW: ...` / `NIT: ...`) to a scratch file and run
-  `bash ~/.claude/skills/adversarial-review/scripts/round-gate.sh <file>`.
+  `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/round-gate.sh <file>`.
   Honour its verdict: `continue` = another round; `stop-early` = zero
   CRITICAL/HIGH, batch remaining LOW/NIT into a final polish pass;
   `done-clean` = finish. Never talk yourself into stopping while the gate
@@ -334,21 +363,35 @@ If you cannot invoke a tool for any reason, reply with exactly `BLOCKED: <one-li
 
 A documented prior failure mode: parallel chunks emitted assistant turns containing markdown pseudo-tool-syntax (e.g. ` ```Read /path``` `, `[Reading file]`, `[Tool: Read]`), no real `tool_use` blocks, then `end_turn`. Zero verifications were performed. The entire review batch was wasted.
 
-## Evidence Rules
+## Anti-Fabrication Protocol (NON-NEGOTIABLE)
 
-Evidence rules: per CLAUDE.md "Evidence rules for review and audit roles"
-(in-session tool-call-backed claims, quoted literal evidence, triple-verified
-negatives, Read-verified line citations, freshness-checked snapshots,
-`UNVERIFIED` marking). Violation = the entire review is invalid and gets
-redone. Skill-specific deltas:
+**Precis (one line):** Every codebase claim → backed by an in-session tool call. Negatives → triple-verified. Line-numbers → Read-not-Grep. Pack snapshots → mtime-checked. Tool success → result-inspected. Unverifiable → mark `UNVERIFIED` + downgrade.
 
-1. **Negatives are mechanised.** One call runs all three checks and renders the verdict: `bash ~/.claude/skills/adversarial-review/scripts/verify-negative.sh '<term>' [dir]` (exit 0 = confirmed absent; quote its full output as the evidence).
-2. **Freshness is mechanised.** For `.repomix-output.xml`, `graphify-out/graph.json`, or any packed/derived snapshot, run `bash ~/.claude/skills/adversarial-review/scripts/evidence-fresh.sh <artifact> <spec-file>` — exit 1 = stale; refuse the artifact and demand a refresh, or fall back to direct Read/Grep. A graphify edge or `source_location` is evidence only when the graph is fresh.
-3. **`UNVERIFIED` downgrades severity by one level.** Never promote unverified claims to CRITICAL/HIGH; better a caveated possible issue than a fabricated finding.
-4. **`claude-mem` retrievals ARE in-session tool calls** — valid evidence for *history/intent* claims, never a substitute for verifying *current code* with Read/Grep/graphify. See "Working With `claude-mem`" in [references/verification-sources.md](references/verification-sources.md).
-5. **Chunked mode:** every finding's `quoted_evidence` must be a verbatim substring of the plan, and the `json adversarial-summary` tail block must be present and well-formed — see [references/chunked-return-contract.md](references/chunked-return-contract.md).
+Prior runs of adversarial review fabricated load-bearing claims (asserted files/symbols/line numbers that did not exist, inverted grep results, claimed tool calls succeeded when no artefact was produced). The following rules are absolute:
 
-Before delivery, run the self-audit checklist: [references/self-audit.md](references/self-audit.md).
+1. **Every factual claim about the codebase MUST be backed by a tool call you actually ran in this session.** No claim from memory, training data, or prior conversation. If you did not Read/Grep/Glob it this session, you do not know it. ("From memory" here means *your own* recollection or training — NOT a `claude-mem` retrieval. A `memory_search`/`observation_search`/`get_observations` call IS an in-session tool call, and its observations are valid evidence for *history/intent* claims; they do not, however, substitute for verifying *current code* with Read/Grep/graphify. See § Working With `claude-mem`.)
+2. **Every finding MUST quote the verifying evidence.** State the tool you invoked (Read, Grep, Glob, Bash) and the target, then quote the literal output the tool returned (truncated if large, never paraphrased). The output you quote must be the actual `tool_result` content from this session — not a reconstructed shape, not a guess, not a markdown fence describing a hypothetical command.
+3. **Negative claims ("X does not exist") require triple verification.** Run all three before asserting non-existence: exact-name Grep, case-insensitive Grep (`-i`), Glob for filename patterns (`**/X*`, `**/*X*`). Quote all three results. If any is non-zero, the claim is false. Mechanised — one call runs all three and renders the verdict: `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/verify-negative.sh '<term>' [dir]` (exit 0 = confirmed absent; quote its full output as the evidence).
+4. **Line-number citations must be Read-verified, not Grep-inferred.** Grep can show a line but its surrounding context may contradict the claim. Read the file at the cited range before quoting.
+5. **Repomix / packed-codebase artifacts must be freshness-checked.** If using `.repomix-output.xml`, `graphify-out/graph.json`, or any packed/derived snapshot, run `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/evidence-fresh.sh <artifact> <spec-file>` — it compares the artifact against the spec's mtime and the newest tracked source file, and exits 1 when stale. If stale, refuse to use it and demand a refresh, or fall back to direct Read/Grep. A graphify edge or `source_location` is evidence only when the graph is fresh; a stale graph is treated like a stale pack.
+6. **Tool-success must be confirmed by inspecting the tool result.** After SendMessage, verify the returned tool result indicates the message was accepted (not just that no error was thrown). Do NOT report a deliverable as complete on the basis of "tool call returned" alone — read what came back.
+7. **If a claim cannot be verified, mark it `UNVERIFIED` and downgrade severity by one level.** Do not promote unverified claims to CRITICAL/HIGH. Better to flag a possible issue with caveat than to fabricate.
+
+Violation of this protocol = the entire review is invalid and gets redone.
+
+## Self-Audit Checklist (run before delivery)
+
+Before sending the report, answer YES to all of these or rerun the affected phase:
+
+- [ ] Every CRITICAL/HIGH finding includes a quoted Read or Grep result as evidence.
+- [ ] Every "X does not exist" claim has triple-verification (exact, case-insensitive, glob) quoted.
+- [ ] Every line-number citation has been Read-verified, not Grep-inferred.
+- [ ] If repomix or any packed snapshot was used, its mtime was checked against the spec and codebase.
+- [ ] No claim relies on prior-conversation context or training data.
+- [ ] All `UNVERIFIED` items are marked as such and downgraded.
+- [ ] In chunked mode: the JSON tail block is present, well-formed, and every finding has `quoted_evidence` that is a verbatim substring of the plan.
+- [ ] If delivering via SendMessage, the tool result confirmed delivery (response was read, not just "no error thrown").
+- [ ] The SendMessage call used `to` + `message` + `summary` (no `recipient`/`content`/`metadata` — those don't exist on this tool).
 
 If invoked as an orchestrator teammate (`/team-sprint-planner` chunk reviewer or `/team-sprint` Phase 2 graph reviewer): load [references/delivery-protocol.md](references/delivery-protocol.md) for the delivery workflow and SendMessage schema.
 

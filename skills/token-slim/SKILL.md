@@ -2,6 +2,7 @@
 name: token-slim
 model: sonnet
 description: Use when asked to "token-slim" a skills directory, "trim skill descriptions", or "split a SKILL.md into references" to reduce per-turn token load.
+disable-model-invocation: true
 ---
 
 # Token-Slim — trim descriptions, split bodies into on-demand references

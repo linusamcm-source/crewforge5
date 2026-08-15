@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mechanical debt-coverage check for /master_plan Phase 4.
+# Mechanical debt-coverage check for /master-plan Phase 4.
 # Usage: check_coverage.sh <GOAL_IMPACT.md> <plan-file>
 # Compares finding IDs in the impact map's disposition table against the plan's
 # debt-coverage table. Exit 0 + CLEAN when every ID appears exactly once in the plan.
@@ -30,6 +30,8 @@ status=0
 missing=$(comm -23 <(echo "$impact_ids") <(echo "$plan_ids" | uniq))
 if [ -n "$missing" ]; then
   echo "MISSING from plan coverage table:"
+  # shellcheck disable=SC2001  # ${var//search/replace} cannot prefix EVERY line
+  # of a multi-line value; sed is the right tool for a per-line prefix.
   echo "$missing" | sed 's/^/  - /'
   status=1
 fi
@@ -37,6 +39,8 @@ fi
 dupes=$(echo "$plan_ids" | uniq -d)
 if [ -n "$dupes" ]; then
   echo "DUPLICATED in plan coverage table:"
+  # shellcheck disable=SC2001  # ${var//search/replace} cannot prefix EVERY line
+  # of a multi-line value; sed is the right tool for a per-line prefix.
   echo "$dupes" | sed 's/^/  - /'
   status=1
 fi

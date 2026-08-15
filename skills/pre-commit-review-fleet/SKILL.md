@@ -2,6 +2,7 @@
 name: pre-commit-review-fleet
 model: opus
 description: Run a parallel reviewer fleet (security, performance, consistency, simplifier) over the staged diff; severity-ranked report, optional HIGH auto-patch. Use when asked to "review my staged changes", "run the review fleet", "audit this diff", "is this safe to commit", or on /pre-commit-review-fleet.
+disable-model-invocation: true
 ---
 
 # Pre-Commit Review Fleet

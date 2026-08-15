@@ -2,6 +2,7 @@
 name: team-sprint-pm-lense
 model: opus
 description: Run a project-management assurance lens over a struggling data migration — audit PM artefacts (charter, schedule, RAID log, governance, change control, reporting) and recommend fixes. Pairs with team-sprint-sa-lense, which diagnoses the technology.
+disable-model-invocation: true
 ---
 
 # PM Assurance Assessment (Rescue Skill)

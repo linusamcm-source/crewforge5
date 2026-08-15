@@ -3,7 +3,8 @@ name: agent-validator
 model: sonnet
 context: fork
 agent: general-purpose
-description: Use when asked to "validate an agent", "check my agent", "audit an agent", or "debug this agent", or when an agent ignored instructions, produced wrong output, or didn't trigger. Grades a .claude/agents/*.md definition with a pass/fail report; below grade A, agent-rectifier auto-fixes until A.
+description: Grades a .claude/agents/*.md file pass/fail; agent-rectifier auto-fixes below grade A. Use on "validate an agent", "check my agent", "audit an agent", "debug this agent", or an agent misbehaving
+disable-model-invocation: true
 ---
 
 # Agent Validator
@@ -65,12 +66,19 @@ Confirm the path with the user before proceeding.
 
 ### Step 1: Structural Validation
 
-Run the bundled validation script for mechanical checks:
+Create the findings ledger first — every later step, scripts and your own judgment findings
+alike, appends to it, and Step 6's grade is computed from it mechanically:
+
 ```bash
-bash ~/.claude/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>
+LEDGER=$(mktemp)
+bash ${CREWFORGE5_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path> | tee -a "$LEDGER"
 ```
 
-Then supplement with these manual checks:
+Treat the script's FAIL/WARN lines as findings verbatim — do not re-derive them by hand. Its
+`INFO` lines never count toward the grade; they are there to be read, not scored.
+
+Then supplement with these manual checks, appending each finding to the ledger in the prose
+form `echo 'WARN [structural]: ...' >> "$LEDGER"`:
 
 **Required (FAIL if missing):**
 - Agent `.md` file exists
@@ -85,9 +93,15 @@ Then supplement with these manual checks:
 - File is located in `.claude/agents/` directory (WARN if elsewhere)
 
 **Frontmatter quality (WARN):**
-- Description is substantive (> 30 words) — short descriptions cause undertriggering
-- Description includes trigger contexts ("Use when...", "Use this agent whenever...")
-- Description includes `<example>` blocks showing user/assistant/commentary interaction patterns — these dramatically improve triggering accuracy
+- Description includes trigger contexts ("Use when...", "Trigger on...") in phrasing a user
+  would plausibly type — trigger phrases are the one part that must never be trimmed away
+- Description stays at trigger phrases plus one line of purpose. It is always-loaded rent:
+  it renders into the catalogue every session whether or not the agent is ever spawned, and
+  an agent has no `disable-model-invocation` escape the way a hidden skill does. Never
+  recommend padding a description to hit a word count, and never recommend adding
+  `<example>` blocks for their own sake — an expressive description carries the same
+  semantics for a fraction of the cost. `${CREWFORGE5_ROOT}/scripts/budget_check.sh` charges this exact string
+  against the release gate, so a longer description can turn CI red.
 - `tools` field is present and non-empty
 - `color` field is present — gives the agent visual identity in UI
 
@@ -104,6 +118,27 @@ Agent files load entirely into context on every invocation. Efficiency matters m
 for skills because agents may be spawned many times per session. Check size metrics, content
 bloat, and instruction quality.
 
+Then apply the `context-hygiene` principles as judgment checks — judge the file against the
+principle, do not pattern-match for keywords:
+
+- **Judgment over rules.** Is the agent constrained where judgment would serve better? Rules
+  written to compensate for a weaker model are the target. Guards on irreversible or costly
+  actions are not — the script exempts them from the directive tally and reports them as
+  `directive_safety_exempt`; never propose softening one.
+- **One home over repetition.** Does anything the agent states already have an authoritative
+  home in CLAUDE.md, a rules file, or a skill the agent loads anyway? Restated guidance drifts
+  apart from its source; point at the home instead of copying it.
+- **Progressive disclosure.** Detail the agent needs only occasionally belongs behind a
+  reference the agent reads on demand, not inline in a file that loads on every spawn.
+- **Auto-memory over prose state.** Facts about the user or the work (preferences, dates,
+  decisions) sitting as prose in the agent body belong in the memory system.
+- **Rich references over prose specs.** Where the agent steers a build with a markdown
+  description, a higher-fidelity reference — a function signature, a test suite, a rubric —
+  is worth more per token.
+
+What never gets flagged for removal: security and irreversible-action guards, genuine repo
+gotchas, exact commands, versions and error strings, and the description's trigger phrases.
+
 Check tables: [references/validation-checks.md](references/validation-checks.md) — load before running this step.
 
 ### Step 4: Instruction Compliance Diagnosis
@@ -117,6 +152,9 @@ Identifies why the agent might not follow its own instructions at runtime. Sub-s
 
 Category definitions, the seven failure modes, matrix format, and fix patterns: [references/validation-checks.md](references/validation-checks.md) — load before running this step.
 
+Append every WARN/FAIL cell from the matrix to the ledger in the same form
+(`echo 'FAIL [compliance]: ...' >> "$LEDGER"`) so it counts toward the grade.
+
 ### Step 5: Behavioral Simulation
 
 Test whether the agent's instructions actually produce correct behavior: generate 2-3 realistic
@@ -125,37 +163,64 @@ evaluate against the Step 4a instruction list, and record results.
 
 Test procedure and spawn-prompt template: [references/validation-checks.md](references/validation-checks.md) — load when running this step.
 
-If subagents are not available, skip this step and note it as SKIPPED.
+Append each skipped or misinterpreted instruction to the ledger
+(`FAIL [simulation]: ...` / `WARN [simulation]: ...`). If subagents are not available, append
+`SKIPPED [simulation]: no subagents` and move on — a SKIPPED phase does not block grade A,
+but must be listed next to the grade.
 
 ### Step 6: Generate Report
 
-Write a structured markdown report to `./docs/agent_reports/agent-validation-{agent-name}-{date}.md`.
+Compute the grade mechanically — never tally or grade by hand:
+
+```bash
+bash ${CREWFORGE5_ROOT}/skills/skill-validator/scripts/grade.sh "$LEDGER"   # grade= fails= warns= skipped=
+```
+
+`grade.sh` is shared with `skill-validator` rather than copied: one scale, one home, no drift.
+It counts both the scripts' JSON findings and the prose lines you appended.
+
+Write a structured markdown report to `./docs/agent_reports/agent-validation-{agent-name}-{date}.md`
+(create the directory first: `mkdir -p ./docs/agent_reports`). Include the `grade.sh` output
+block and the full ledger verbatim — the rectifier parses them.
 
 Full report template, including summary table and grade scale: [references/report-template.md](references/report-template.md) — load when writing the report.
 
 ### Step 7: Auto-Rectify Until Grade A
 
-Show the user the summary table and overall grade. Then:
+**Report-only mode:** if this validation was invoked by agent-rectifier as a re-validation
+round (the invoking prompt contains "report-only" or "re-validation"), stop after Step 6.
+Return the report path and overall grade, and do not invoke agent-rectifier — the rectifier
+already owns the fix-and-revalidate loop, and invoking it from here nests a second loop
+inside the first.
+
+Otherwise, show the user the summary table and overall grade. Then:
 
 1. **If grade is A** (all pass, 0-2 warnings): the agent is production-ready. Stop here.
 
-2. **If grade is below A** (B, C, D, or F): automatically invoke the **agent-rectifier**
-   skill (`/agent-rectifier`) with this validation report and the target agent path.
-   Do not ask the user for confirmation — this is mandatory. The rectifier applies fixes
-   and then invokes this validator again for full re-validation. This creates a self-healing
-   loop:
+2. **If grade is below A** (B, C, D, or F): automatically hand off to **agent-rectifier**
+   with this validation report and the target agent path. It is hidden from the catalogue,
+   so the `Skill` tool cannot reach it — resolve it with
+   `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode agent-rectifier`
+   and honour the answer (`MODE=inline` — read the body and follow it here).
+   Do not ask the user for confirmation — this is mandatory. Pass on one condition with the
+   report: any fix that makes the agent file **shorter** must clear the retention gate
+   before it is applied, because a trim is measured by how much shorter it got and the
+   lines worth the most tokens are usually the ones worth keeping:
 
-   ```
-   agent-validator finds issues → agent-rectifier fixes them → agent-validator re-checks → repeat
+   ```bash
+   bash "${CREWFORGE5_ROOT}/scripts/retention_gate.sh" <agent-file> /tmp/agent-proposed.md
    ```
 
-   The loop continues until grade A is achieved. The only exit conditions are:
-   - Grade A reached (success)
-   - A rectification round produces zero fixable issues and all remaining items need
-     human judgment (escalate to user with clear explanation)
+   It fails the proposal if any `never`/`always`/`must` line, backticked command, path,
+   version or quoted error string stopped appearing anywhere. It reads two files and
+   returns a verdict; it cannot edit, so the decision stays with the rectifier.
+
+   Hand off **exactly once**. **The rectifier owns the loop from here**: it applies fixes,
+   re-runs this validator in report-only mode, and repeats until grade A or escalation. Do
+   not re-enter this step after handing off, and do not duplicate the loop logic here.
 
 3. After the loop completes, present the final grade A confirmation with the total number
    of rounds and fixes applied.
 
-The agent-rectifier is at `~/.claude/skills/agent-rectifier/` — it handles the full fix
+The agent-rectifier is at `${CREWFORGE5_ROOT}/skills/agent-rectifier/` — it handles the full fix
 workflow including before/after diffs and deferred items that need human review.

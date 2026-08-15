@@ -1,0 +1,58 @@
+[
+  {
+    "id": "0",
+    "title": "Preflight",
+    "doc": "phases/phase-0.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" preflight",
+    "required": true
+  },
+  {
+    "id": "1",
+    "title": "Measure",
+    "doc": "phases/phase-1.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" measure",
+    "required": true
+  },
+  {
+    "id": "2",
+    "title": "Hygiene",
+    "doc": "phases/phase-2.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" hygiene",
+    "required": true
+  },
+  {
+    "id": "3",
+    "title": "Slim",
+    "doc": "phases/phase-3.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" slim",
+    "required": true
+  },
+  {
+    "id": "4",
+    "title": "Validate",
+    "doc": "phases/phase-4.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" validate",
+    "required": true
+  },
+  {
+    "id": "5",
+    "title": "Rectify",
+    "doc": "phases/phase-5.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" rectify",
+    "required": true
+  },
+  {
+    "id": "6",
+    "title": "Distil",
+    "doc": "phases/phase-6.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" distil",
+    "required": false
+  },
+  {
+    "id": "7",
+    "title": "Report",
+    "doc": "phases/phase-7.md",
+    "gate": "bash \"${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh\" report",
+    "required": true
+  }
+]

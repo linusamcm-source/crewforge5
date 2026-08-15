@@ -276,7 +276,7 @@ token in the filename, per lines 62–75).
   satisfies check 3's clobber guard for repeat plans of the same feature.
 - Phase 4's delivery step gains an explicit handoff offer, after the summary and inside the
   existing "do not implement" stop: if the user wants the plan executed by `/team-sprint`,
-  invoke the `team-sprint-planner` skill with the plan file and decision ledger as source
+  resolve `team-sprint-planner` (`subskill_resolve.sh`) with the plan file and decision ledger as source
   docs — the planner owns story decomposition and the parse contract; team-feature does not
   emit `## Story` headings itself.
 - The ledger filename follows the plan: `<feature-slug>-1-decisions.md`.

@@ -12,7 +12,16 @@ question, or memory for a current-code question, is how reviews go wrong:
 | `graphify` (optional) | current structure, coupling, reachability | "what calls X", "does input reach a sink", "does this util already exist", caller fan-in |
 | `claude-mem` (optional) | history — decisions, conventions, known issues | "did we decide X", "is this a recorded pattern", "was this bug fixed before" |
 
-1. **repomix pack (default)** — via the `use-repo-code` skill; the repo is packed
+1. **repomix pack (default)** — resolve `use-repo-code` rather than reaching for
+   the `Skill` tool, which cannot see a hidden skill:
+
+   ```bash
+   bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code
+   ```
+
+   It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
+   frontmatter names. Never read its body inline: it forks to keep a whole pack out
+   of the caller's window, and inlining it puts the pack there instead. The repo is packed
    at session start (`repomix-prewarm.sh` → `.repomix-output.xml`). Search it with
    bash `grep`/`rg` on the pack — the RTK `PreToolUse` hook rewrites these to
    `rtk grep`/`rtk rg`, so output is token-filtered and grouped by file — instead

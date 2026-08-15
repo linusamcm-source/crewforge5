@@ -58,7 +58,7 @@ in the catalogue, so a flow reaches one through
 | `grill-me` | `/crewforge5:plan` | phase 3, the questioning loop |
 | `team-feature` | `/crewforge5:plan` | phases 0–3, the interactive ratification half |
 | `tech-debt-audit` | `/crewforge5:plan` | phase 4 |
-| `master_plan` | `/crewforge5:plan` | phases 5 and 8 — impact map, coverage check |
+| `master-plan` | `/crewforge5:plan` | phases 5 and 8 — impact map, coverage check |
 | `team-sprint-planner` | `/crewforge5:plan` | phase 6, plan contract and story shape |
 | `adversarial-review` | `/crewforge5:plan`, `/crewforge5:execute` | plan phase 7; execute phase 2 under `scheduling: graph` |
 | `team-sprint` | `/crewforge5:execute` | phases 0–7 are its phase docs, wrapped unchanged |
@@ -70,6 +70,10 @@ in the catalogue, so a flow reaches one through
 | `code-reviewer` | — | same — a crew-assignable skill, distinct from the `code-reviewer` agent |
 | `playwright-cli` | — | same, for frontend AC verification |
 | `plugin-forge` | — | nothing drives it; reachable by name only |
+| `graphify` | `/crewforge5:plan`, `/crewforge5:execute` | plan phase 1 and execute phase 0 — the knowledge-graph half of recon |
+| `ui-polish-loop` | — | crew-assignable, for the interactive UI pass on a running app |
+| `team-sprint-pm-lense` | — | crew-assignable, the project-management assurance lens |
+| `team-sprint-sa-lense` | — | crew-assignable, the solution-architecture rescue lens |
 
 ## What it costs you
 
@@ -83,7 +87,7 @@ bash "$CREWFORGE5_ROOT/scripts/budget_check.sh" --verbose
 The bundle is **~543 tokens** always-loaded across 12 catalogue entries, against
 a budget of **600** — one description's worth of headroom, so rewording a
 trigger phrase does not turn the build red, while a whole new listed surface
-still cannot slip in unpriced. The other **24 skills** carry
+still cannot slip in unpriced. The other **28 skills** carry
 `disable-model-invocation: true`, so they cost nothing until a flow resolves one
 or you call it by name. That discipline is the only reason a bundle this size is
 affordable, and `budget_check.sh` fails the build over the budget rather than

@@ -18,7 +18,7 @@
 set -uo pipefail
 
 STATE_REL=".claude/scripts/sprint-watchdog/.sprint-active.json"
-VOCAB="${TEAM_SPRINT_VOCAB:-$HOME/.claude/skills/team-sprint/data/vocab.json}"
+VOCAB="${TEAM_SPRINT_VOCAB:-$HOME/.claude/skills/team-sprint/assets/data/vocab.json}"
 MAX_VIOLATIONS=200
 
 trap 'exit 0' ERR

@@ -94,14 +94,14 @@ _split_run() {
 
 # --- name normalisation -----------------------------------------------------
 
-@test "master-plan and master_plan both resolve to skills/master_plan" {
+@test "master-plan and master_plan both resolve to skills/master-plan" {
   _split_run master-plan
   [ "$RC" -eq 0 ]
-  [ "$STDOUT" = "$ROOT/skills/master_plan/SKILL.md" ]
+  [ "$STDOUT" = "$ROOT/skills/master-plan/SKILL.md" ]
 
   _split_run master_plan
   [ "$RC" -eq 0 ]
-  [ "$STDOUT" = "$ROOT/skills/master_plan/SKILL.md" ]
+  [ "$STDOUT" = "$ROOT/skills/master-plan/SKILL.md" ]
 }
 
 @test "normalisation runs the other way too (use_repo_code -> use-repo-code)" {

@@ -104,7 +104,7 @@ so there is no per-language variant to build.
 
 ## Phase 4 — Manifest
 
-8. Write `.claude/crews/<lang>.json` — the shape is stated in `${CREWFORGE5_ROOT}/skills/team-sprint/scripts/crews.schema.json` and enforced in pure jq by every `crew_check.sh` call, so a malformed manifest surfaces at the factory, not as a spawn crash mid-sprint:
+8. Write `.claude/crews/<lang>.json` — the shape is stated in `${CREWFORGE5_ROOT}/skills/team-sprint/scripts/schemas/crews.schema.json` and enforced in pure jq by every `crew_check.sh` call, so a malformed manifest surfaces at the factory, not as a spawn crash mid-sprint:
 ```json
 {
   "language": "<lang>",

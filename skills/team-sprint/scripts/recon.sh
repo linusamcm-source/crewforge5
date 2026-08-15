@@ -264,7 +264,7 @@ recon_root() {
 }
 
 _file_size() {
-  stat -f %z "$1" 2>/dev/null || stat -c %s "$1"
+  stat -c %s "$1" 2>/dev/null || stat -f %z "$1"
 }
 
 # _json_array <newline-list> — the list as a sorted, de-duplicated JSON array.

@@ -9,7 +9,7 @@ set -euo pipefail
 ART="${1:?usage: evidence-fresh.sh <artifact> [compare-file]}"
 CMP="${2:-}"
 
-mtime() { stat -f %m "$1" 2>/dev/null || stat -c %Y "$1"; }
+mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"; }
 
 [ -f "$ART" ] || { echo "fresh=no"; echo "reason=artifact missing: $ART"; exit 1; }
 am="$(mtime "$ART")"

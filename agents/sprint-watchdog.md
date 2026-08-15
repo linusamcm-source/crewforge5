@@ -138,7 +138,7 @@ TaskList({ status: "completed" })
 **Run the predicates — do not re-derive them.** The same code the
 guard runs is callable directly, so your verdict and the hook's can
 never disagree. Role vocabularies and test-file patterns come from
-`${CREWFORGE5_ROOT}/skills/team-sprint/data/vocab.json`; never restate them.
+`${CREWFORGE5_ROOT}/skills/team-sprint/assets/data/vocab.json`; never restate them.
 
 ```bash
 # per completed task, from the repo root

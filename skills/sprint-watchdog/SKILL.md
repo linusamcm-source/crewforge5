@@ -2,6 +2,7 @@
 name: sprint-watchdog
 model: opus
 description: Use when starting, running, resuming, or auditing a /team-sprint, or on "sprint stalled", "agent didn't deliver report", "sprint protocol broke down", or "watchdog the sprint". Verifies agent claims between handoffs — reports, files, clean tree, quality gates. Default alongside any team-sprint run.
+disable-model-invocation: true
 ---
 
 # Sprint Watchdog

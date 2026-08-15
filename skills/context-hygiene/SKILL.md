@@ -1,6 +1,7 @@
 ---
 name: context-hygiene
 description: Audit and refactor the Claude environment (CLAUDE.md, skills, agents, hooks, MCP config) to Claude 5-generation context-engineering rules. Use on "clean up my Claude config", "slim CLAUDE.md", "refactor my skills", "audit context load", or "rightsize the environment".
+disable-model-invocation: true
 ---
 
 # Context Hygiene — Claude 5 Generation Rules

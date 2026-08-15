@@ -1,7 +1,7 @@
 ---
 name: master-plan
 model: opus
-description: Build a codebase-grounded master plan for a stated goal. Runs tech-debt-audit, triages intersecting debt findings, and feeds goal + audit + impact map to team-sprint-planner for a /team-sprint-ready plan. Use when the user invokes /master-plan or asks for a "master plan". Does not auto-invoke.
+description: Audit-grounded /team-sprint-ready planning — tech-debt-audit, debt triage, then team-sprint-planner. Use on /master_plan or when the user asks for a "master plan". Does not auto-invoke
 disable-model-invocation: true
 ---
 
@@ -11,7 +11,7 @@ Turns a goal into a /team-sprint-ready implementation plan grounded in a fresh t
 
 ## When to use
 
-Use when the user invokes /master-plan, asks for a "master plan", or wants a full audit-grounded sprint plan that fixes technical debt alongside a feature goal. Does not auto-invoke. The run starts with tech-debt-audit (which refreshes the repomix pack by default and refreshes/uses /graphify for structural questions when available), triages every intersecting debt finding into fix-first/fold-in/defer dispositions, then feeds goal + audit + impact map to team-sprint-planner for a team-sprint ready plan in which debt fixes are verifiable stories.
+Use when the user invokes /master_plan, asks for a "master plan", or wants a full audit-grounded sprint plan that fixes technical debt alongside a feature goal. Does not auto-invoke. The run starts with tech-debt-audit (which refreshes the repomix pack by default and refreshes/uses graphify for structural questions when available), triages every intersecting debt finding into fix-first/fold-in/defer dispositions, then feeds goal + audit + impact map to team-sprint-planner for a /team-sprint-ready plan in which debt fixes are verifiable stories.
 
 The goal arrives as the skill's arguments. If no goal was passed, stop and ask what to plan before doing anything.
 
@@ -21,7 +21,7 @@ Success criteria for the whole run: (1) `TECH_DEBT_AUDIT.md` exists and is curre
 
 ## Phase 1 — Ground truth
 
-Invoke the tech-debt-audit skill on the current repo. It refreshes the repomix pack by default, and refreshes/uses graphify for structural questions when its tools are available (fail-soft), then writes `TECH_DEBT_AUDIT.md` with ID'd, file:line-cited findings. Do NOT invoke /graphify separately — the audit already handles it when needed; a second build wastes minutes.
+Run tech-debt-audit over the current repo. It is hidden from the catalogue, so the `Skill` tool cannot reach it — `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode tech-debt-audit` answers `MODE=agent`, so spawn it through the `Agent` tool with the type its frontmatter names rather than reading its body inline. It refreshes the repomix pack by default, and refreshes/uses graphify for structural questions when its tools are available (fail-soft), then writes `TECH_DEBT_AUDIT.md` with ID'd, file:line-cited findings. Do NOT invoke /graphify separately — the audit already handles it when needed; a second build wastes minutes.
 
 ## Phase 2 — Goal impact map + debt triage
 
@@ -37,14 +37,14 @@ Table columns: `Finding ID | File:Line | Severity | Effort | Disposition | Ratio
 
 ## Phase 3 — Plan
 
-Invoke /team-sprint-planner with the goal plus these source docs: `TECH_DEBT_AUDIT.md`, `docs/plans/GOAL_IMPACT.md`, `graphify-out/GRAPH_REPORT.md`. Requirements for the plan it produces:
+Load team-sprint-planner — hidden from the catalogue, so resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode team-sprint-planner` answers `MODE=inline`, so read the body it names and follow it here. Give it the goal plus these source docs: `TECH_DEBT_AUDIT.md`, `docs/plans/GOAL_IMPACT.md`, `graphify-out/GRAPH_REPORT.md`. Requirements for the plan it produces:
 
 - Feature stories with testable acceptance criteria, per-story DoD, and a Depends-On/Touches graph.
 - Every **fix-first** finding becomes a story whose acceptance criterion is the finding's detection command, inverted — the grep/graphify query/analyzer rule that found the debt is re-run and must come back clean. The audit's evidence command IS the story's acceptance test: mechanically re-runnable, no judgment. Refactor stories use TDD shape — characterization test pins current behaviour first, then the fix, tests stay green.
 - Every **fold-in** finding becomes a named task with its own AC inside the feature story that touches its file, citing the finding ID.
 - Every fix-first and fold-in story's DoD includes: "finding re-verified gone via its detection command."
 - The plan ends with a **debt-coverage table**: `Finding ID → story ID | fold-in task | deferred + reason`. Every intersecting finding ID from GOAL_IMPACT.md appears exactly once.
-- Final story in the plan: re-run /tech-debt-audit. Repeat-run mode marks fixed findings RESOLVED in `TECH_DEBT_AUDIT.md`, closing the loop — the audit document is the living debt register the next /master-plan starts from.
+- Final story in the plan: re-run /tech-debt-audit. Repeat-run mode marks fixed findings RESOLVED in `TECH_DEBT_AUDIT.md`, closing the loop — the audit document is the living debt register the next /master_plan starts from.
 
 ## Phase 4 — Verify and hand off
 

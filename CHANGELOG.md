@@ -1,5 +1,63 @@
 # Changelog
 
+## 0.4.0 — 2026-08-15
+
+Picks up the upstream development tree — a reorganised `team-sprint`, four new
+sub-skills — and re-applies the packaging layer that the import had flattened.
+
+### Added
+
+- `graphify` ships as a hidden sub-skill: the knowledge-graph half of recon,
+  driven from `/crewforge5:plan` phase 1 and `/crewforge5:execute` phase 0
+  alongside the repomix pack rather than instead of it.
+- `ui-polish-loop`, `team-sprint-pm-lense` and `team-sprint-sa-lense` — three
+  crew-assignable skills with no phase driving them, reached by name.
+
+### Changed
+
+- `skills/master_plan` is now `skills/master-plan`, matching every other
+  directory in the bundle. The resolver already normalised `_` and `-`, so both
+  spellings still resolve; only the hardcoded `check_coverage.sh` paths in
+  `/crewforge5:plan` phases 5 and 8 had to move.
+- `team-sprint`'s tree is regrouped: phase docs, ADRs, plans and reference notes
+  under `references/`, the schemas under `scripts/schemas/`, the vocabulary under
+  `assets/data/`. `/crewforge5:execute` phases 0–7, the watchdog guard hook and
+  `crew-factory` follow the new paths.
+- `rule_emit.sh` and `crew_copy.sh` are gone with their tests; `crew_check.sh`
+  owns what remains of the manifest gates.
+
+### Fixed
+
+Everything below is the same defect: the imported tree predates the packaging
+work, so re-importing it wholesale reverted fixes 0.3.1 and 0.3.2 had already
+made. Each is restored with the test that proves it.
+
+- **The three entry points were deleted.** `skills/init`, `skills/plan` and
+  `skills/execute` are back, so the plugin ships the commands its manifests
+  advertise. `skills/adhd` is a real directory again rather than a symlink
+  pointing outside the repo, and `claude-config`, `self-improve` and
+  `plugin-forge` — all reachable from the entry points or the ledger hooks —
+  are back with it.
+- **Every skill body pointed at `~/.claude`.** Sub-skill call sites resolve
+  through `scripts/flow/subskill_resolve.sh` and `${CREWFORGE5_ROOT}` again
+  rather than assuming the user's config directory, which is what makes the
+  bundle work as an installed plugin at all.
+- **Every non-entry-point skill was catalogue-listed.** All 28 carry
+  `disable-model-invocation: true` again; the always-loaded cost is back to
+  ~543 tok across 12 entries against the 600 budget, from ~2,280 across 38.
+- **`stat -f` ran before `stat -c`** in `lib.sh`, `recon.sh`, `pack.sh`,
+  `evidence-fresh.sh` and four bats helpers. GNU `stat` reads `-f` as
+  *filesystem*, so the BSD-first form fed a mount-point report into arithmetic
+  and `set -u` killed the caller with `File: unbound variable`.
+- **`build_commit_msg.sh` forced `LC_ALL=en_US.UTF-8`**, which a box that
+  generates only `C.utf8` answers with a `setlocale` warning on stdout —
+  straight into the commit subject. It picks an installed UTF-8 locale again.
+- **`preflight_subskills.sh` probed `$HOME` alone**, declaring every
+  plugin-installed sub-skill missing; it delegates to the resolver again.
+- **`grade.sh` counted only prose findings**, grading a skill A while its own
+  structural script reported failures in JSON on the same ledger. Both
+  validators and their report templates are restored.
+
 ## 0.3.2 — 2026-08-15
 
 Closes the gap 0.3.1 fixed by hand: the validators now check that frontmatter

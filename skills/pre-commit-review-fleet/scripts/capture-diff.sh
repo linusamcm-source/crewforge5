@@ -36,7 +36,10 @@ git diff --cached --name-only -- "$@" | sed 's/^/file=/'
 nontrivial=0
 while IFS= read -r f; do
   case "$f" in
-    *.md|*.txt|*.rst|LICENSE*|*.lock|package-lock.json|yarn.lock|bun.lockb|*.snap) ;;
+    # `yarn.lock` was here too and could never match — `*.lock` already covers
+    # it, so the branch was dead. Classification is unchanged; the pattern list
+    # just no longer claims to handle a case it never reached.
+    *.md|*.txt|*.rst|LICENSE*|*.lock|package-lock.json|bun.lockb|*.snap) ;;
     *) nontrivial=$((nontrivial + 1));;
   esac
 done < <(git diff --cached --name-only -- "$@")

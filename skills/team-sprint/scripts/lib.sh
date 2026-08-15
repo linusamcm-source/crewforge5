@@ -292,12 +292,22 @@ PY
 }
 
 # mtime_epoch <file> — echo the file's mtime as an integer Unix epoch.
-#   Tries BSD `stat -f %m` (macOS) first, then GNU `stat -c %Y` (Linux).
-#   Extracted from the identical inline probes in repomix_refresh.sh and
-#   graphify_ensure.sh (Story LS4).
+#   GNU `stat -c %Y` (Linux) first, then BSD `stat -f %m` (macOS). The order
+#   matters: GNU stat reads `-f` as "filesystem", prints a multi-line report on
+#   stdout and exits non-zero, so a BSD-first probe feeds that report to the
+#   caller. When it lands in `$(( ))`, bash parses the leading word as a
+#   variable name and `set -u` kills the script with "File: unbound variable"
+#   several frames away. BSD stat has no `-c` at all and fails cleanly, so
+#   reversing the order is safe. The integer check rejects a non-numeric answer
+#   here rather than deep inside an arithmetic expansion.
 mtime_epoch() {
-  local file="$1"
-  stat -f %m "$file" 2>/dev/null || stat -c %Y "$file"
+  local file="$1" out
+  out="$(stat -c %Y "$file" 2>/dev/null)" || out=""
+  if [[ ! "$out" =~ ^[0-9]+$ ]]; then
+    out="$(stat -f %m "$file" 2>/dev/null)" || out=""
+  fi
+  [[ "$out" =~ ^[0-9]+$ ]] || return 1
+  printf '%s\n' "$out"
 }
 
 # now_ms — echo the current Unix epoch in MILLISECONDS, as an integer.

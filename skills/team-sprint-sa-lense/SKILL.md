@@ -2,6 +2,7 @@
 name: team-sprint-sa-lense
 model: opus
 description: Assess a struggling Azure data migration (Synapse + dbt + DevOps) in a rescue engagement — gap analysis, prioritised recovery path, capability assessment, architecture diagrams. Pairs with team-sprint-pm-lense, which audits the project management.
+disable-model-invocation: true
 ---
 
 # Team Sprint SA Lense (Rescue Skill)

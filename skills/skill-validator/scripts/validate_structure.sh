@@ -8,6 +8,8 @@ set -euo pipefail
 SKILL_DIR="${1:?Usage: validate_structure.sh <skill-directory>}"
 SKILL_DIR="${SKILL_DIR%/}"
 SKILL_MD="$SKILL_DIR/SKILL.md"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FM_CHECK="$HERE/../../../scripts/frontmatter_check.sh"
 
 # Escape backslashes, quotes, and control whitespace so details can't break the JSON
 json_escape() {
@@ -54,6 +56,22 @@ else
   else
     emit "$(result PASS "frontmatter_present" "Frontmatter delimiters found")"
 
+    # Delimiters present is not the same claim as parses. Every other check here
+    # asks whether a field is in the text; a block that does not parse has no
+    # fields at all, so those checks read a broken manifest as a clean one. This
+    # shipped: the plugin's own entry point ran with empty metadata and every
+    # gate called it clean.
+    if [ -f "$FM_CHECK" ]; then
+      FM_OUT="$(bash "$FM_CHECK" "$SKILL_MD" 2>&1)" && FM_RC=0 || FM_RC=$?
+      case "${FM_OUT:-}" in
+        FAIL:*) emit "$(result FAIL "frontmatter_parses" "${FM_OUT#FAIL: } — at runtime this skill loads with NO metadata")" ;;
+        WARN:*) emit "$(result WARN "frontmatter_parses" "${FM_OUT#WARN: }")" ;;
+        *)      [ "$FM_RC" -eq 0 ] && emit "$(result PASS "frontmatter_parses" "frontmatter parses as a flat mapping")" ;;
+      esac
+    else
+      emit "$(result WARN "frontmatter_parses" "frontmatter_check.sh not found at $FM_CHECK — parse validation skipped")"
+    fi
+
     # Extract frontmatter
     FM=$(sed -n "2,$((CLOSE-1))p" "$SKILL_MD")
 
@@ -83,12 +101,19 @@ else
         found && /^[A-Za-z0-9_-]+:/ { exit }
         found { print }')
       WORD_COUNT=$(printf '%s\n' "$DESC" | wc -w | tr -d ' ')
+      # The bar is a ceiling, not a floor. A visible skill's description renders
+      # into the always-loaded catalogue every session whether or not the skill is
+      # ever invoked, and budget_check.sh charges this exact string against the
+      # release gate — so a rule that rewards padding fights the gate it ships
+      # beside. claude-config sets the house limit at ~200 chars; trigger phrases
+      # plus one line of purpose is the shape that fits.
+      DESC_CHARS=$(printf '%s' "$DESC" | wc -c | tr -d ' ')
       if [ "$WORD_COUNT" -lt 5 ]; then
         emit "$(result FAIL "description_field" "description is too short ($WORD_COUNT words)")"
-      elif [ "$WORD_COUNT" -lt 30 ]; then
-        emit "$(result WARN "description_length" "description is only $WORD_COUNT words (recommend > 30 for reliable triggering)")"
+      elif [ "$DESC_CHARS" -gt 200 ]; then
+        emit "$(result WARN "description_length" "description is $DESC_CHARS chars (~$((DESC_CHARS / 4)) tok always-loaded; house limit ~200 — trim to trigger phrases plus one line of purpose)")"
       else
-        emit "$(result PASS "description_length" "description is $WORD_COUNT words")"
+        emit "$(result PASS "description_length" "description is $DESC_CHARS chars (~$((DESC_CHARS / 4)) tok always-loaded)")"
       fi
     else
       emit "$(result FAIL "description_field" "description field missing from frontmatter")"

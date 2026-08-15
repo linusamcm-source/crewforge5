@@ -1,0 +1,9 @@
+Node: only_fn
+  ID:        skills_team_sprint_scripts_lib_only_fn
+  Source:    skills/team-sprint/scripts/lib.sh L21
+  Type:      code
+  Community: lib.sh
+
+Connections (2):
+  --> helper_one() [calls] [EXTRACTED] skills/team-sprint/scripts/lib.sh:L44
+  --> helper_two() [calls] [EXTRACTED] skills/team-sprint/scripts/state.sh:L91

@@ -28,7 +28,7 @@ Run sequentially. Each check is short-circuiting.
 5. **Commands resolve.** Detect or load from config via `bash $SCRIPTS/detect_commands.sh`; `command -v <bin>` for each. Missing test runner → STOP — **except when `crew: auto`**: defer the stop, because step 10a backfills commands from the verified crew profile. Re-run this check at the end of 10a and STOP only if the test runner is still unresolved.
 6. **Plan file exists and is non-empty.** `[ -s "$plan_path" ]`.
 7. **Plan-path uniqueness validation.** `bash $SCRIPTS/validate_plan_path.sh "$plan_path"`. On `STATUS=FAIL` the filename lacks a story-id slug or `.team-sprint/sprints/sprint-<slug>/` already belongs to a different or finalised plan — STOP and surface the script's stderr reason. On `STATUS=RESUME`, an earlier sprint for this exact plan is being continued. See `$REF/plan-path-convention.md` for the full naming contract.
-8. **Sprint-watchdog Phase -1 audit.** Invoke sprint-watchdog with `audit-only`. Surfaces stale state, dangling worktrees from prior failed sprints.
+8. **Sprint-watchdog Phase -1 audit.** Run sprint-watchdog in `audit-only` mode. It is hidden from the catalogue, so the `Skill` tool cannot reach it — `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode sprint-watchdog` answers `MODE=inline`, so read the body it names and run the audit from here (the `sprint-watchdog` **agent** under `agents/` is a separate, still-spawnable surface). Surfaces stale state, dangling worktrees from prior failed sprints.
 
 8a. **Arm the watchdog guard.** `bash ~/.claude/hooks/sprint-watchdog-guard.sh --activate` (run from the repo root). Creates `.claude/scripts/sprint-watchdog/.sprint-active.json`, which is the sole activation gate for the `PostToolUse(TaskUpdate)` guard — with no file the hook is a no-op, so it never fires outside a sprint. The guard mechanically records `impl_no_source_files`, `impl_missing_source_files`, and `review_no_artifact` violations for sprint-watchdog Step A to drain. It **fails open by design**: a guard error is never a sprint stop condition, which is exactly why Step B re-verifies independently. Absence of the hook (unregistered in `settings.json`) is a WARN, not a STOP — the sprint proceeds with the watchdog as the only check.
 9. **Refresh repomix pack.** `bash $SCRIPTS/repomix_refresh.sh --max-age-minutes "$repomix_max_age_minutes"` regenerates `.repomix-output.xml` when missing or older than `repomix_max_age_minutes` (config, default 240). Stale pack = false-clean reviews in Phase 4 / 7.
@@ -41,12 +41,12 @@ Run sequentially. Each check is short-circuiting.
        ```
        `STATUS=OK` → installed and runnable. `STATUS=FAIL` → install/import broke; STOP under `graphify: on`, else WARN + degrade.
 
-    2. **Build or refresh the project graph.** Check freshness, then (re)build only when needed — the build is the one graphify step a bash script can't own (semantic extraction needs subagents), so the lead invokes the `/graphify` skill:
+    2. **Build or refresh the project graph.** Check freshness, then (re)build only when needed — the build is the one graphify step a bash script can't own (semantic extraction needs subagents), so the lead drives the hidden `graphify` sub-skill (`bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode graphify` answers `MODE=inline` — read the body it names and run it from here):
        ```bash
        bash "$SCRIPTS/graphify_ensure.sh" --graph-status --max-age-minutes "$graphify_max_age_minutes"
        ```
        - `STATUS=FRESH` → reuse the existing `graphify-out/graph.json`, skip the build.
-       - `STATUS=MISSING` or `STATUS=STALE` → invoke the **`/graphify`** skill (via the Skill tool) on the repo root to build/refresh `graphify-out/graph.json`. A pre-built graph from a prior session is reused; otherwise `/graphify` runs its full pipeline.
+       - `STATUS=MISSING` or `STATUS=STALE` → run the resolved `graphify` body on the repo root to build/refresh `graphify-out/graph.json`. A pre-built graph from a prior session is reused; otherwise graphify runs its full pipeline.
 
     3. **Retest graphify in the sprint (smoke query).** Re-verify after the build so the graph is confirmed queryable before any reviewer relies on it — this is the explicit "newly installed graphify runs correctly in the team skill" gate:
        ```bash

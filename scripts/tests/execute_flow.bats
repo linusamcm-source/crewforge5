@@ -111,7 +111,7 @@ _own_execute() {
   m="$(manifest)"
   for n in 0 1 2 3 4 5 6 7; do
     doc="$(jq -r --arg id "$n" 'map(select(.id == $id)) | .[0].doc' "$m")"
-    [ "$doc" = "../team-sprint/phases/phase-$n.md" ]
+    [ "$doc" = "../team-sprint/references/phases/phase-$n.md" ]
     [ -f "$(dirname "$m")/$doc" ]
   done
 }

@@ -3,7 +3,8 @@ name: skill-validator
 model: sonnet
 context: fork
 agent: general-purpose
-description: Validates that a Claude Code skill is structurally sound, functional, efficient, and actually followed by agents. Use when asked to "validate a skill", "audit a skill", "check if my skill works", or "why isn't my skill working". Produces a graded pass/fail report with actionable fixes.
+description: Grades a Claude Code skill structurally and behaviourally, with fixes. Use on "validate a skill", "audit a skill", "check if my skill works", "why isn't my skill working"
+disable-model-invocation: true
 ---
 
 # Skill Validator
@@ -32,8 +33,8 @@ catches both categories.
 ### Step 0: Identify the Target Skill
 
 Determine which skill to validate. The user will provide one of:
-- A path to a skill directory (e.g., `~/.claude/skills/my-skill/`)
-- A skill name (search `~/.claude/skills/` and `.claude/skills/` for it)
+- A path to a skill directory (e.g., `$CLAUDE_CONFIG_DIR/skills/my-skill/`)
+- A skill name (search `$CLAUDE_CONFIG_DIR/skills/` and `.claude/skills/` for it)
 - "this skill" or "the one I just made" (use the most recently modified skill directory)
 
 State the resolved path explicitly before proceeding; if multiple candidates match,
@@ -189,9 +190,12 @@ Otherwise, show the user the summary table and overall grade. Then:
    production-ready. A SKIPPED phase (e.g., agent simulation without subagents) does not
    block grade A, but must be listed next to the grade. Stop here.
 
-2. **If grade is below A** (B, C, D, or F): invoke the **skill-rectifier** skill
-   (`/skill-rectifier`) exactly once, passing the validation report path and the target
-   skill path. Do not ask the user — this is mandatory. **The rectifier owns the loop
+2. **If grade is below A** (B, C, D, or F): hand off to **skill-rectifier** exactly once,
+   passing the validation report path and the target skill path. It is hidden from the
+   catalogue, so the `Skill` tool cannot reach it — resolve it with
+   `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode skill-rectifier`
+   and honour the answer (`MODE=inline` — read the body and follow it here).
+   Do not ask the user — this is mandatory. **The rectifier owns the loop
    from here**: it applies fixes, re-runs this validator in report-only mode, and
    repeats until grade A, a 5-round cap, or escalation. Do not re-enter this step after
    handing off, and do not duplicate the loop logic here.
@@ -203,6 +207,6 @@ if your prose summary and grade.sh disagree, grade.sh wins. Warnings that persis
 multiple rounds indicate instructions that genuinely need human judgment, at which point
 the rectifier escalates rather than spinning forever.
 
-The skill-rectifier is at `~/.claude/skills/skill-rectifier/` — it handles the full
+The skill-rectifier is at `${CREWFORGE5_ROOT}/skills/skill-rectifier/` — it handles the full
 fix workflow including before/after diffs, the re-validation loop, and deferred items
 that need human review.

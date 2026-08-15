@@ -2,6 +2,7 @@
 name: ui-polish-loop
 model: sonnet
 description: Interactive UI polish loop for a running app — iOS simulator (via mobile MCP) or web (via rustwright MCP). Screenshot, apply the user's tweak, refresh, re-screenshot, repeat until stop. Use when the user says "clean up this screen", "polish this", "fix the spacing", or "make this nicer".
+disable-model-invocation: true
 ---
 
 # UI Polish Loop

@@ -1,10 +1,8 @@
 ---
 name: team-feature
 model: opus
-description: Interactive feature-planning loop — repo grounding, per-decision
-  divergence, user ratification, adversarially verified plan. Use on /team-feature,
-  "plan this feature with me", "team feature plan", or when the user wants a feature
-  plan built through questioning rather than handed down.
+description: Interactive feature-planning loop — repo recon, adhd divergence, grill to ratify each decision, then draft and verify the plan. Use on /team-feature, "plan this feature with me", "team feature plan"
+disable-model-invocation: true
 ---
 
 # Team Feature
@@ -71,9 +69,16 @@ on — they should see what will and won't be asked.
 
 ## Phase 1 — Diverge
 
-Invoke the `adhd` skill now (Skill tool) so its loop, frames, and invariants
-are in context — it is the single source of truth for the divergence method.
-Do not restate its frame table here.
+Load `adhd` now so its loop, frames, and invariants are in context — it is the
+single source of truth for the divergence method. It is hidden from the
+catalogue, so the `Skill` tool cannot reach it; resolve it instead:
+
+```bash
+bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode adhd
+```
+
+It answers `MODE=inline`, so read the body at the path it names and follow it
+here. Do not restate its frame table.
 
 Then run adhd's own Diverge → Focus loop once per open decision, treating the
 decision's question as adhd's problem P:
@@ -107,7 +112,9 @@ reasons, and the three deepened sketches.
 
 ## Phase 2 — Grill (inline)
 
-Invoke the `grill-me` skill (Skill tool). Then walk the decision tree in
+Load `grill-me` — hidden from the catalogue, so resolve it:
+`bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode grill-me`
+answers `MODE=inline`, so read the body it names. Then walk the decision tree in
 dependency order — a decision is askable only when everything in its
 `depends_on` is ratified.
 
@@ -170,7 +177,10 @@ same feature. The decision ledger always follows the plan's number:
    user can see exactly what was considered, chosen, and rejected, and why.
 
 Summarize both to the user. If the user wants the plan executed by
-/team-sprint, invoke the `team-sprint-planner` skill with BOTH artifacts —
+/team-sprint, load `team-sprint-planner` — hidden from the catalogue, so
+resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
+--load-mode team-sprint-planner` answers `MODE=inline`, so read the body it
+names — and give it BOTH artifacts —
 the plan file and the decision ledger — as source docs: the planner owns
 story decomposition and the plan parse contract, so team-feature never
 emits `## Story` headings itself. Then stop — grill-me's hard rule applies:

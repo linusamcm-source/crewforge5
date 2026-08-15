@@ -1,6 +1,7 @@
 ---
 name: graphify
 description: "Use for any question about a codebase, its architecture, file relationships, or project content — especially when graphify-out/ exists, where the question should be treated as a graphify query first. Turns any input into a persistent knowledge graph with query/path/explain tools."
+disable-model-invocation: true
 ---
 
 # /graphify
