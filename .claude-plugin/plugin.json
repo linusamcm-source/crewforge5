@@ -1,6 +1,6 @@
 {
   "name": "crewforge5",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Three commands over one repo: /crewforge5:init audits and slims your Claude config, /crewforge5:plan turns a goal into an adversarially-reviewed plan, and /crewforge5:execute drives that plan to a merged commit with a generated agent crew and its quality gates.",
   "author": {
     "name": "Linus McManamey",
