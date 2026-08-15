@@ -34,16 +34,20 @@ printf 'ok\n'
 SH
   chmod +x "$root/scripts/dummy.sh"
 
-  cat > "$root/scripts/tests/dummy.bats" <<'BATS'
-#!/usr/bin/env bats
-source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.sh"
-
-@test "dummy script prints ok" {
-  run bash "$BATS_TEST_DIRNAME/../dummy.sh"
-  [ "$status" -eq 0 ]
-  [ "$output" = "ok" ]
-}
-BATS
+  # The `@test` line is printf'd rather than heredoc'd — same reason
+  # bats_fallback_skip.bats does it. A literal `@test` at column 0 anywhere in
+  # this file makes older bats (Ubuntu's apt build) count the fixture as a real
+  # test: it plans one more than it runs and fails the suite on the count.
+  {
+    printf '#!/usr/bin/env bats\n'
+    printf 'source "$(dirname "${BATS_TEST_FILENAME:-${BASH_SOURCE[0]}}")/lib/bats-fallback.sh"\n'
+    printf '\n'
+    printf '@test "dummy script prints ok" {\n'
+    printf '  run bash "$BATS_TEST_DIRNAME/../dummy.sh"\n'
+    printf '  [ "$status" -eq 0 ]\n'
+    printf '  [ "$output" = "ok" ]\n'
+    printf '}\n'
+  } > "$root/scripts/tests/dummy.bats"
 
   # One reference doc — content doesn't matter, just existence + back-reference.
   cat > "$root/references/example.md" <<'REF'

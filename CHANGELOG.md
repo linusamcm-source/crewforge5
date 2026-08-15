@@ -11,6 +11,10 @@
   historical design docs under `skills/team-sprint/references/docs/plans/` no
   longer cite one machine's absolute paths. Restores the "No path coupling to one
   machine" release gate.
+- `lint_skill.bats` built its throwaway fixture with a literal `@test` at column 0
+  inside a heredoc. Newer bats parses heredocs and ignores it; Ubuntu's apt build
+  counts it, so the suite planned 649 tests, ran 648, and failed on the count
+  alone. The declaration is `printf`'d now, matching `bats_fallback_skip.bats`.
 - `graphify_ensure.sh` and `lib.sh` are clean under shellcheck 0.9.0, the declared
   minimum: two `A && B || true` command substitutions became `... || var=""`
   (SC2015). Behaviour is unchanged; only 0.9 flagged them, and CI installs 0.9 on
