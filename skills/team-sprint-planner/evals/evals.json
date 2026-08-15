@@ -1,22 +1,22 @@
 {
   "skill_name": "team-sprint-planner",
-  "repo": "/Users/linus/Development/data_dp_ssis2sp-dev-work",
+  "repo": "<repo-root>",
   "evals": [
     {
       "id": 1,
-      "prompt": "In the repo at /Users/linus/Development/data_dp_ssis2sp-dev-work, the SSIS Pivot component isn't really transpiled — it's lumped into the catch-all @register in data_dp_ssis2sp/transforms/flow.py that just warns and passes the rows through. I want a real transpiler that emits actual T-SQL for Pivot (PIVOT operator or conditional aggregation), modelled on how Aggregate is handled in transforms/grouping.py. Write me a detailed implementation plan I can hand to /team-sprint. I'll run the sprint myself.",
+      "prompt": "In the repo at <repo-root>, the SSIS Pivot component isn't really transpiled — it's lumped into the catch-all @register in data_dp_ssis2sp/transforms/flow.py that just warns and passes the rows through. I want a real transpiler that emits actual T-SQL for Pivot (PIVOT operator or conditional aggregation), modelled on how Aggregate is handled in transforms/grouping.py. Write me a detailed implementation plan I can hand to /team-sprint. I'll run the sprint myself.",
       "expected_output": "A slug-named markdown plan with multiple ## Story headings, each with ### Acceptance Criteria + ### Definition of Done, a Depends On / Touches graph, testable ACs, grounded in the real transforms registry/flow.py fallback and grouping.py pattern. No code written; plan only.",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "/Users/linus/Development/data_dp_ssis2sp-dev-work — the SSIS expression translator (data_dp_ssis2sp/expressions/translator.py) emits a 'no T-SQL mapping' warning for FINDSTRING because it's not in the _PASSTHROUGH set. FINDSTRING(haystack, needle, occurrence) maps to CHARINDEX but the argument order is different and the occurrence arg needs handling. Add proper translation for FINDSTRING (and any other obviously-unmapped string funcs you find while you're in there). Prep a team-sprint plan.",
+      "prompt": "<repo-root> — the SSIS expression translator (data_dp_ssis2sp/expressions/translator.py) emits a 'no T-SQL mapping' warning for FINDSTRING because it's not in the _PASSTHROUGH set. FINDSTRING(haystack, needle, occurrence) maps to CHARINDEX but the argument order is different and the occurrence arg needs handling. Add proper translation for FINDSTRING (and any other obviously-unmapped string funcs you find while you're in there). Prep a team-sprint plan.",
       "expected_output": "team-sprint-formatted plan grounded in translator.py's _PASSTHROUGH / _function fallback, with testable ACs (translate(FINDSTRING(...)) produces CHARINDEX with reordered args; warning no longer emitted), DoD per story, slug filename.",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "Repo: /Users/linus/Development/data_dp_ssis2sp-dev-work. extract_agent_jobs in data_dp_ssis2sp/agent/extractor.py supports job_filter and category_filter but there's no way to EXCLUDE jobs — I need to skip maintenance/system jobs by name pattern during extraction. Decompose this into sprint stories with acceptance criteria and a dependency graph.",
+      "prompt": "Repo: <repo-root>. extract_agent_jobs in data_dp_ssis2sp/agent/extractor.py supports job_filter and category_filter but there's no way to EXCLUDE jobs — I need to skip maintenance/system jobs by name pattern during extraction. Decompose this into sprint stories with acceptance criteria and a dependency graph.",
       "expected_output": "Plan (single or multi story) grounded in the real extract_agent_jobs signature at extractor.py:167, testable ACs (jobs matching the exclude pattern are skipped; exclude composes with existing filters), DoD, slug filename. No code.",
       "files": []
     }

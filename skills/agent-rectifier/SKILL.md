@@ -21,9 +21,9 @@ the parameters below.
 ## Parameters for the loop
 
 - **Target**: a single agent `.md` file (frontmatter + body) under `.claude/agents/`.
-- **Validator**: `/agent-validator` (at `~/.claude/skills/agent-validator/`).
+- **Validator**: `/agent-validator` (at `${CREWFORGE5_ROOT}/skills/agent-validator/`).
   Structural script (Step 6):
-  `bash ~/.claude/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>`
+  `bash ${CREWFORGE5_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path>`
 - **Fix catalog** (Steps 2-5): [references/fix-catalogs.md](references/fix-catalogs.md).
   Category order: structural → tool coherence → efficiency → instruction compliance.
 - **Report** (Step 7): `./docs/agent_reports/agent-rectification-{agent-name}-{date}.md`,

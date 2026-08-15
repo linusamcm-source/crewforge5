@@ -1,15 +1,15 @@
 # Sprint: team-sprint Mechanical Refactor (`team-sprint-mech`)
 
-**Goal:** Optimise `~/.claude/skills/team-sprint` by extracting mechanical pseudocode into executable scripts, splitting SKILL.md into per-phase reference docs, tightening defaults, and closing under-specified contract gaps. No behavioural regression to the resume contract or to existing sub-skill integrations.
+**Goal:** Optimise `$HOME/.claude/skills/team-sprint` by extracting mechanical pseudocode into executable scripts, splitting SKILL.md into per-phase reference docs, tightening defaults, and closing under-specified contract gaps. No behavioural regression to the resume contract or to existing sub-skill integrations.
 
-**Target directory:** `~/.claude/skills/team-sprint/`
+**Target directory:** `$HOME/.claude/skills/team-sprint/`
 **Target branch:** `develop` (or `main` if the skills repo has no `develop`)
 **Out of scope:** Per-repo `team-sprint` variants under `~/Development/*`; new sub-skills; rewriting `validate_plan_path.sh` (interface stable).
 
 **Why this plan exists:** SKILL.md is currently 492 lines, with several phases describing mechanical work as inline pseudocode (lead validator, finding application, coverage parsing, commit message build, resume scan). LLM-driven mechanical work is non-deterministic, expensive in tokens, and untestable. Extracting these to `scripts/*.sh` makes them deterministic, shell-syntax-checkable, fixture-testable, and cheap. Splitting the prose into per-phase docs loaded on-demand cuts per-turn context cost ~60%.
 
 **Conventions for this plan:**
-- `$SKILL_DIR` = `~/.claude/skills/team-sprint`
+- `$SKILL_DIR` = `$HOME/.claude/skills/team-sprint`
 - `$SCRIPTS` = `$SKILL_DIR/scripts`
 - `$PHASES` = `$SKILL_DIR/phases`
 - `$REF` = `$SKILL_DIR/reference`

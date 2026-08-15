@@ -878,7 +878,7 @@ recon_explain() {
 # ---------------------------------------------------------------------------
 
 # _recon_gitignore — make git ignore the .recon/ artifact dir, but ONLY when it
-# does not already: against a `/*`-whitelist .gitignore (the shape ~/.claude
+# does not already: against a `/*`-whitelist .gitignore (the shape $HOME/.claude
 # itself uses) check-ignore already matches and an appended line would be
 # redundant churn in a tracked file. rc 0 = already ignored, rc 1 = not ignored,
 # anything else (128 outside a work tree) is an error this does not act on.

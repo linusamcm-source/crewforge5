@@ -611,7 +611,7 @@ _log_nonanswer_field() {
   _answer_repo "$d"
   cp "$FIX/gitignore-whitelist" "$d/.gitignore"
   # Fixture precondition: `/*` already matches .recon/, so an appended line
-  # would be redundant, not effective (as in ~/.claude, .gitignore:8:/*).
+  # would be redundant, not effective (as in $HOME/.claude, .gitignore:8:/*).
   ( cd "$d" && git check-ignore -q .recon/ ) \
     || { echo "fixture error: whitelist .gitignore does not already match .recon/"; false; }
 

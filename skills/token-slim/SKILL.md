@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Skill frontmatter descriptions load **every turn** via the available-skills listing;
 SKILL.md bodies load **at invocation**. This skill slims both, with a mechanical
-harness proving nothing discoverable was lost. First applied to `~/.claude/skills/`
+harness proving nothing discoverable was lost. First applied to a user-global `skills/` directory
 (2026-07: 24,512 → 11,016 desc chars, ~3,374 tok/turn saved; see
 `skills/.token-slim/report.md` for that run's record).
 
@@ -18,20 +18,20 @@ harness proving nothing discoverable was lost. First applied to `~/.claude/skill
 Also trigger on "audit skill token load", "skills are bloating my context",
 "slim the skills", "my skill descriptions are too long", or after adding several
 new skills to a repo. Works on any directory of `<skill>/SKILL.md` folders —
-`~/.claude/skills/` or a project's `.claude/skills/`.
+a user-global `skills/` directory or a project's `.claude/skills/`.
 
 ## Scripts
 
 All take explicit paths — nothing is hardcoded to one repo:
 
 ```bash
-SCRIPTS=~/.claude/skills/token-slim/scripts
+SCRIPTS=${CREWFORGE5_ROOT}/skills/token-slim/scripts
 python3 $SCRIPTS/baseline.py --skills-dir <dir> --out <work>/baseline.json   # snapshot
 python3 $SCRIPTS/baseline.py --skills-dir <dir> --report                     # live measure
 bash    $SCRIPTS/check.sh <skill> <dir> <work>/baseline.json [desc-cap]     # per-skill gate
 python3 $SCRIPTS/sweep.py --skills-dir <dir> --baseline <work>/baseline.json \
         [--ceilings <work>/ceilings.json] [--max-total N]                    # totals gate
-bats    ~/.claude/skills/token-slim/tests                                    # harness self-test (tests/check.bats)
+bats    ${CREWFORGE5_ROOT}/skills/token-slim/tests                                    # harness self-test (tests/check.bats)
 python3 $SCRIPTS/mech-candidates.py --skills-dir <dir> [--min-hits N]        # sandwich candidates
 ```
 

@@ -173,7 +173,7 @@ smoke_test() {
   # the `graphify query` CLI may be unavailable, with a NetworkX fallback).
   if [[ -f "$GRAPH_JSON" ]]; then
     if command -v graphify >/dev/null 2>&1; then
-      out="$(cd "$TARGET_DIR" && graphify query 'overview of this codebase' 2>/dev/null || true)"
+      out="$(cd "$TARGET_DIR" && graphify query 'overview of this codebase' 2>/dev/null)" || out=""
       [[ -n "$out" ]] && return 0
     fi
     # Path via argv, never interpolated into the source: a project path holding

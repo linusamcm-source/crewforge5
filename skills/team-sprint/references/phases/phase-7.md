@@ -101,7 +101,7 @@ Every story in `$ART/stories.json` has a corresponding entry in `state.json.stor
     Do NOT delete `$ART/` — it's the post-mortem record and proves the plan-path slug is claimed (so a future plan with the same filename is correctly rejected by Phase 0 step 7).
 
 ## Exit condition
-`state.json.done == true`; sprint branch merged into `$TARGET_BRANCH`; worktree removed; team released; sprint report finalised. **Disarm the watchdog guard** as the last teardown step: `bash ~/.claude/hooks/sprint-watchdog-guard.sh --deactivate` (from the repo root) — removes `.claude/scripts/sprint-watchdog/.sprint-active.json` so the `PostToolUse(TaskUpdate)` guard goes inert until the next sprint arms it. Leaving it armed makes every later `TaskUpdate` in the repo verify against a finished sprint's artifacts and record spurious violations.
+`state.json.done == true`; sprint branch merged into `$TARGET_BRANCH`; worktree removed; team released; sprint report finalised. **Disarm the watchdog guard** as the last teardown step: `bash ${CREWFORGE5_ROOT}/hooks/sprint-watchdog-guard.sh --deactivate` (from the repo root) — removes `.claude/scripts/sprint-watchdog/.sprint-active.json` so the `PostToolUse(TaskUpdate)` guard goes inert until the next sprint arms it. Leaving it armed makes every later `TaskUpdate` in the repo verify against a finished sprint's artifacts and record spurious violations.
 
 ## Artifacts produced
 - `$ART/diff-sprint.patch` (+ fleet report and any fix commits on the sprint branch) · `$ART/reviews-sprint-round-<N>-<reviewer>.md` (one per fleet reviewer — the delivery-completeness audit record) · merge commit on `$TARGET_BRANCH` · finalised `$ART/sprint-report.md` · `state.json.done == true` + `state.json.finalised_at`.

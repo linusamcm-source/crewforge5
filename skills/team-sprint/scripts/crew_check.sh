@@ -12,7 +12,7 @@
 #   STATUS=CACHED   manifest exists, schema-valid (see crews.schema.json),
 #                   every crew.<role> resolves to <agents-dir>/<name>.md
 #                   (falling back to the registry, $CREW_REGISTRY_DIR or
-#                   ~/.claude/agents, for reused agents), and
+#                   $HOME/.claude/agents, for reused agents), and
 #                   every generated agent still matches the required structure
 #                   (frontmatter name/description/tools + '## Stack Knowledge'
 #                   seed + '## Skills' where the manifest assigns skills).

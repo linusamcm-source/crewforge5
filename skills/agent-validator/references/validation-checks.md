@@ -13,7 +13,7 @@ verbatim from SKILL.md.
 
 **Skill invocation analysis:**
 - Scan for `/skill-name` patterns and `Skill tool` references in the body
-- Verify each referenced skill exists in `~/.claude/skills/` or `.claude/skills/`
+- Verify each referenced skill exists in `$HOME/.claude/skills/` or `.claude/skills/`
 - WARN if a referenced skill doesn't exist on disk
 
 **Agent spawning analysis:**

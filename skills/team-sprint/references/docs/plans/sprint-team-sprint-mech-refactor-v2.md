@@ -1,9 +1,9 @@
 # Sprint: team-sprint Mechanical Refactor v2 (`team-sprint-mech`)
 
 **Supersedes:** `sprint-team-sprint-mech-refactor.md` (v1, 2026-05-20).
-**Goal:** Same v1 goal — optimise `~/.claude/skills/team-sprint` by extracting mechanical pseudocode into executable scripts, splitting SKILL.md into per-phase docs, tightening defaults, closing contract gaps — **plus** reserve a stable extension surface so the per-project `integration-diagram` skill (see `sprint-integration-diagram-skill-v2.md`) can plug into team-sprint without further refactor.
+**Goal:** Same v1 goal — optimise `$HOME/.claude/skills/team-sprint` by extracting mechanical pseudocode into executable scripts, splitting SKILL.md into per-phase docs, tightening defaults, closing contract gaps — **plus** reserve a stable extension surface so the per-project `integration-diagram` skill (see `sprint-integration-diagram-skill-v2.md`) can plug into team-sprint without further refactor.
 
-**Target directory:** `~/.claude/skills/team-sprint/`
+**Target directory:** `$HOME/.claude/skills/team-sprint/`
 **Target branch:** `develop` (or `main` if the skills repo has no `develop`)
 **Out of scope:** Per-repo `team-sprint` variants under `~/Development/*`; new sub-skills; rewriting `validate_plan_path.sh` (interface stable); the `integration-diagram` skill itself (separate sprint).
 

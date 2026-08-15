@@ -7,11 +7,11 @@ Human-facing documentation for the `tech-debt-audit` Claude Code skill. The exec
 Personal install (available across all your projects):
 
 ```bash
-mkdir -p ~/.claude/skills/tech-debt-audit
+mkdir -p $HOME/.claude/skills/tech-debt-audit
 ```
 
 ```bash
-curl -o ~/.claude/skills/tech-debt-audit/SKILL.md https://raw.githubusercontent.com/ksimback/tech-debt-skill/main/SKILL.md
+curl -o $HOME/.claude/skills/tech-debt-audit/SKILL.md https://raw.githubusercontent.com/ksimback/tech-debt-skill/main/SKILL.md
 ```
 
 Or for a project-only install (just this repo):

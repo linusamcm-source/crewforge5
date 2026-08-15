@@ -25,7 +25,7 @@ Six phases run hooks. Each phase commits a different slice of sprint state befor
 subskill_hooks:
   phase-6:
     - skill: my-skill                                 # metadata + preflight probe target
-      command: 'bash ~/.claude/skills/my-skill/run.sh' # actual shell line, always runs
+      command: 'bash /path/to/my-skill/run.sh' # actual shell line, always runs
       required: false                                  # optional; defaults to false
 ```
 
@@ -36,7 +36,7 @@ subskill_hooks:
 One-line example:
 
 ```yaml
-subskill_hooks: { phase-6: [{skill: my-skill, command: 'bash ~/.claude/skills/my-skill/run.sh'}] }
+subskill_hooks: { phase-6: [{skill: my-skill, command: 'bash /path/to/my-skill/run.sh'}] }
 ```
 
 ### TS_* contract env vars

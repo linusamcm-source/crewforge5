@@ -103,7 +103,7 @@ art_dir() {
   root="$(repo_root)"
   local sprint_dir=""
   local plan_dir
-  plan_dir="$(cd "$(dirname "$plan_path")" 2>/dev/null && pwd -P || true)"
+  plan_dir="$(cd "$(dirname "$plan_path")" 2>/dev/null && pwd -P)" || plan_dir=""
   if [[ "$(dirname "$plan_dir")" == */.team-sprint/sprints \
         && "$(basename "$plan_dir")" == sprint-* ]]; then
     sprint_dir=".team-sprint/sprints/$(basename "$plan_dir")"

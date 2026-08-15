@@ -1,7 +1,7 @@
 # Recon Harness — capability router for code-knowledge instruments
 
 **Status:** specification, not yet built.
-**Source:** `~/.claude/union.md` (Graphify vs GitNexus vs CodeGraph comparison), reviewed
+**Source:** `$HOME/.claude/union.md` (Graphify vs GitNexus vs CodeGraph comparison), reviewed
 2026-07-27 against the live tooling on this machine.
 
 ## Context and problem
@@ -100,8 +100,8 @@ entirely bash-probeable (codegraph, graphify, repomix); any chain containing tok
 to `STATUS=DELEGATE` instead. This is the single rule reconciling the filter with the delegate
 link — without it the two produce opposite statuses for the same input.
 
-**On `~/.claude` itself the CodeGraph half of this harness is inert, and the plan assumes it.**
-Verified this session: `codegraph status` in `~/.claude` prints `⚠ Not initialized`, and
+**On `$HOME/.claude` itself the CodeGraph half of this harness is inert, and the plan assumes it.**
+Verified this session: `codegraph status` in `$HOME/.claude` prints `⚠ Not initialized`, and
 CodeGraph's grammar registry (`lib/dist/extraction/grammars.js`) enumerates 40-odd languages —
 `c cpp csharp go java javascript python ruby rust swift typescript vue yaml …` — with **no
 `bash`/`shell`/`sh` entry at all**, so initialising it here would not help. graphify's live
@@ -112,9 +112,9 @@ the AC: in a repo whose indexed languages include `.sh` for graphify and not for
 `recon.sh callers <sym>` is answered by graphify and the output reports `PROVIDER=graphify`.
 
 **Phase 0 precondition — flip `graphify: auto`.** The sprint config sets `graphify: off`
-(`/Users/linus/.claude/team-sprint.config.yaml:32`), which skips phase-0 step 9a entirely and
+(`$HOME/.claude/team-sprint.config.yaml:32`), which skips phase-0 step 9a entirely and
 would leave every graphify-served intent fixture-only with no live verification at all. That is
-needless here: verified 2026-07-28, graphify is installed at `/Users/linus/.local/bin/graphify`
+needless here: verified 2026-07-28, graphify is installed at `$HOME/.local/bin/graphify`
 and `graphify-out/graph.json` is present and fresh — 2,763,824 bytes, 3453 nodes, rebuilt
 2026-07-28 05:58 — so live verification is free. Set `graphify: auto`
 before Phase 0 — under `auto` a graphify failure WARNs and sets `state.json.graphify_degraded=true`
@@ -282,7 +282,7 @@ the zero case it is meant to detect. `lint_skill.sh:111` is the in-repo preceden
 - CodeGraph CLI, external, installed via npm `@colbymchenry/codegraph` (produces the capability surface the probe reads; **not in this repo**, its tool roster is not documented at a stable URL)
 - tokensave MCP roster (~140 `mcp__tokensave__*` tools; produces the delegate targets — **MCP-only, unreachable from bash**, so the probe can never shell it)
 - `skills/team-sprint/scripts/graphify_ensure.sh:93-125` (produces the interpreter resolution + `graphify-out/.graphify_python` cache the adapter MUST reuse rather than reimplement; note it now calls `uv tool run --from graphifyy` — a bare `uv tool run graphifyy python` resolves to nothing)
-- `~/.claude/CLAUDE.md:118-119` (produces the `rtk grep`-not-bare-grep rule the repomix adapter is asserted against — verified 2026-07-28 that `RTK.md` contains neither the string `rtk grep` nor `bare grep`, so it is not the producer; worse, `RTK.md:24-26` "Hook-Based Usage" claims all commands are automatically rewritten by the hook, which contradicts the rule this adapter is asserted against)
+- `$HOME/.claude/CLAUDE.md:118-119` (produces the `rtk grep`-not-bare-grep rule the repomix adapter is asserted against — verified 2026-07-28 that `RTK.md` contains neither the string `rtk grep` nor `bare grep`, so it is not the producer; worse, `RTK.md:24-26` "Hook-Based Usage" claims all commands are automatically rewritten by the hook, which contradicts the rule this adapter is asserted against)
 - `${REPOMIX_PACK:-.repomix-output.xml}` (produces the XML pack whose `<file path=…>` tags are the ONLY source of a hit's real path and line offset; `-B 2` does not reach the owning tag and never did — verified 2026-07-27 on the live pack: the tag for `agents/boundary-reviewer.md` sits at pack line 472 and its content runs to line 568, so the adapter indexes tag offsets rather than using context lines)
 - `rtk grep` output shape, external (produces pack-line-numbered hits and, when its result cap trips, a trailing `  +<n> more in <file>` line — verified 2026-07-27: a broad sweep of the live pack ended `+6245 more in .repomix-output.xml`; that trailer is RH1's only source of a pre-truncation `COUNT=` for the `text` intent)
 - CodeGraph CLI 1.5.0, external (produces `callers`/`callees`/`impact`/`affected`/`explore` output shapes the adapter normalises)
@@ -358,7 +358,7 @@ unavailable; it never guesses a name. Two properties of the cache are load-beari
   un-indexed repo answers nothing, and reporting that as `EMPTY` is the false claim this plan
   exists to prevent. The probe parses `codegraph status` **stdout** for the initialised state —
   never its exit code, which is 0 even when the project is not initialised (verified 2026-07-27
-  in `~/.claude`: prints `⚠ Not initialized`, exits 0) — and stores the result as `indexed`
+  in `$HOME/.claude`: prints `⚠ Not initialized`, exits 0) — and stores the result as `indexed`
   alongside `available`. RH6 owns adding `codegraph init` to the Phase 0 probe step.
 
 ### Acceptance Criteria
@@ -393,7 +393,7 @@ unavailable; it never guesses a name. Two properties of the cache are load-beari
 ### Definition of Done
 - [ ] `shellcheck scripts/recon.sh` clean.
 - [ ] `recon.bats` green — `run-all.sh:54` collects `("$TESTS_DIR"/*.bats)`, so a new suite is discovered by that glob; there is no registry to edit and no registration step to perform.
-- [ ] `commands.typecheck` names no file a later story creates: `/Users/linus/.claude/team-sprint.config.yaml:44` reads `bash skills/team-sprint/scripts/tests/run-all.sh` before Phase 0 (as originally written it named `recon.sh` and `recon_providers.sh`, neither of which exists until this story lands, so every typecheck run before RH1 failed on a missing file). `lint_skill.sh:125` check 7 and `run-all.sh:42-47` already shellcheck every `$SCRIPTS/*.sh` that exists, with no missing-file failure mode.
+- [ ] `commands.typecheck` names no file a later story creates: `$HOME/.claude/team-sprint.config.yaml:44` reads `bash skills/team-sprint/scripts/tests/run-all.sh` before Phase 0 (as originally written it named `recon.sh` and `recon_providers.sh`, neither of which exists until this story lands, so every typecheck run before RH1 failed on a missing file). `lint_skill.sh:125` check 7 and `run-all.sh:42-47` already shellcheck every `$SCRIPTS/*.sh` that exists, with no missing-file failure mode.
 - [ ] Header comment block documents every mode (`--help`, `--probe`, `--no-delegate`, bare intent), the single evaluation order, every `STATUS=` value including the three `--probe` statuses, and exit codes, in the style of `graphify_ensure.sh:1-38`.
 - [ ] **Contract coverage** (substitutes for the disabled line-coverage gate — see "Coverage gate" above). Both loops pass, asserted in `recon.bats`, not by eye: all 10 intents (`text callers callees impact tests path dynamic coupling docs spans`) are each named in at least one test; and every `STATUS=` value RH1 itself produces (`OK EMPTY UNAVAILABLE DEGRADED NO_INTENT_MATCH DELEGATE`, read from the Output grammar block rather than restated) has a test asserting it is emitted.
 - [ ] **Contract coverage, `REASON=`.** Every `REASON=` value RH1 itself produces (`not-installed no-index language-unsupported provider-error`) has a test asserting it is emitted with its status, looped against `grep -l` on `recon.bats` — `provider-error` included, since RH1's last-link-failed branch is its only producer anywhere in the sprint and the sprint-wide `REASON=` loop lists it.
@@ -423,9 +423,9 @@ unavailable; it never guesses a name. Two properties of the cache are load-beari
 - `skills/team-sprint/scripts/lib.sh` `mtime_epoch()` (produces the index age; handles the BSD/GNU `stat` split for files that exist, but aborts under `set -e` when the file is absent — the caller must test first, so every call site is guarded by `[[ -f "$idx" ]] || { <absent-index branch>; }` rather than leaning on the helper)
 - `skills/team-sprint/scripts/lib.sh` `repo_root()` at `lib.sh:71` (git-common-dir based, so it returns the MAIN tree root from inside any worktree; produces the base path for both the config lookup and the guard's file count — and, unhardened, returns `/` outside a repo, which is why RH3 hardens it)
 - `TEAM_SPRINT_CONFIG` (produces the config path override; the full resolution is `CONFIG_FILE="${TEAM_SPRINT_CONFIG:-$(repo_root)/team-sprint.config.yaml}"`)
-- `skills/team-sprint/team-sprint.config.yaml.example:173-178` `graphify_max_age_minutes` (produces the *documented* default of 240 for graphify's `fresh` vs `stale:<n>m` split — verified 2026-07-27 that `skills/team-sprint/team-sprint.config.yaml` does not exist and the live `/Users/linus/.claude/team-sprint.config.yaml` sets no `graphify_max_age_minutes` at all, so no config file is a producer of defaults and `recon.sh` supplies 240 itself)
-- `skills/team-sprint/team-sprint.config.yaml.example:141-146` and `/Users/linus/.claude/team-sprint.config.yaml:30` `repomix_max_age_minutes` (produces the threshold for the repomix-served `text` intent; documented default and live value are both 240, and `recon.sh` hardcodes 240 for the empty return)
-- `~/.claude/CLAUDE.md` "Never run `find` from `/` or `~`" (produces the constraint on the file-count fallback)
+- `skills/team-sprint/team-sprint.config.yaml.example:173-178` `graphify_max_age_minutes` (produces the *documented* default of 240 for graphify's `fresh` vs `stale:<n>m` split — verified 2026-07-27 that `skills/team-sprint/team-sprint.config.yaml` does not exist and the live `$HOME/.claude/team-sprint.config.yaml` sets no `graphify_max_age_minutes` at all, so no config file is a producer of defaults and `recon.sh` supplies 240 itself)
+- `skills/team-sprint/team-sprint.config.yaml.example:141-146` and `$HOME/.claude/team-sprint.config.yaml:30` `repomix_max_age_minutes` (produces the threshold for the repomix-served `text` intent; documented default and live value are both 240, and `recon.sh` hardcodes 240 for the empty return)
+- `$HOME/.claude/CLAUDE.md` "Never run `find` from `/` or `~`" (produces the constraint on the file-count fallback)
 - CodeGraph's FSEvents daemon, external (produces the `FRESHNESS=live` claim — see Open Question 2: auto-sync is daemon-backed, so `live` is only true while a daemon is actually running, which is why the label is gated on a probe rather than on the provider's identity)
 
 Enforce the cost floor and the freshness contract.
@@ -474,18 +474,18 @@ silently-rebuilt index mid-review is not.
 **`live` is a probe result, not a provider property.** CodeGraph's auto-sync is FSEvents-daemon
 backed, so `live` is claimed only when a daemon-liveness probe succeeds — `codegraph status`
 reporting an initialised, daemon-backed project, parsed from its **stdout** and never from its exit
-code, which is 0 even when the project is not initialised (verified 2026-07-27 in `~/.claude`:
+code, which is 0 even when the project is not initialised (verified 2026-07-27 in `$HOME/.claude`:
 prints `⚠ Not initialized`, exits 0). RH1's probe stores that parsed `indexed` bool in
 `.recon/capabilities.json` and RH3 gates `FRESHNESS=live` on it; when the probe fails or reports
 uninitialised, codegraph falls back to the same `mtime_epoch`-based `fresh`/`stale:<n>m` computation
 graphify and repomix use.
 
 **graphify freshness has a live producer; only `live` is stub-bound.** Verified 2026-07-28:
-graphify is installed at `/Users/linus/.local/bin/graphify` and this repo's
+graphify is installed at `$HOME/.local/bin/graphify` and this repo's
 `graphify-out/graph.json` is present and fresh — 2,763,824 bytes, 3453 nodes, rebuilt 2026-07-28
 05:58 — so `fresh` and `stale:<n>m` are asserted against a real index, once the Design's Phase 0
 precondition flips the live config's `graphify: off`
-(`/Users/linus/.claude/team-sprint.config.yaml:32`, verified 2026-07-28) to `graphify: auto`.
+(`$HOME/.claude/team-sprint.config.yaml:32`, verified 2026-07-28) to `graphify: auto`.
 Fixtures with a forced mtime remain only for what a live index cannot produce on demand — the
 300-minute `stale:300m` case and the absent-index case — and `FRESHNESS=live` stays stub-only,
 being CodeGraph-daemon-backed on a repo where CodeGraph is not initialised and parses no shell if
@@ -533,7 +533,7 @@ producer before RH4's call log starts collecting the data Open Question 3 depend
 - `skills/team-sprint/scripts/tests/lib.bats`
 
 ### Boundaries:
-- the target repo's `.gitignore` (RH4 appends `.recon/` to it — a file this story does not own and which may be a whitelist, as `~/.claude/.gitignore` is: there `/*` ignores everything, `git check-ignore -v .recon/` already answers `.gitignore:8:/*` (verified 2026-07-27), and an appended `.recon/` line would be redundant, not effective)
+- the target repo's `.gitignore` (RH4 appends `.recon/` to it — a file this story does not own and which may be a whitelist, as `$HOME/.claude/.gitignore` is: there `/*` ignores everything, `git check-ignore -v .recon/` already answers `.gitignore:8:/*` (verified 2026-07-27), and an appended `.recon/` line would be redundant, not effective)
 - `union.md:43-44` (produces the unverified 58%-fewer-tool-calls vendor claim this log exists to test with local data)
 - `skills/team-sprint/scripts/lib.sh` `repo_root()` at `lib.sh:61-75` (produces the `.recon/` location: git-common-dir based, so it returns the MAIN tree root from inside any worktree — the header comment documents exactly that intent for artifact dirs, and it is why the log is never resolved against CWD)
 - `jq` (produces the encoding of every log line — `jq -c -n --arg`, `--argjson` for the numeric fields, as at `state.sh:165-172` and `state.sh:302`; `lib.sh:30` `require_jq` is the guard `recon.sh`'s preflight calls as `require_jq || exit 1`)
@@ -608,13 +608,13 @@ line would be redundant and the file is left byte-identical.
 ### Touches:
 - `skills/team-sprint/scripts/recon.sh`
 - `skills/team-sprint/team-sprint.config.yaml.example`
-- `/Users/linus/.claude/team-sprint.config.yaml`
+- `$HOME/.claude/team-sprint.config.yaml`
 - `skills/team-sprint/scripts/state.schema.json`
 - `skills/team-sprint/scripts/tests/recon_config.bats`
 
 ### Boundaries:
 - `skills/team-sprint/scripts/state.schema.json` (the DoD adds `recon_degraded` to it; `additionalProperties` is `true`, so an unknown key passes validation silently — the schema must be edited or the flag is unenforced)
-- `/Users/linus/.claude/team-sprint.config.yaml` (the live sprint config, where the `recon` block must actually land or every key resolves to its hardcoded default for the whole sprint; it is **untracked** and matched by `.gitignore:8:/*` — verified 2026-07-28, `git ls-files team-sprint.config.yaml` empty and `git check-ignore -v` reports that rule — so the edit appears in no `git diff` and its DoD is asserted by reading the file, never by diff)
+- `$HOME/.claude/team-sprint.config.yaml` (the live sprint config, where the `recon` block must actually land or every key resolves to its hardcoded default for the whole sprint; it is **untracked** and matched by `.gitignore:8:/*` — verified 2026-07-28, `git ls-files team-sprint.config.yaml` empty and `git check-ignore -v` reports that rule — so the edit appears in no `git diff` and its DoD is asserted by reading the file, never by diff)
 - `skills/team-sprint/scripts/lib.sh` `read_config_scalar` / `read_config_commands` (produce the config values; the parser handles only a top-level key or a `commands:` block, so a nested `recon:` map would need parser work this story does not scope — and a YAML **flow sequence** is not parsed either: verified 2026-07-28, `read_config_scalar` on `recon_providers: [codegraph, graphify]` returns the literal string `[codegraph, graphify]`, brackets and comma included, which is why `recon_providers` is a space-separated scalar)
 - `skills/team-sprint/team-sprint.config.yaml.example:152-178` (produces the `off|auto|on` comment format the new keys must mirror)
 
@@ -679,7 +679,7 @@ have to rediscover why the obvious third tool is missing.
 ### Definition of Done
 - [ ] `recon_config.bats` green.
 - [ ] `recon_degraded` added to `scripts/state.schema.json`.
-- [ ] The `recon` block is present in the live `/Users/linus/.claude/team-sprint.config.yaml`, asserted by reading the file (it is untracked and `.gitignore`-matched, so it appears in no `git diff`) — otherwise every key resolves to its hardcoded default for the whole sprint.
+- [ ] The `recon` block is present in the live `$HOME/.claude/team-sprint.config.yaml`, asserted by reading the file (it is untracked and `.gitignore`-matched, so it appears in no `git diff`) — otherwise every key resolves to its hardcoded default for the whole sprint.
 - [ ] **Contract coverage, split per key kind** — each list looped against `grep -l` on `recon_config.bats`, not checked by eye. `recon` exercises all three enum values (`off auto on`). `recon_log` exercises both (`off on`). `recon_providers` exercises three cases: a valid list, an empty value, and one containing `gitnexus`. `recon_min_files` exercises 0 / below-threshold / at-threshold — already covered by RH3's 19/20 boundary ACs, so RH5 cross-references those tests rather than duplicating them. `recon_max_lines` exercises below-cap and over-cap, the over-cap case asserting both the single `TRUNCATED=<emitted>/<total>` line and the pre-truncation `COUNT=`. `recon_probe_max_age_minutes` exercises within-TTL (no provider exec) and expired (re-probe), reusing RH1's stub-counter fixture. An unexercised enum branch is an untested branch.
 
 ---
@@ -696,9 +696,9 @@ have to rediscover why the obvious third tool is missing.
 - `skills/team-sprint/scripts/tests/recon_distribution.bats`
 
 ### Boundaries:
-- `agents/*.md` — **explicitly not edited** (their correctness depends on the inheritance fact, not on their contents: every custom subagent inherits `~/.claude/CLAUDE.md` automatically, so editing the CLAUDE.md section reaches all of them. Verified at Claude Code 2.1.220, `code.claude.com/docs/en/sub-agents` → "What loads at startup"). No file count is stated on purpose — the cardinality is decorative and rots; the load-bearing claim is inheritance. Verified 2026-07-28: `agents/` is 51 files, all tracked, working tree clean, so nothing there blocks Phase 0.
+- `agents/*.md` — **explicitly not edited** (their correctness depends on the inheritance fact, not on their contents: every custom subagent inherits `$HOME/.claude/CLAUDE.md` automatically, so editing the CLAUDE.md section reaches all of them. Verified at Claude Code 2.1.220, `code.claude.com/docs/en/sub-agents` → "What loads at startup"). No file count is stated on purpose — the cardinality is decorative and rots; the load-bearing claim is inheritance. Verified 2026-07-28: `agents/` is 51 files, all tracked, working tree clean, so nothing there blocks Phase 0.
 - built-in `Explore` and `Plan` agents (the **only** subagents that skip CLAUDE.md and git status, and it is not configurable — they will never see the recon ladder, so any rule they need belongs in the delegation prompt)
-- `~/.claude/CLAUDE.md` git history (produces the ≤8-net-line budget's rationale: the file was deliberately consolidated 8628→7019 bytes on 2026-07-27 and has since grown back to 7910 at HEAD. Verified 2026-07-28 that HEAD and the working tree agree at 7910 bytes with `git status --porcelain CLAUDE.md` empty, so the assertion is `git diff --numstat BASE...HEAD -- CLAUDE.md` and no pre-sprint commit or stash of `CLAUDE.md` is needed)
+- `$HOME/.claude/CLAUDE.md` git history (produces the ≤8-net-line budget's rationale: the file was deliberately consolidated 8628→7019 bytes on 2026-07-27 and has since grown back to 7910 at HEAD. Verified 2026-07-28 that HEAD and the working tree agree at 7910 bytes with `git status --porcelain CLAUDE.md` empty, so the assertion is `git diff --numstat BASE...HEAD -- CLAUDE.md` and no pre-sprint commit or stash of `CLAUDE.md` is needed)
 - `skills/team-sprint/scripts/lint_skill.sh` check 6 (produces the dangling-anchor failure if the new SKILL.md text adds an internal anchor link)
 - `skills/tech-debt-audit/SKILL.md` and `skills/adversarial-review/SKILL.md` — **deliberately left stale, not updated by this story.** Verified 2026-07-28 that neither restates the three-layer list (no "three layers" string in either file), so neither contradicts the new ladder; both describe repomix/graphify in their own words, and copying the ladder into them is precisely the duplication-drift the CLAUDE.md-only mechanism exists to avoid. One **pre-existing defect** is inherited rather than introduced or fixed here: `tech-debt-audit/SKILL.md:51` says to grep the pack with bash `grep`/`rg` because "the RTK `PreToolUse` hook rewrites these", which contradicts `CLAUDE.md:118-119`'s "explicit `rtk grep` … never trust the RTK hook to rewrite it". Reconciling the two is out of RH6's scope; it is filed as an open question, not silently absorbed.
 
@@ -722,7 +722,7 @@ Phase 0 gains a `recon.sh --probe` step alongside the existing `graphify_ensure.
 - Nothing under `skills/` or in `CLAUDE.md` still describes the recon convention as "three layers" — asserted by `grep -rn 'Three layers — the convention' CLAUDE.md skills/ --exclude-dir=plans` returning no hit, the `--exclude-dir=plans` being load-bearing because this plan file quotes the phrase itself and would otherwise match forever; `skills/humanise/SKILL.md:8` uses `Three layers:` for an unrelated subject (Australian English) and does not match the full phrase, while `skills/officecli` does not use it at all (verified 2026-07-28: `grep -rni 'three layer' skills/officecli/` returns nothing) — both are out of scope.
 - No file under `agents/` is modified by this story — asserted with both `git status --porcelain agents/` (catches untracked additions, which a diff misses) and `git diff --name-only BASE...HEAD -- agents/`, each expected empty.
 - `recon-instruments.md` routes structural questions through `recon.sh` and retains the existing `rtk grep`-on-pack instruction verbatim.
-- The `recon.sh` block added to `recon-instruments.md` is guarded by the same executable test the graphify block at `recon-instruments.md:42-43` uses — `RS=~/.claude/skills/team-sprint/scripts/recon.sh; if [ -x "$RS" ]; then ...; fi` — and the surrounding text states the fallback when it is absent, asserted by grepping the post-edit file for `-x "$RS"`.
+- The `recon.sh` block added to `recon-instruments.md` is guarded by the same executable test the graphify block at `recon-instruments.md:42-43` uses — `RS=$HOME/.claude/skills/team-sprint/scripts/recon.sh; if [ -x "$RS" ]; then ...; fi` — and the surrounding text states the fallback when it is absent, asserted by grepping the post-edit file for `-x "$RS"`.
 - `phase-0.md` invokes `recon.sh --probe` under `recon != off` and branches on `STATUS=OK|DEGRADED|SKIP`, with the disposition worded as at `phase-0.md:42`: STOP under `recon: on`, else WARN + set `recon_degraded=true` and continue — the same step both branches and persists the flag.
 - The `phase-0.md` probe step runs `codegraph init` before `recon.sh --probe` whenever the codegraph binary is present and `codegraph status` reports the project uninitialised (parsed from stdout, which exits 0 either way), so a present-but-unindexed CodeGraph is indexed rather than permanently reported `no-index` — asserted by grepping the post-edit `phase-0.md` for `codegraph init`.
 - That same `phase-0.md` step is gated on `recon != off` and builds or probes at least one real index (a graphify build or `codegraph init`), so `FRESHNESS=fresh` and `FRESHNESS=live` have a live producer this sprint instead of fixtures alone — asserted by grepping the post-edit `phase-0.md` for the `recon != off` gate and the index-building call.

@@ -48,7 +48,7 @@ rigid rules. Every instruction file in the environment should be re-audited agai
 
 ## Refactor Workflow
 
-Run these passes over the target environment (usually `~/.claude` and project `.claude/`):
+Run these passes over the target environment (usually `$HOME/.claude` and project `.claude/`):
 
 **Audit the principles, not surface patterns.** Judge each file against the principle, don't pattern-match for keywords. Read the context the way Claude receives it - what loads always, what loads on demand - and ask per shift: is this workspace still living in the THEN column? The smells below are illustrations, not definitions; something can smell fine and still break the principle, and vice versa.
 

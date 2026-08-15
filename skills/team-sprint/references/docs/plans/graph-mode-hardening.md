@@ -2,7 +2,7 @@
 
 **Source:** Sprint-lead post-mortem from a real graph-mode run (2026-07). Six reported defects (D1–D6) verified against source; three more coupled defects (D7–D9) found during plan review. All defects concentrate in the graph-mode layer (phase-execute.md, build_graph.sh, schedule.sh, phases 3–6 graph adaptation); the gates, artifacts, and review economics held up.
 
-**Repo:** `~/.claude` (skill lives at `skills/team-sprint/`; the former nested git repo was folded into `~/.claude` on 2026-07-20 — history in `~/team-sprint-nested-history.bundle`). All paths below are relative to `skills/team-sprint/`.
+**Repo:** `$HOME/.claude` (skill lives at `skills/team-sprint/`; the former nested git repo was folded into `$HOME/.claude` on 2026-07-20 — history in `~/team-sprint-nested-history.bundle`). All paths below are relative to `skills/team-sprint/`.
 
 ## Defect register (verified, file:line against current tree)
 
@@ -20,7 +20,7 @@
 
 ## Preconditions
 
-- **P0 — DONE (2026-07-20).** The in-flight LS-refactor is committed and the nested repo folded into `~/.claude` (commit `6fa2dce`). Working tree at `skills/team-sprint/` is clean. Defect line references were verified against this tree.
+- **P0 — DONE (2026-07-20).** The in-flight LS-refactor is committed and the nested repo folded into `$HOME/.claude` (commit `6fa2dce`). Working tree at `skills/team-sprint/` is clean. Defect line references were verified against this tree.
 - **P1 — baseline green.** `bash scripts/tests/run-all.sh` passes and `bash scripts/lint_skill.sh` is clean before any story begins. If baseline is red, fix or quarantine first — no story may claim a pre-existing failure.
 
 ## Verification commands (used by every story's DoD)
@@ -257,4 +257,4 @@ Wave 3: GH4. Wave 4: GH5. Wave 5: GH6.
 - [ ] `schedule.sh simulate` on a ≥5-node fixture (with one `--fail`) drains correctly under the new branch naming.
 - [ ] Repo-wide greps: zero `sprint/<name>/<id>`-pattern refs; zero non-story-keyed `reviews-round-` refs; zero executor-context "SendMessage to team-lead" instructions for reviewers.
 - [ ] CHANGELOG.md entry for the release (breaking: branch naming, reviewer delivery contract, provisional commits).
-- [ ] One commit per story, Conventional Commits, on the `~/.claude` repo (scope commits to `skills/team-sprint/` paths only).
+- [ ] One commit per story, Conventional Commits, on the `$HOME/.claude` repo (scope commits to `skills/team-sprint/` paths only).

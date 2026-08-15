@@ -30,7 +30,7 @@ Run this before anything else — Phase 3 overwrites `TECH_DEBT_AUDIT.md`, so a 
 1. If invoked with a path argument (`/tech-debt-audit src/payments`), scope the entire audit to that subtree.
 2. If `TECH_DEBT_AUDIT.md` already exists in the repo, read it now — and extract its
    finding inventory mechanically:
-   `bash ~/.claude/skills/tech-debt-audit/scripts/prior-findings.sh` (prints
+   `bash ${CREWFORGE5_ROOT}/skills/tech-debt-audit/scripts/prior-findings.sh` (prints
    `ID<TAB>severity<TAB>file:line` per prior finding). In Phase 3, mark resolved
    findings `RESOLVED`, update stale ones, and tag new findings `NEW`. This turns the
    audit into a living document tracked over time.
@@ -42,7 +42,7 @@ Do not skip this. Forming opinions before understanding the system produces bad 
 1. Read the README, package manifest (`package.json` / `pyproject.toml` / `Cargo.toml` / `go.mod` / `*.psd1`), and any architecture docs in `/docs` or `/adr`.
 2. Prepare the repomix pack (regenerate if missing or >2h old) — the default recon instrument for this audit (see "Evidence instruments" below). For the structural dimensions (coupling, circular deps, god nodes, dead code), also run graphify when available: `graphify .` if no `graphify-out/graph.json` exists (establishes the baseline), `graphify update .` if one does (no-LLM code re-extract; add `--force` if code was deleted since the last build); if the graphify CLI isn't loaded, fail-soft and grep the pack for the same signals. When built, the graph's god-node and community report doubles as a head start on your architecture mental model.
 3. Map the directory structure and identify the major modules / layers.
-4. Run `bash ~/.claude/skills/tech-debt-audit/scripts/orient.sh [scope-dir]` — it emits
+4. Run `bash ${CREWFORGE5_ROOT}/skills/tech-debt-audit/scripts/orient.sh [scope-dir]` — it emits
    the top 20 largest files, the 20 most-modified in 6 months, their intersection
    (where debt usually hides), repo LOC, and the findings-budget band. Never derive
    these lists by hand.
@@ -87,7 +87,7 @@ Write to `TECH_DEBT_AUDIT.md` in the repo root with this structure:
 
 - Cite `file:line` for every concrete finding, verified against the live file.
   Before delivering, run the mechanical gate:
-  `bash ~/.claude/skills/tech-debt-audit/scripts/verify-citations.sh TECH_DEBT_AUDIT.md`
+  `bash ${CREWFORGE5_ROOT}/skills/tech-debt-audit/scripts/verify-citations.sh TECH_DEBT_AUDIT.md`
   — exit 1 means a citation points at a missing file or a line past EOF; fix every
   FAIL before the audit is done.
 - If unsure whether something is debt or intentional, ask in the open questions section — don't assert.

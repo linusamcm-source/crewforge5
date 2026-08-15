@@ -71,7 +71,7 @@ Changes from the pre-graph schema: `current_phase` now accepts the string `"exec
   "plan_slug": "sprint-team-sprint-mech-refactor-v3",
   "worktree_name": "sprint-sprint-team-sprint-mech-refactor-v3",
   "target_branch": "main",
-  "worktree_path": "/Users/linus/.claude/skills/team-sprint-sprint-team-sprint-mech-refactor-v3",
+  "worktree_path": "$HOME/.claude/skills/team-sprint-sprint-team-sprint-mech-refactor-v3",
   "artifact_dir": ".team-sprint/sprints/<worktree_name>",
   "started_at": "2026-05-20T00:00:00Z",
   "current_phase": "execute",
@@ -80,7 +80,7 @@ Changes from the pre-graph schema: `current_phase` now accepts the string `"exec
   "graph_path": ".team-sprint/sprints/sprint-sprint-team-sprint-mech-refactor-v3/graph.json",
   "sprint_branch": "sprint/sprint-sprint-team-sprint-mech-refactor-v3",
   "iterations": { "adversarial": 2, "coverage": 0, "review_fix": 0 },
-  "repo_root": "/Users/linus/.claude/skills/team-sprint"
+  "repo_root": "$HOME/.claude/skills/team-sprint"
 }
 ```
 
@@ -187,7 +187,7 @@ Present only under `scheduling: graph`. Written by `build_graph.sh` at Phase 2, 
       "depends_on": ["9"], "declared_deps": ["9"], "inferred_deps": [],
       "touches": ["src/mech/state/**"],
       "branch": "sprint/sprint-sprint-team-sprint-mech-refactor-v3-11",
-      "worktree": "/Users/linus/.claude/skills/team-sprint-sprint-team-sprint-mech-refactor-v3-11",
+      "worktree": "$HOME/.claude/skills/team-sprint-sprint-team-sprint-mech-refactor-v3-11",
       "base_commit": "e4f5a6b",
       "commit": null, "integrated_commit": null,
       "iterations": { "coverage": 1, "review_fix": 0 },

@@ -272,7 +272,7 @@ subskill_hooks:
   # preflight miss logs a WARN but doesn't abort Phase 0.
   phase-6:
     - skill: my-skill
-      command: 'bash ~/.claude/skills/my-skill/run.sh'
+      command: 'bash /path/to/my-skill/run.sh'
       required: false
   phase-7: []
 

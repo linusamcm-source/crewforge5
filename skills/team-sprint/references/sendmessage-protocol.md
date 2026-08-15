@@ -1,6 +1,6 @@
 **WHO READS THIS / WHEN:** Every agent that spawns a child or reports a result reads this — spawners (team-lead, node executors) before collecting a child; children (test-writers, engineers, reviewers, fleet auditors) before delivering. sprint-watchdog reads it at Phase 5 step 1 to verify delivery (artifact-based for reviewers — see "Reviewer delivery" below); team-lead reads it when adjudicating a "no findings delivered" complaint.
 
-This document is the canonical agent-communication contract for the team-sprint skill. The user-global `~/.claude/CLAUDE.md` may carry similar rules but is not authoritative for this skill.
+This document is the canonical agent-communication contract for the team-sprint skill. The user-global `$HOME/.claude/CLAUDE.md` may carry similar rules but is not authoritative for this skill.
 
 ### Two channels — final agent return is the default; SendMessage crosses an un-spawned layer
 

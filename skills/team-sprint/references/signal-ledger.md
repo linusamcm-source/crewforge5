@@ -15,7 +15,7 @@ one query and none of which are cheap over append-only text.
 
 ## 1. Why this exists
 
-`~/.claude` is ~20 shell scripts, ~50 agents and ~40 skills that reason about each other. The
+`$HOME/.claude` is ~20 shell scripts, ~50 agents and ~40 skills that reason about each other. The
 failure mode is never a crash. It is a **document and its implementation drifting apart while
 both look fine** — and the drift is only visible to whoever happens to read both in one sitting.
 

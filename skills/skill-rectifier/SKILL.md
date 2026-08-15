@@ -21,7 +21,7 @@ including the bounded exit conditions) with the parameters below.
 - **Target**: a skill directory — SKILL.md plus optional `scripts/`, `references/`,
   `assets/`.
 - **Validator**: `/skill-validator`. Structural script (Step 6):
-  `bash ~/.claude/skills/skill-validator/scripts/validate_structure.sh <skill-path>`
+  `bash ${CREWFORGE5_ROOT}/skills/skill-validator/scripts/validate_structure.sh <skill-path>`
 - **Fix catalog** (Steps 2-5): [references/fix-catalog.md](references/fix-catalog.md).
   Category order: structural → functional → efficiency → instruction compliance.
 - **Report** (Step 7): `./docs/agent_reports/skill-rectification-{skill-name}-{date}.md`,

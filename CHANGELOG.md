@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.2 — 2026-08-15
+
+### Fixed
+
+- Restored the plugin-relative path adaptations that the 0.4.0 upstream import
+  reverted. Shipped skills, references and hooks referenced `~/.claude/...` and
+  `/Users/...`, which resolve to nothing in a plugin install; executable paths now
+  use `${CREWFORGE5_ROOT}`, user-config paths use `$HOME/.claude`, and the
+  historical design docs under `skills/team-sprint/references/docs/plans/` no
+  longer cite one machine's absolute paths. Restores the "No path coupling to one
+  machine" release gate.
+- `graphify_ensure.sh` and `lib.sh` are clean under shellcheck 0.9.0, the declared
+  minimum: two `A && B || true` command substitutions became `... || var=""`
+  (SC2015). Behaviour is unchanged; only 0.9 flagged them, and CI installs 0.9 on
+  Linux by design.
+
+### Removed
+
+- `docs/plans/epic-1-three-skill-condensation.md`, a superseded planning document.
+
 ## 0.4.1 — 2026-08-15
 
 ### Fixed
