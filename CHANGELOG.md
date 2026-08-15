@@ -23,8 +23,15 @@ sub-skills — and re-applies the packaging layer that the import had flattened.
   under `references/`, the schemas under `scripts/schemas/`, the vocabulary under
   `assets/data/`. `/crewforge5:execute` phases 0–7, the watchdog guard hook and
   `crew-factory` follow the new paths.
-- `rule_emit.sh` and `crew_copy.sh` are gone with their tests; `crew_check.sh`
-  owns what remains of the manifest gates.
+- `crew_copy.sh` is gone with its tests. `crew_check.sh` reports
+  `WORKTREE_AGENTS=ok|not_git|ignored|untracked:<names>` instead: a generated
+  agent reaches a sprint worktree by being tracked in git, not by being copied
+  into each one. No phase doc consumes that signal yet.
+- `run-all.sh` now snapshots the checkout before the bats step and fails the run
+  if it changed — a fixture that writes into the live tree instead of its temp
+  dir is otherwise silent, and one did, editing this repo's `.gitignore`. Both
+  leak shapes are covered: a file the run newly dirties (named in the failure)
+  and a write into a file that was already dirty (caught by a diff digest).
 
 ### Fixed
 
@@ -57,6 +64,12 @@ made. Each is restored with the test that proves it.
 - **`grade.sh` counted only prose findings**, grading a skill A while its own
   structural script reported failures in JSON on the same ledger. Both
   validators and their report templates are restored.
+- **`rule_emit.sh` went with the import**, leaving `crew-factory` Phase 5 calling
+  a script that no longer existed and a definition-of-done demanding a file
+  nothing could write. The script, its bats contract and `crew_check.sh`'s
+  `RULE_FILE=present|missing` signal are all back — informational like `STALE`,
+  so a crew that predates rule files is never rebuilt for the sake of one
+  document.
 
 ## 0.3.2 — 2026-08-15
 

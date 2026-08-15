@@ -24,6 +24,10 @@
 #   STALE=true|false|unknown  profile 'Verified YYYY-MM-DD' stamp older than
 #                   --max-age-days (default 5). Informational only — never
 #                   gates; the factory surfaces it as a --verify suggestion.
+#   RULE_FILE=present|missing  is there a .claude/rules/<lang>.md carrying the
+#                   stack's house conventions? Informational like STALE — a crew
+#                   that predates rule files is complete apart from one document,
+#                   which rule_emit.sh writes in place without touching an agent.
 #   WORKTREE_AGENTS=ok|not_git|ignored|untracked:<names>  (CACHED only)
 #                   Whether generated agents in a project-local agents dir are
 #                   visible to git-worktree-based sprints: 'ignored' means the
@@ -78,6 +82,7 @@ parse_args() {
 }
 
 manifest_path() { printf '%s/.claude/crews/%s.json' "$PROJECT_DIR" "$LANG_ARG"; }
+rule_path()     { printf '%s/.claude/rules/%s.md'    "$PROJECT_DIR" "$LANG_ARG"; }
 
 # Pure-jq schema validation, same pattern as state.sh _validate_state.
 # crews.schema.json is the human-readable statement of this shape.
@@ -162,7 +167,7 @@ PY
 }
 
 do_check() {
-  local manifest missing="" role_name err stale
+  local manifest missing="" role_name err stale rule
   manifest="$(manifest_path)"
   if [[ ! -f "$manifest" ]]; then
     printf 'STATUS=REBUILD\nREASON=manifest_missing\n'
@@ -211,8 +216,14 @@ do_check() {
   fi
 
   stale="$(profile_staleness "$manifest")"
-  printf 'STATUS=CACHED\nSTALE=%s\nWORKTREE_AGENTS=%s\n' \
-    "$stale" "$(worktree_visibility "$manifest")"
+  # RULE_FILE follows the STALE precedent exactly: informational, never gating.
+  # Every crew that predates rule generation lacks one, and returning REBUILD
+  # for that would regenerate every existing crew at ~470s apiece to produce a
+  # file the factory can write in place without touching a single agent.
+  rule="missing"
+  [[ -f "$(rule_path)" ]] && rule="present"
+  printf 'STATUS=CACHED\nSTALE=%s\nRULE_FILE=%s\nWORKTREE_AGENTS=%s\n' \
+    "$stale" "$rule" "$(worktree_visibility "$manifest")"
 }
 
 do_verify() {

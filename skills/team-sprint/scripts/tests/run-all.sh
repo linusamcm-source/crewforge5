@@ -49,7 +49,25 @@ green "shellcheck OK (${#sh_files[@]} files)"
 
 # ---------------------------------------------------------------------------
 # Step 2: run bats fixtures.
+#
+# Every fixture builds its own repo under $TMP; a test that reaches the live
+# tree instead is a bug in the fixture, not a finding. It is invisible on a
+# dirty checkout — the edit lands among the developer's own — so the working
+# tree is snapshotted here and re-read in step 2b, and only entries the run
+# ADDED are reported. Outside a git repo the guard is skipped, not failed.
 # ---------------------------------------------------------------------------
+#
+# Two snapshots, because one is not enough: the porcelain list names a file the
+# run newly dirtied, and the diff digest catches a write into a file the
+# developer already had dirty — where the porcelain line is identical before and
+# after, so the list alone reports nothing.
+TREE_ROOT="$(git -C "$SCRIPTS" rev-parse --show-toplevel 2>/dev/null || true)"
+TREE_BEFORE="" DIFF_BEFORE=""
+if [ -n "$TREE_ROOT" ]; then
+  TREE_BEFORE="$(git -C "$TREE_ROOT" status --porcelain 2>/dev/null || true)"
+  DIFF_BEFORE="$(git -C "$TREE_ROOT" diff HEAD 2>/dev/null | cksum)"
+fi
+
 shopt -s nullglob
 bats_files=("$TESTS_DIR"/*.bats)
 shopt -u nullglob
@@ -74,6 +92,22 @@ else
       exit 1
     fi
   done
+fi
+
+# ---------------------------------------------------------------------------
+# Step 2b: did the suite write into the checkout it was run from?
+# ---------------------------------------------------------------------------
+if [ -n "$TREE_ROOT" ]; then
+  leaked="$(comm -13 \
+    <(printf '%s\n' "$TREE_BEFORE" | sort) \
+    <(git -C "$TREE_ROOT" status --porcelain 2>/dev/null | sort))"
+  diff_after="$(git -C "$TREE_ROOT" diff HEAD 2>/dev/null | cksum)"
+  if [ -n "$leaked" ] || [ "$diff_after" != "$DIFF_BEFORE" ]; then
+    red "the test run modified the live checkout — a fixture escaped its temp dir:"
+    printf '%s\n' "${leaked:-(content of an already-modified file changed)}"
+    exit 1
+  fi
+  green "working tree unchanged by the suite"
 fi
 
 # ---------------------------------------------------------------------------
