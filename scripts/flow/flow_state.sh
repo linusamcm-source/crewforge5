@@ -370,7 +370,7 @@ _cmd_reset() {
 main() {
   command -v jq >/dev/null 2>&1 || fail "jq missing — install: brew install jq"
   local flow="${1:-}" sub="${2:-}"
-  [ -n "$flow" ] && [ -n "$sub" ] || usage
+  if [ -z "$flow" ] || [ -z "$sub" ]; then usage; fi
   shift 2
   # Every subcommand that resolves state runs the one-time layout migration
   # first, so an in-flight pre-subject run keeps its place. `manifest` is exempt:

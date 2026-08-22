@@ -454,9 +454,14 @@ JSON
   mkdir -p "$TMP/repo/.crewforge5/init"
   printf '{"flow":"init","started_at":"x","phase":{"0":{"status":"PASS"}}}\n' \
     > "$TMP/repo/.crewforge5/init/state.json"
-  run "$FLOW_STATE" init get phase.0.status
-  [ "$status" -eq 0 ]
-  [ "$output" = "PASS" ]
+  # _split_run, not `run`: the migration announces itself on stderr, and the
+  # whole point of this assertion is that the announcement does NOT reach
+  # stdout — a caller reading `v="$(flow_state.sh init get k)"` must get the
+  # value alone. bats' merged $output cannot express that.
+  _split_run "$FLOW_STATE" init get phase.0.status
+  [ "$RC" -eq 0 ]
+  [ "$STDOUT" = "PASS" ]
+  case "$STDERR" in *"moved pre-subject state"*) ;; *) return 1 ;; esac
   [ -f "$TMP/repo/.crewforge5/init/default/state.json" ]
   [ ! -f "$TMP/repo/.crewforge5/init/state.json" ]
 }

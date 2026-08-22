@@ -70,7 +70,7 @@ fi
 # phase could be marked pass and confuse a later resume.
 WHEN="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | .[0].when // ""')"
 if [ -n "$WHEN" ] && ! ( cd "$ROOT" && bash -c "$WHEN" ) >/dev/null 2>&1; then
-  printf 'flow_gate.sh: phase %s is excluded from this run by its `when`\n' "$PHASE" >&2
+  printf 'flow_gate.sh: phase %s is excluded from this run by its when clause\n' "$PHASE" >&2
   exit 1
 fi
 

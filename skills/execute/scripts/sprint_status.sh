@@ -82,6 +82,7 @@ if [ "${1:-}" = "--mode" ]; then
     fi
   fi
   if [ -z "$mode" ]; then
+    # shellcheck source=/dev/null
     mode="$(. "$TS/scripts/lib.sh" >/dev/null 2>&1
             read_config_scalar "${TEAM_SPRINT_CONFIG:-team-sprint.config.yaml}" scheduling 2>/dev/null)"
   fi
