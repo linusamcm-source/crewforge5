@@ -19,6 +19,11 @@ nine phases as `{id, title, doc, gate, required}`; the shared driver holds the
 state and decides what comes next, so an interrupted planning session resumes
 where it stopped instead of starting over.
 
+State is keyed by subject — `.crewforge5/plan/<subject>/state.json` — and phase 0
+claims one from the confirmed goal. Planning a second feature therefore starts at
+phase 0 rather than resuming into the first plan's verdicts. `flow_state.sh plan
+list` names the planning runs this repo holds; `use` returns to one.
+
 ```bash
 bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_next.sh" plan     # STATUS=NEXT PHASE=<id> DOC=<path>
 # …read DOC, do the phase's work…

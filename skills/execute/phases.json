@@ -1,12 +1,24 @@
-[
-  {"id": "0", "title": "Pre-flight",                       "doc": "../team-sprint/references/phases/phase-0.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 0", "required": true},
-  {"id": "1", "title": "Plan-review provenance",           "doc": "../team-sprint/references/phases/phase-1.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 1", "required": true},
-  {"id": "2", "title": "Worktree + team",                  "doc": "../team-sprint/references/phases/phase-2.md", "gate": "", "required": true},
-  {"id": "3", "title": "TDD + coverage gate",              "doc": "../team-sprint/references/phases/phase-3.md", "gate": "", "required": true},
-  {"id": "4", "title": "AC/DoD review",                    "doc": "../team-sprint/references/phases/phase-4.md", "gate": "", "required": true},
-  {"id": "5", "title": "Fix loop",                         "doc": "../team-sprint/references/phases/phase-5.md", "gate": "", "required": true},
-  {"id": "6", "title": "Story commit",                     "doc": "../team-sprint/references/phases/phase-6.md", "gate": "", "required": true},
-  {"id": "7", "title": "Review fleet, merge & cleanup",    "doc": "../team-sprint/references/phases/phase-7.md", "gate": "", "required": true},
-  {"id": "8", "title": "Integration diagram",              "doc": "phases/phase-8.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 8", "required": false},
-  {"id": "9", "title": "Distil learnings",                 "doc": "phases/phase-9.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 9", "required": false}
-]
+{
+  "status_source": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/sprint_status.sh\"",
+  "phases": [
+    {"id": "0", "title": "Pre-flight",                       "doc": "../team-sprint/references/phases/phase-0.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 0", "required": true},
+    {"id": "1", "title": "Plan-review provenance",           "doc": "../team-sprint/references/phases/phase-1.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 1", "required": true},
+    {"id": "2", "title": "Worktree + team",                  "doc": "../team-sprint/references/phases/phase-2.md", "gate": "", "required": true},
+
+    {"id": "3", "title": "TDD + coverage gate",              "doc": "../team-sprint/references/phases/phase-3.md", "gate": "", "required": true,
+     "when": "test \"$(bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/sprint_status.sh\" --mode)\" = sequential"},
+    {"id": "4", "title": "AC/DoD review",                    "doc": "../team-sprint/references/phases/phase-4.md", "gate": "", "required": true,
+     "when": "test \"$(bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/sprint_status.sh\" --mode)\" = sequential"},
+    {"id": "5", "title": "Fix loop",                         "doc": "../team-sprint/references/phases/phase-5.md", "gate": "", "required": true,
+     "when": "test \"$(bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/sprint_status.sh\" --mode)\" = sequential"},
+    {"id": "6", "title": "Story commit",                     "doc": "../team-sprint/references/phases/phase-6.md", "gate": "", "required": true,
+     "when": "test \"$(bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/sprint_status.sh\" --mode)\" = sequential"},
+
+    {"id": "execute", "title": "Wave loop (graph mode)",     "doc": "../team-sprint/references/phases/phase-execute.md", "gate": "", "required": true,
+     "when": "test \"$(bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/sprint_status.sh\" --mode)\" = graph"},
+
+    {"id": "7", "title": "Review fleet, merge & cleanup",    "doc": "../team-sprint/references/phases/phase-7.md", "gate": "", "required": true},
+    {"id": "8", "title": "Integration diagram",              "doc": "phases/phase-8.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 8", "required": false},
+    {"id": "9", "title": "Distil learnings",                 "doc": "phases/phase-9.md", "gate": "bash \"${CREWFORGE5_ROOT:?}/skills/execute/scripts/phase_gate.sh\" 9", "required": false}
+  ]
+}

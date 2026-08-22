@@ -49,7 +49,9 @@ setup() {
   git config user.name "test"
   git commit -q --allow-empty -m "init"
 
-  STATE="$TMP/repo/.crewforge5/execute/state.json"
+  # Subject-keyed since flow state stopped being one file per repo: a second
+  # sprint would otherwise resume into the first one's phase statuses.
+  STATE="$TMP/repo/.crewforge5/execute/default/state.json"
 
   # The repo's own fixture plan, under a filename that carries its story id
   # (Phase 0's path contract) and stamped as the planner would stamp it — the
@@ -99,45 +101,74 @@ _own_execute() {
 
 # --- the manifest ------------------------------------------------------------
 
-@test "phases.json lists ten phases, 0 through 9" {
-  _split_run bash "$FLOW_STATE" execute manifest
-  [ "$RC" -eq 0 ]
-  [ "$(jq -r 'length' "$STDOUT")" = "10" ]
-  [ "$(jq -r 'map(.id) | join(",")' "$STDOUT")" = "0,1,2,3,4,5,6,7,8,9" ]
+# The manifest is the object form — {status_source, phases} — because execute's
+# phase list depends on `scheduling` and its phase progress is owned by
+# team-sprint. `mphases` normalises so these assertions read the same either way.
+mphases() { jq '(if type == "array" then {phases: .} else . end) | .phases' "$(manifest)"; }
+mfield()  { mphases | jq -r --arg id "$1" --arg f "$2" 'map(select(.id == $id)) | .[0][$f] // ""'; }
+
+@test "phases.json lists eleven phases: 0-9 plus the graph-mode wave loop" {
+  [ "$(mphases | jq -r 'length')" = "11" ]
+  [ "$(mphases | jq -r 'map(.id) | join(",")')" = "0,1,2,3,4,5,6,execute,7,8,9" ]
 }
 
 @test "phases 0-7 point at team-sprint's own phase docs, which exist" {
   local m n doc
   m="$(manifest)"
   for n in 0 1 2 3 4 5 6 7; do
-    doc="$(jq -r --arg id "$n" 'map(select(.id == $id)) | .[0].doc' "$m")"
+    doc="$(mfield "$n" doc)"
     [ "$doc" = "../team-sprint/references/phases/phase-$n.md" ]
     [ -f "$(dirname "$m")/$doc" ]
   done
+}
+
+@test "the wave-loop phase points at team-sprint's graph-mode doc, which exists" {
+  local m doc
+  m="$(manifest)"
+  doc="$(mfield execute doc)"
+  [ "$doc" = "../team-sprint/references/phases/phase-execute.md" ]
+  [ -f "$(dirname "$m")/$doc" ]
 }
 
 @test "phases 8 and 9 are execute's own docs and exist" {
   local m doc
   m="$(manifest)"
   for n in 8 9; do
-    doc="$(jq -r --arg id "$n" 'map(select(.id == $id)) | .[0].doc' "$m")"
+    doc="$(mfield "$n" doc)"
     [ "$doc" = "phases/phase-$n.md" ]
     [ -f "$(dirname "$m")/$doc" ]
   done
 }
 
-@test "only 0, 1, 8 and 9 declare a gate; 2-7 are judgment phases" {
-  local m n gate
-  m="$(manifest)"
+@test "only 0, 1, 8 and 9 declare a gate; the rest are judgment phases" {
+  local n
   for n in 0 1 8 9; do
-    gate="$(jq -r --arg id "$n" 'map(select(.id == $id)) | .[0].gate' "$m")"
-    case "$gate" in *"phase_gate.sh"*" $n") ;; *) return 1 ;; esac
+    case "$(mfield "$n" gate)" in *"phase_gate.sh"*" $n") ;; *) return 1 ;; esac
   done
-  for n in 2 3 4 5 6 7; do
-    gate="$(jq -r --arg id "$n" 'map(select(.id == $id)) | .[0].gate' "$m")"
-    [ -z "$gate" ]
+  for n in 2 3 4 5 6 execute 7; do
+    [ -z "$(mfield "$n" gate)" ]
   done
   [ -f "$PHASE_GATE" ]
+}
+
+@test "the per-story phases and the wave loop are mode-gated against each other" {
+  local n
+  # Exactly one of the two lists can be live in a run, so each carries a `when`.
+  for n in 3 4 5 6; do
+    case "$(mfield "$n" when)" in *"--mode"*sequential) ;; *) return 1 ;; esac
+  done
+  case "$(mfield execute when)" in *"--mode"*graph) ;; *) return 1 ;; esac
+  # Phases every run walks carry none.
+  for n in 0 1 2 7 8 9; do
+    [ -z "$(mfield "$n" when)" ]
+  done
+}
+
+@test "the manifest names team-sprint as the owner of phase progress" {
+  local src
+  src="$(jq -r '.status_source // ""' "$(manifest)")"
+  case "$src" in *sprint_status.sh*) ;; *) return 1 ;; esac
+  [ -f "$CREWFORGE5_ROOT/skills/execute/scripts/sprint_status.sh" ]
 }
 
 # --- phase 1: the provenance gate execute inherits ---------------------------
@@ -265,7 +296,7 @@ _driver_verdicts() {
 
 @test "phase 8 not required and no diagram tool: SKIP, and the flow advances" {
   _own_execute
-  jq '(.[] | select(.id == "8") | .required) |= false' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
+  jq '(.phases[] | select(.id == "8") | .required) |= false' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
   mv "$TMP/p.json" "$CREWFORGE5_ROOT/skills/execute/phases.json"
   rm "$CREWFORGE5_ROOT/skills/drawio"
   drive_to_8
@@ -284,7 +315,7 @@ _driver_verdicts() {
 
 @test "phase 8 required and no diagram tool: FAIL" {
   _own_execute
-  jq '(.[] | select(.id == "8") | .required) |= true' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
+  jq '(.phases[] | select(.id == "8") | .required) |= true' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
   mv "$TMP/p.json" "$CREWFORGE5_ROOT/skills/execute/phases.json"
   rm "$CREWFORGE5_ROOT/skills/drawio"
   drive_to_8
@@ -303,7 +334,7 @@ _driver_verdicts() {
 
 @test "phase 8 required with the tool present but no diagram recorded: FAIL" {
   _own_execute
-  jq '(.[] | select(.id == "8") | .required) |= true' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
+  jq '(.phases[] | select(.id == "8") | .required) |= true' "$CREWFORGE5_ROOT/skills/execute/phases.json" > "$TMP/p.json"
   mv "$TMP/p.json" "$CREWFORGE5_ROOT/skills/execute/phases.json"
   record_plan
 
@@ -367,4 +398,69 @@ _driver_verdicts() {
   _split_run bash "$PHASE_GATE" 3
   [ "$RC" -eq 2 ]
   [ -z "$STDOUT" ]
+}
+
+# --- team-sprint owns phases 0-7 ---------------------------------------------
+#
+# execute wraps team-sprint, which has tracked current_phase, current_story_id
+# and story_commits[] since long before the shared driver existed. Keeping a
+# second copy meant no story dimension at all: flow_next.sh filters on phase
+# status, so once Phase 3 was marked pass for story 1 nothing could send it
+# back for story 2. These prove the driver now follows team-sprint instead.
+
+_sprint_state() { # $1 current_phase (JSON)  $2 done (JSON)
+  local art
+  art="$(bash "$CREWFORGE5_ROOT/skills/team-sprint/scripts/state.sh" art-dir "$PLAN")"
+  mkdir -p "$art"
+  printf '{"current_phase":%s,"current_story_id":"s1","done":%s}\n' "$1" "$2" > "$art/state.json"
+}
+
+_offers() { bash "$FLOW_NEXT" execute | sed -n 's/^PHASE=//p'; }
+
+@test "the driver follows team-sprint's current_phase without recording it itself" {
+  bash "$FLOW_STATE" execute set plan "$PLAN"
+  _sprint_state 5 false
+  [ "$(_offers)" = "5" ]
+  # Nothing recorded phases 0-4; the status source passed them.
+  run bash "$FLOW_STATE" execute get phase.0.status
+  [ "$status" -eq 1 ]
+}
+
+@test "a story loop-back to phase 3 is followed, not walked past" {
+  bash "$FLOW_STATE" execute set plan "$PLAN"
+  _sprint_state 6 false
+  [ "$(_offers)" = "6" ]
+  # Phase 6 step 7 puts current_phase back to 3 for the next story.
+  _sprint_state 3 false
+  [ "$(_offers)" = "3" ]
+}
+
+@test "done=true hands over to the phases team-sprint does not own" {
+  bash "$FLOW_STATE" execute set plan "$PLAN"
+  _sprint_state 7 true
+  [ "$(_offers)" = "8" ]
+}
+
+@test "current_phase execute offers the wave loop even when config says sequential" {
+  printf 'scheduling: sequential\n' > "$TMP/repo/team-sprint.config.yaml"
+  bash "$FLOW_STATE" execute set plan "$PLAN"
+  _sprint_state '"execute"' false
+  [ "$(_offers)" = "execute" ]
+  # …and the per-story phases are gone from that run.
+  run bash "$FLOW_GATE" execute 3
+  [ "$status" -eq 1 ]
+}
+
+@test "with no sprint state the driver decides alone" {
+  bash "$FLOW_STATE" execute set plan "$PLAN"
+  [ "$(_offers)" = "0" ]
+  bash "$FLOW_STATE" execute set phase.0.status PASS
+  [ "$(_offers)" = "1" ]
+}
+
+@test "a sprint on a second plan does not inherit the first's progress" {
+  bash "$FLOW_STATE" execute use --from "$PLAN"
+  bash "$FLOW_STATE" execute set plan "$PLAN" phase.0.status PASS phase.1.status PASS
+  bash "$FLOW_STATE" execute use --from "docs/plans/story-2-other.md"
+  [ "$(_offers)" = "0" ]
 }

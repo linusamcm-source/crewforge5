@@ -64,13 +64,23 @@ Under `scheduling: graph` this phase runs inside a **node executor** against the
    bash "$SCRIPTS/run_subskill_hooks.sh" --phase 6 --plan-path "$plan_path"
    ```
 
-7. **Advance (sequential mode only).** Persist the next story id and reset per-story iteration counters:
+7. **Advance (sequential mode only).** Persist the next story id, reset per-story
+   iteration counters, and put `current_phase` back where the next story starts:
    ```bash
    bash "$SCRIPTS/state.sh" update "$plan_path" \
      current_story_id="\"$NEXT_STORY_ID\"" \
+     current_phase=3 \
      iterations='{"adversarial":0,"coverage":0,"review_fix":0}'
    ```
-   If more stories remain → back to Phase 3 for the next story. If this was the last story → Phase 7.
+   If more stories remain → back to Phase 3 for the next story. If this was the last story → Phase 7
+   (`state.sh advance-phase "$plan_path" 7`) instead of the `current_phase=3` above.
+
+   The `current_phase` write is `update`, not `advance-phase`: looping back is a
+   decrement, and `advance-phase` enforces target == current+1. Without it Phase
+   3's own entry condition (`current_phase == 3`) is unsatisfiable for every
+   story after the first, and any reader that resumes from `state.json` — a
+   human, or `crewforge5:execute`'s status source — parks on Phase 6 while the
+   sprint is really back at Phase 3.
 
 ## Exit condition
 

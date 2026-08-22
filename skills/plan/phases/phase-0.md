@@ -12,13 +12,25 @@ compute against.
 2. If it did not, **stop and ask**. Do not infer a goal from the repo, the branch
    name, or an open plan file — a guessed goal produces a plan nobody asked for.
    Ask with a single `AskUserQuestion`, then wait.
-3. Record the confirmed goal, and nothing else:
+3. Claim a subject for this planning run, **before** writing anything else. Flow
+   state is keyed by subject, and the default one is shared — a second plan
+   started in this repo would otherwise resume into the first plan's phase
+   statuses and find them all passed:
+
+   ```bash
+   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh" plan use --from "<confirmed goal>"
+   ```
+
+   `flow_state.sh plan list` shows the planning runs this repo already holds, and
+   `flow_state.sh plan use <subject>` returns to one of them.
+
+4. Record the confirmed goal, and nothing else:
 
    ```bash
    bash "${CREWFORGE5_ROOT:-.}/scripts/flow/flow_state.sh" plan set goal "<confirmed goal>"
    ```
 
-4. Optionally record `scope` and `plan_dir` alongside it if the user volunteered
+5. Optionally record `scope` and `plan_dir` alongside it if the user volunteered
    them. Do not record a `plan_path` here — phase 6 owns that key, and writing it
    early would let phase 6's gate pass against a file that does not exist.
 

@@ -38,6 +38,19 @@ Each one is a state machine over a `phases.json` manifest: a phase is offered,
 its gate is run, and the verdict is written to state before the next phase is
 offered. A gate announced in prose and never run did not happen.
 
+State lives at `<repo>/.crewforge5/<flow>/<subject>/state.json` — **keyed by the
+thing the run is about**, not by the flow alone, so a second plan or a second
+sprint in one repo starts at phase 0 instead of resuming into the first one's
+verdicts. `flow_state.sh <flow> list` names the runs a repo holds, `use` switches
+between them, and `reset` discards one to start it over.
+
+A manifest may also name a `status_source` — a command that answers how far the
+run has got — and give a phase a `when` that decides whether it is in this run at
+all. `crewforge5:execute` uses both: team-sprint owns phases 0–7 and their
+per-story loop, so the driver asks it rather than keeping a second, coarser copy,
+and the per-story phases swap for the graph-mode wave loop under
+`scheduling: graph`.
+
 ### What drives which sub-skill
 
 The sub-skills stay on disk and stay callable by name; they are just no longer

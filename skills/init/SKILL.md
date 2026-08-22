@@ -48,6 +48,10 @@ Two locations, both overridable:
 | `INIT_TARGET` | config root under audit (holds `skills/`, `agents/`) | repo root |
 | `INIT_STATE` | where baseline, proposals and report live | `.crewforge5/init/` |
 
+Flow state is keyed by subject (`.crewforge5/init/<subject>/state.json`), claimed
+in phase 0 from `INIT_TARGET`: a second config root starts at phase 0 rather than
+resuming into the first audit's verdicts. `flow_state.sh init list` names them.
+
 ## Phases
 
 | # | Phase | Doc | Gate |
@@ -77,10 +81,9 @@ RESOLVE="${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
 ```
 
 Check `--load-mode` every time. `MODE=agent` means the skill declares
-`context: fork`, and it declares that precisely so its work stays out of the
-caller's context — spawn it through the `Agent` tool with the declared type.
-Reading such a body inline keeps the instructions and destroys the isolation,
-which is the opposite of what this flow is for. `skill-validator` and
+`context: fork` precisely so its work stays out of the caller's context — spawn
+it through the `Agent` tool with the declared type. Reading such a body inline
+keeps the instructions and destroys the isolation. `skill-validator` and
 `agent-validator` are both `MODE=agent`.
 
 ## What each phase drives

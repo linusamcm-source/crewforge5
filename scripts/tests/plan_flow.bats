@@ -47,7 +47,7 @@ setup() {
   git config user.name  "test"
   git commit -q --allow-empty -m "init"
 
-  STATE="$TMP/repo/.crewforge5/plan/state.json"
+  STATE="$TMP/repo/.crewforge5/plan/default/state.json"
 }
 
 teardown() {

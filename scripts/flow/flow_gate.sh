@@ -44,14 +44,37 @@ command -v jq >/dev/null 2>&1 || { printf '[fail] jq missing — install: brew i
 
 MANIFEST="$("$FLOW_STATE" "$FLOW" manifest)" || exit 1
 
-# `has` distinguishes an absent phase from one whose gate is legitimately empty.
-FOUND="$(jq -r --arg id "$PHASE" 'map(select(.id == $id)) | length' "$MANIFEST")"
+ROOT="$(git rev-parse --git-common-dir 2>/dev/null)"
+if [ -z "$ROOT" ]; then
+  printf 'flow_gate.sh: not inside a git repository\n' >&2
+  exit 1
+fi
+ROOT="$(cd "$ROOT/.." && pwd -P)"
+
+# phases.json is either the bare array or {status_source, phases} — flow_next.sh
+# documents both. Normalise before looking anything up, so a manifest that grew
+# the object form does not silently stop resolving every phase in it.
+NORM="$(jq 'if type == "array" then {phases: .} else . end' "$MANIFEST")"
+
+# Counting, not `.gate`: this distinguishes an absent phase from one whose gate
+# is legitimately empty.
+FOUND="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | length')"
 if [ "$FOUND" = "0" ]; then
   printf 'flow_gate.sh: no phase "%s" in %s\n' "$PHASE" "$MANIFEST" >&2
   exit 1
 fi
 
-GATE="$(jq -r --arg id "$PHASE" 'map(select(.id == $id)) | .[0].gate // ""' "$MANIFEST")"
+# A phase whose `when` excludes it is not part of this run, so gating it would
+# record a verdict for work the flow never offered. flow_next.sh drops it from
+# the manifest for the same reason; the two must agree or a `when`-excluded
+# phase could be marked pass and confuse a later resume.
+WHEN="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | .[0].when // ""')"
+if [ -n "$WHEN" ] && ! ( cd "$ROOT" && bash -c "$WHEN" ) >/dev/null 2>&1; then
+  printf 'flow_gate.sh: phase %s is excluded from this run by its `when`\n' "$PHASE" >&2
+  exit 1
+fi
+
+GATE="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | .[0].gate // ""')"
 
 record() { # $1 status  $2 stdout
   "$FLOW_STATE" "$FLOW" set "phase.$PHASE.status" "$1" "phase.$PHASE.stdout" "$2" || {
@@ -66,13 +89,6 @@ if [ -z "$GATE" ]; then
   printf 'STATUS=PASS\n'
   exit 0
 fi
-
-ROOT="$(git rev-parse --git-common-dir 2>/dev/null)"
-if [ -z "$ROOT" ]; then
-  printf 'flow_gate.sh: not inside a git repository\n' >&2
-  exit 1
-fi
-ROOT="$(cd "$ROOT/.." && pwd -P)"
 
 CAPTURE="$(mktemp "${TMPDIR:-/tmp}/flow_gate.XXXXXX")"
 trap 'rm -f "$CAPTURE"' EXIT

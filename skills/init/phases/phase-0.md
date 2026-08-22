@@ -57,8 +57,17 @@ anything is measured or rewritten.
 
 1. **Resolve the config root.** `INIT_TARGET` is the directory holding the
    `skills/` and `agents/` this run audits. Default is the repo root. Export it
-   if the config lives elsewhere, and record it:
-   `flow_state.sh init set target "<abs path>"`.
+   if the config lives elsewhere, then claim a subject for it **before**
+   recording anything — flow state is keyed by subject, so two config roots
+   audited from one repo need two of them:
+
+   ```bash
+   bash "${CREWFORGE5_ROOT}/scripts/flow/flow_state.sh" init use --from "$INIT_TARGET"
+   bash "${CREWFORGE5_ROOT}/scripts/flow/flow_state.sh" init set target "$INIT_TARGET"
+   ```
+
+   `flow_state.sh init list` shows the audits this repo already holds;
+   `flow_state.sh init reset` discards the current one to start it over.
 2. **Load the house rules.** `claude-config` is the standing statement of how
    this bundle wants skills, agents and hooks written, and every later phase
    proposes edits against it. Load it inline:
