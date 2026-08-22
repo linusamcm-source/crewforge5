@@ -60,8 +60,17 @@ _table_ids() { # $1 file
 }
 
 # Decision ids from a frames/decisions file: D<n> on a `## ` heading.
+#
+# Two -e expressions, not one with `\b` or `\|`: both are GNU BRE extensions,
+# and BSD sed reads `\b` as a literal `b` — on macOS no heading ever matched
+# and every frames gate failed with "no decision section". The first
+# expression takes a bare `## D3` heading, the second `## D1 — question`,
+# with `[^0-9]` as the boundary so D1 never swallows D10.
 _decision_ids() { # $1 file
-  sed -n 's/^## *\(D[0-9][0-9]*\)\b.*/\1/p' "$1" | sort -u
+  sed -n \
+    -e 's/^## *\(D[0-9][0-9]*\)$/\1/p' \
+    -e 's/^## *\(D[0-9][0-9]*\)[^0-9].*/\1/p' \
+    "$1" | sort -u
 }
 
 # _section_body <file> <id> — the lines of one `## D<n>` section, heading
@@ -132,7 +141,7 @@ check_decisions() {
   ids="$(_decision_ids "$frames")"
   for id in $ids; do
     n=$((n + 1))
-    if ! grep -qE "^## *$id\b" "$decisions"; then
+    if ! grep -qE "^## *$id([^0-9]|$)" "$decisions"; then
       note "decisions: $id is framed but has no section in $decisions"
       missing="$missing $id"
     elif ! _section_body "$decisions" "$id" | grep -q '^\*\*Chosen:\*\*'; then
