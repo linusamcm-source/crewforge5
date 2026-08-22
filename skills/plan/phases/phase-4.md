@@ -15,7 +15,9 @@ about to build on, before deciding what the plan will do about it.
 2. Run it over the repo and have it write `TECH_DEBT_AUDIT.md` at the repo root.
 3. Every finding carries a stable ID (`F001`, `SEC1`, …) in a markdown table row.
    Phase 5 and phase 8 both match on those IDs, so a finding recorded only in
-   prose is a finding that will silently escape coverage.
+   prose is a finding that will silently escape coverage. An audit that finds
+   nothing says so with a literal `No findings.` line — a claim the gate can
+   read, where an empty table is indistinguishable from an audit that never ran.
 
 ## Currency
 
@@ -25,4 +27,7 @@ than reusing it — the gate proves the file is there, not that it is honest.
 
 ## Gate
 
-`test -s TECH_DEBT_AUDIT.md`.
+`plan_gate.sh audit` — at least one ID-carrying table row (the same ID pattern
+`check_coverage.sh` matches in phase 8), or the explicit `No findings.` claim.
+The file merely existing — the old gate — proved the audit was touched, not that
+it produced anything phases 5 and 8 can consume.

@@ -39,10 +39,10 @@ gate passes, which is the whole reason the gates are scripts and not prose.
 | --- | --- | --- | --- |
 | 0 | Intake | `phases/phase-0.md` | a confirmed goal is in `state.json` |
 | 1 | Ground | `phases/phase-1.md` | a fresh pack, or a recorded DEGRADED verdict |
-| 2 | Diverge | `phases/phase-2.md` | frames exist for the open decisions |
-| 3 | Grill | `phases/phase-3.md` | every decision has a ratified answer |
-| 4 | Audit | `phases/phase-4.md` | `TECH_DEBT_AUDIT.md` exists |
-| 5 | Triage | `phases/phase-5.md` | `docs/plans/GOAL_IMPACT.md` exists |
+| 2 | Diverge | `phases/phase-2.md` | every `D<n>` section offers ≥2 frames, or a `Skip:` reason |
+| 3 | Grill | `phases/phase-3.md` | every framed `D<n>` carries a `**Chosen:**` line |
+| 4 | Audit | `phases/phase-4.md` | ID-carrying table rows, or a `No findings.` claim |
+| 5 | Triage | `phases/phase-5.md` | every ID known, unique, and dispositioned |
 | 6 | Draft | `phases/phase-6.md` | filename carries a story id; the plan parses |
 | 7 | Review | `phases/phase-7.md` | no open finding, and a stamp |
 | 8 | Verify | `phases/phase-8.md` | every finding ID covered exactly once |
@@ -55,7 +55,10 @@ one — the follow-up worth asking always depends on the answer you have not got
 yet, so a batch of pre-written questions is a form, not a grilling.
 
 That is also why this skill declares no `context: fork` and no `agent:`
-frontmatter: a forked subagent has no user to ask.
+frontmatter: a forked subagent has no user to ask. The one heavy sub-skill,
+`adversarial-review`, forks the other way — phase 7 spawns each review round as
+an agent so its ~24k-char body loads in the reviewer's window, while the fold,
+the stamp and the user-override conversation stay here with the user.
 
 ## Loading the sub-skills
 
@@ -77,7 +80,7 @@ bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode use-re
 | Existing-debt inventory | `tech-debt-audit` | phase 4 (Agent-spawned) |
 | Impact map and coverage check | `master_plan` | phases 5 and 8 |
 | Plan contract and story shape | `team-sprint-planner` | phase 6 |
-| Review-to-clean loop and stamp | `adversarial-review` | phase 7 |
+| Review-to-clean loop and stamp | `adversarial-review` | phase 7 (Agent-spawned rounds) |
 
 ## Done
 

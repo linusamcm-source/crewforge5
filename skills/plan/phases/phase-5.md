@@ -27,10 +27,15 @@ check it.
    ```
 
    `fix in Story N`, `accept` and `defer` are all legitimate. Two dispositions
-   for one ID is not — phase 8 counts occurrences, and an ID carrying two
-   answers means nobody chose.
+   for one ID is not — an ID carrying two answers means nobody chose. A goal
+   whose touched surface intersects nothing writes a literal
+   `No intersecting findings.` line instead of an empty table.
 
 ## Gate
 
-`test -s docs/plans/GOAL_IMPACT.md`. Phase 8 is where the table is checked
-against the plan; this gate only proves the table exists to be checked.
+`plan_gate.sh triage` — every ID in the table exists in `TECH_DEBT_AUDIT.md`
+(an invented ID would sail through phase 8, which only compares this table
+against the plan), appears exactly once, and carries a disposition in its row;
+zero rows passes only with the explicit `No intersecting findings.` claim.
+Phase 8 still checks this table against the plan — this gate proves the table
+is worth checking.

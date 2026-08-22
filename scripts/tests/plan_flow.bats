@@ -509,3 +509,161 @@ MD
     return 1
   fi
 }
+
+# ---------------------------------------------------------------------------
+# Phases 2-5 — the shape gates that replaced `test -s`.
+#
+# Non-emptiness proved a file was touched, not that the phase happened: a
+# frames.md holding one sentence passed phase 2, a decisions.md answering none
+# of the framed decisions passed phase 3, and an impact map could invent an ID
+# phase 8 would never catch (it only compares impact vs plan). Each test here
+# is one of those escapes, closed.
+# ---------------------------------------------------------------------------
+
+PG="skills/plan/scripts/plan_gate.sh"
+
+_art() { dirname "$(bash "$FLOW_STATE" plan path)"; }
+
+_frames() { # write $1 as this run's frames.md
+  local art; art="$(_art)"; mkdir -p "$art"
+  printf '%s\n' "$1" > "$art/frames.md"
+}
+
+_decisions() {
+  local art; art="$(_art)"; mkdir -p "$art"
+  printf '%s\n' "$1" > "$art/decisions.md"
+}
+
+@test "frames gate: a non-empty file with no decision section fails" {
+  _frames "just some prose about the goal"
+  run bash "$ROOT/$PG" frames
+  [ "$status" -eq 1 ]
+  case "$output" in *REASON=no-sections*) ;; *) return 1 ;; esac
+}
+
+@test "frames gate: two frames per decision passes" {
+  _frames "$(printf '## D1 — storage?\n- Frame A: sqlite\n- Frame B: postgres')"
+  run bash "$ROOT/$PG" frames
+  assert_success
+  case "$output" in *SECTIONS=1*) ;; *) return 1 ;; esac
+}
+
+@test "frames gate: a single frame needs its Skip: reason" {
+  _frames "$(printf '## D1 — auth?\n- Frame A: sessions')"
+  run bash "$ROOT/$PG" frames
+  [ "$status" -eq 1 ]
+  _frames "$(printf '## D1 — auth?\n- Frame A: sessions\nSkip: user asked for the textbook answer')"
+  run bash "$ROOT/$PG" frames
+  assert_success
+}
+
+@test "frames gate: a named-but-unframed decision fails by id" {
+  _frames "$(printf '## D1 — storage?\n- Frame A: sqlite\n- Frame B: postgres\n## D2 — naming?')"
+  run bash "$ROOT/$PG" frames
+  [ "$status" -eq 1 ]
+  case "$output" in *BAD=D2*) ;; *) return 1 ;; esac
+}
+
+@test "decisions gate: a framed decision with no answer fails as MISSING" {
+  _frames "$(printf '## D1 — a?\n- Frame A: x\n- Frame B: y\n## D2 — b?\n- Frame A: x\n- Frame B: y')"
+  _decisions "$(printf '## D1 — a?\n**Chosen:** Frame A — cheap')"
+  run bash "$ROOT/$PG" decisions
+  [ "$status" -eq 1 ]
+  case "$output" in *MISSING=D2*) ;; *) return 1 ;; esac
+}
+
+@test "decisions gate: discussed is not decided — no Chosen line fails as UNCHOSEN" {
+  _frames "$(printf '## D1 — a?\n- Frame A: x\n- Frame B: y')"
+  _decisions "$(printf '## D1 — a?\nWe went back and forth on this.')"
+  run bash "$ROOT/$PG" decisions
+  [ "$status" -eq 1 ]
+  case "$output" in *UNCHOSEN=D1*) ;; *) return 1 ;; esac
+}
+
+@test "decisions gate: every framed decision chosen passes" {
+  _frames "$(printf '## D1 — a?\n- Frame A: x\n- Frame B: y')"
+  _decisions "$(printf '## D1 — a?\n**Chosen:** Frame B — concurrency')"
+  run bash "$ROOT/$PG" decisions
+  assert_success
+  case "$output" in *DECISIONS=1*) ;; *) return 1 ;; esac
+}
+
+@test "audit gate: an ID only in prose fails; a table row passes" {
+  printf 'The intake accepts an empty goal (F001).\n' > TECH_DEBT_AUDIT.md
+  run bash "$ROOT/$PG" audit
+  [ "$status" -eq 1 ]
+  printf '| ID | Finding |\n| --- | --- |\n| F001 | empty goal accepted |\n' > TECH_DEBT_AUDIT.md
+  run bash "$ROOT/$PG" audit
+  assert_success
+  case "$output" in *FINDINGS=1*) ;; *) return 1 ;; esac
+}
+
+@test "audit gate: a clean repo passes only by claiming it" {
+  printf '# Audit\n\nNothing stood out.\n' > TECH_DEBT_AUDIT.md
+  run bash "$ROOT/$PG" audit
+  [ "$status" -eq 1 ]
+  printf '# Audit\n\nNo findings.\n' > TECH_DEBT_AUDIT.md
+  run bash "$ROOT/$PG" audit
+  assert_success
+}
+
+_audit_f001() {
+  printf '| ID | Finding |\n| --- | --- |\n| F001 | empty goal |\n' > TECH_DEBT_AUDIT.md
+  mkdir -p docs/plans
+}
+
+@test "triage gate: an ID the audit never issued fails — phase 8 would never catch it" {
+  _audit_f001
+  printf '| ID | Finding | Disposition |\n| --- | --- | --- |\n| F999 | invented | accept |\n' > docs/plans/GOAL_IMPACT.md
+  run bash "$ROOT/$PG" triage
+  [ "$status" -eq 1 ]
+  case "$output" in *UNKNOWN=F999*) ;; *) return 1 ;; esac
+}
+
+@test "triage gate: one ID with two dispositions fails here, not three phases later" {
+  _audit_f001
+  printf '| ID | Finding | Disposition |\n| --- | --- | --- |\n| F001 | empty goal | fix in Story 1 |\n| F001 | empty goal | accept |\n' > docs/plans/GOAL_IMPACT.md
+  run bash "$ROOT/$PG" triage
+  [ "$status" -eq 1 ]
+  case "$output" in *DUPES=F001*) ;; *) return 1 ;; esac
+}
+
+@test "triage gate: an ID row with an empty disposition cell fails" {
+  _audit_f001
+  printf '| ID | Finding | Disposition |\n| --- | --- | --- |\n| F001 | empty goal |  |\n' > docs/plans/GOAL_IMPACT.md
+  run bash "$ROOT/$PG" triage
+  [ "$status" -eq 1 ]
+  case "$output" in *BARE=F001*) ;; *) return 1 ;; esac
+}
+
+@test "triage gate: a dispositioned intersection passes; zero rows needs the claim" {
+  _audit_f001
+  printf '| ID | Finding | Disposition |\n| --- | --- | --- |\n| F001 | empty goal | fix in Story 1 |\n' > docs/plans/GOAL_IMPACT.md
+  run bash "$ROOT/$PG" triage
+  assert_success
+  printf '# Impact\n\nNo intersecting findings.\n' > docs/plans/GOAL_IMPACT.md
+  run bash "$ROOT/$PG" triage
+  assert_success
+  case "$output" in *INTERSECTING=0*) ;; *) return 1 ;; esac
+}
+
+@test "the phase 2 and 3 gates run through the driver and record their verdicts" {
+  _pass_through 1
+  run bash "$FLOW_GATE" plan 2
+  [ "$status" -ne 0 ]
+  _frames "$(printf '## D1 — a?\n- Frame A: x\n- Frame B: y')"
+  run bash "$FLOW_GATE" plan 2
+  [ "$status" -eq 0 ]
+  run bash "$FLOW_NEXT" plan
+  printf '%s\n' "$output" | grep -q '^PHASE=3$'
+}
+
+@test "frames and decisions are subject-keyed — a second plan does not see the first's" {
+  _frames "$(printf '## D1 — a?\n- Frame A: x\n- Frame B: y')"
+  run bash "$ROOT/$PG" frames
+  assert_success
+  bash "$FLOW_STATE" plan use other-feature >/dev/null
+  run bash "$ROOT/$PG" frames
+  [ "$status" -eq 1 ]
+  case "$output" in *REASON=no-frames*) ;; *) return 1 ;; esac
+}

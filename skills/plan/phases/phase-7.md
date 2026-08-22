@@ -4,28 +4,56 @@
 stamp is what `crewforge5:execute` checks before it will run anything, so it is a
 claim about work done, not a formality.
 
+## Who runs the review
+
+**The reviewer is a spawned agent, not you.** `adversarial-review` is the
+largest sub-skill this flow touches (~24k chars before its references), and
+phase 7 arrives when this window is already carrying frames, decisions, the
+audit, the impact map and the plan draft. Reading the reviewer's body here
+would spend the fullest window on instructions only the reviewer needs — so it
+loads in the reviewer's window instead, exactly as team-sprint's phase-2 graph
+review seeds its reviewers.
+
+The resolver still answers `MODE=inline` for this skill: inline **for whoever
+reads it**, which is the spawned agent.
+
 ## Steps
 
-1. Load the reviewer's body:
+1. Resolve the reviewer's body — the path, not the content:
 
    ```bash
-   bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" adversarial-review
+   R="$(bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" adversarial-review)"
    ```
 
-2. Loop: review → annotate each finding into the plan as a
-   `<!-- FINDING <id> (<severity>): <recommendation> -->` marker → fold each
-   marker into revised prose and delete it → re-review. The loop converges only
-   because the markers are deleted; a plan that accumulates them ends up more
-   comment than content.
-3. When a round produces no new findings, stamp the plan on its own line:
+2. Loop, one round per spawn:
+
+   - **Spawn** a `general-purpose` agent via the `Agent` tool. Its prompt: read
+     and follow the skill at `$R`; adversarially review the plan at
+     `<plan_path>` against this repo; annotate each finding **into the plan
+     file** as a `<!-- FINDING <id> (<severity>): <recommendation> -->` marker
+     line; return only the round's finding count and one line per finding.
+   - **Block-collect** the agent's final return. Never end a turn with a live
+     child.
+   - **Fold** each marker yourself: apply the recommendation into revised
+     prose, delete the marker. The findings are yours to judge — a reviewer
+     drafts criticism, the lead owns the plan. The loop converges only because
+     markers are deleted; a plan that accumulates them ends up more comment
+     than content.
+   - **Re-spawn** a fresh round over the folded plan. A fresh agent per round
+     is the point: it re-reads the plan as it now stands, with no memory of
+     what it meant to find.
+
+3. When a round returns zero findings, stamp the plan on its own line:
 
    ```markdown
    <!-- adversarial-review: status=clean rounds=<N> date=<YYYY-MM-DD> reviewer=crewforge5:plan -->
    ```
 
    `status=user-override` is the honest alternative when the user chooses to
-   ship with a known open finding. Inventing `status=clean` over an unfolded
-   finding is the one failure this phase exists to prevent.
+   ship with a known open finding — that conversation happens **here**, with
+   the user, which is why the fold-and-stamp half stays inline while the
+   review half forks. Inventing `status=clean` over an unfolded finding is the
+   one failure this phase exists to prevent.
 
 ## Gate
 
