@@ -17,28 +17,28 @@
     "id": "2",
     "title": "Diverge",
     "doc": "phases/phase-2.md",
-    "gate": "test -s .crewforge5/plan/frames.md",
+    "gate": "bash \"${CREWFORGE5_ROOT:-.}/skills/plan/scripts/plan_gate.sh\" frames",
     "required": true
   },
   {
     "id": "3",
     "title": "Grill",
     "doc": "phases/phase-3.md",
-    "gate": "test -s .crewforge5/plan/decisions.md",
+    "gate": "bash \"${CREWFORGE5_ROOT:-.}/skills/plan/scripts/plan_gate.sh\" decisions",
     "required": true
   },
   {
     "id": "4",
     "title": "Audit",
     "doc": "phases/phase-4.md",
-    "gate": "test -s TECH_DEBT_AUDIT.md",
+    "gate": "bash \"${CREWFORGE5_ROOT:-.}/skills/plan/scripts/plan_gate.sh\" audit",
     "required": true
   },
   {
     "id": "5",
     "title": "Triage",
     "doc": "phases/phase-5.md",
-    "gate": "test -s docs/plans/GOAL_IMPACT.md",
+    "gate": "bash \"${CREWFORGE5_ROOT:-.}/skills/plan/scripts/plan_gate.sh\" triage",
     "required": true
   },
   {

@@ -43,7 +43,11 @@ jobs:
       - name: Plugin scripts — shellcheck and bats
         run: |
           set -euo pipefail
-          shellcheck scripts/*.sh
+          # `find -exec … +`, not a glob: `scripts/*.sh` is not recursive and the
+          # `find skills` step below never reaches scripts/, which left the
+          # shared flow driver — the thing init, plan and execute all run on —
+          # linted by nothing. find covers the next subdirectory on day one.
+          find scripts -name '*.sh' -exec shellcheck {} +
           bats scripts/tests/
 
       # run-all.sh lints only skills/team-sprint/scripts, and the step above only

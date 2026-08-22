@@ -58,10 +58,17 @@ plan_path() { bash "$FLOW_STATE" execute get plan 2>/dev/null; }
 
 # `required` for a phase, straight from the manifest — the flag that replaced
 # team-sprint's `integration_diagram: off|auto|on` config toggle.
+# The manifest is `{status_source, phases: [...]}` since execute's phase list
+# became mode-aware; older flows still ship the bare array. Normalise before
+# indexing, exactly as flow_next.sh and flow_gate.sh do — reading the object
+# form as an array silently answers `false` for every phase, which would have
+# turned a required phase 8 into a skippable one.
 required_flag() {
   local m
   m="$(bash "$FLOW_STATE" execute manifest 2>/dev/null)" || return 1
-  jq -r --arg id "$1" 'map(select(.id == $id)) | .[0].required // false' "$m"
+  jq -r --arg id "$1" '
+    (if type == "array" then {phases: .} else . end)
+    | .phases | map(select(.id == $id)) | .[0].required // false' "$m"
 }
 
 gate_0() { # Pre-flight: a real plan, a valid plan path, every required sub-skill

@@ -13,8 +13,15 @@ For each failing component, load the matching rectifier through the resolver
 
 Each ships a fix catalogue keyed by the check that failed, so a finding maps to
 a specific repair rather than a rewrite. Apply the fix, re-run that component's
-validator, repeat. Components are disjoint, so fan out one agent per failing
-component.
+validator, **rewrite that component's findings file** under
+`$INIT_STATE/findings/`, repeat. Components are disjoint, so fan out one agent
+per failing component.
+
+Rewriting the findings file is what makes the repair count: the gate reads those
+files, so a component repaired but not re-validated still carries its old
+findings and still fails. Only the components you touched need re-validating —
+the gate caches the structural half on content, so the ones you did not touch
+cost nothing to re-check.
 
 Two rules keep this from turning into drift:
 

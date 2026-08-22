@@ -100,6 +100,26 @@ EOF
 
 # A skill that validates structurally clean AND grades A (0 FAIL, <=2 WARN),
 # so the only defect in the phase-4 fixture is the agent's.
+# The behavioural half of phase 4 is a model's work, so the tests stand in for
+# it: `ledger <kind> <label> [line...]` writes the findings file that phase 4's
+# spawned validator would. An EMPTY file is the "validated, found nothing"
+# claim; no file at all is what the gate now refuses.
+ledger() {
+  local kind="$1" label="$2"; shift 2
+  mkdir -p "$INIT_STATE/findings"
+  if [ $# -eq 0 ]; then
+    : > "$INIT_STATE/findings/$kind.$label.md"
+  else
+    printf '%s\n' "$@" > "$INIT_STATE/findings/$kind.$label.md"
+  fi
+}
+
+# Every component the phase-4/5 fixtures create, validated clean.
+ledger_all_clean() {
+  ledger skill fixture-clean
+  ledger agent fixture-reviewer
+}
+
 fixture_clean_skill() {
   mkdir -p "$INIT_TARGET/skills/fixture-clean"
   cat > "$INIT_TARGET/skills/fixture-clean/SKILL.md" <<'EOF'
@@ -552,6 +572,7 @@ EOF
 @test "validate reports FAIL for an agent with a structural defect" {
   fixture_clean_skill
   fixture_broken_agent
+  ledger_all_clean
   run bash "$GATE_SH" validate
   [ "$status" -eq 1 ]
   case "$output" in *STATUS=FAIL*) : ;; *) return 1 ;; esac
@@ -561,6 +582,7 @@ EOF
 @test "validate passes once the defect is repaired" {
   fixture_clean_skill
   fixture_fixed_agent
+  ledger_all_clean
   run bash "$GATE_SH" validate
   assert_success
   case "$output" in *FAILURES=0*) : ;; *) return 1 ;; esac
@@ -569,6 +591,7 @@ EOF
 @test "rectify demands grade A and refuses the unrepaired component" {
   fixture_clean_skill
   fixture_broken_agent
+  ledger_all_clean
   run bash "$GATE_SH" rectify
   [ "$status" -eq 1 ]
 }
@@ -576,6 +599,7 @@ EOF
 @test "rectify passes when every component grades A" {
   fixture_clean_skill
   fixture_fixed_agent
+  ledger_all_clean
   run bash "$GATE_SH" rectify
   assert_success
   case "$output" in *GRADE=A*) : ;; *) return 1 ;; esac
@@ -759,4 +783,118 @@ Never run find from the filesystem root; scope it to the project tree." \
   run bash "$ROOT/skills/skill-validator/scripts/grade.sh" "$findings"
   assert_success
   case "$output" in *"grade=A"*) : ;; *) return 1 ;; esac
+}
+
+# ---------------------------------------------------------------------------
+# Phase 4's behavioural half, and the walk's content cache.
+#
+# The two validators grade behaviour as well as structure, and only a model can
+# run that half — phase 4 spawns one agent per component to do it. The gate used
+# to re-derive the STRUCTURAL findings itself and read nothing the fleet wrote,
+# so 38 agent spawns of behavioural review could not fail it. These prove the
+# fleet's verdict now blocks, and that an unwritten one is not a clean one.
+# ---------------------------------------------------------------------------
+
+@test "validate fails when a component has no behavioural findings file" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  run bash "$GATE_SH" validate
+  [ "$status" -eq 1 ]
+  case "$output" in *REASON=no-behavioural-findings*) : ;; *) return 1 ;; esac
+  case "$output" in *fixture-clean*) : ;; *) return 1 ;; esac
+}
+
+@test "an empty findings file is a claim, and passes" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger_all_clean
+  run bash "$GATE_SH" validate
+  assert_success
+  case "$output" in *FAILURES=0*) : ;; *) return 1 ;; esac
+}
+
+@test "a behavioural FAIL blocks the gate no script would have caught" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger agent fixture-reviewer
+  ledger skill fixture-clean "FAIL [fixture-clean]: agent-simulation — ignores its own stated stop rule"
+  run bash "$GATE_SH" validate
+  [ "$status" -eq 1 ]
+  case "$output" in *FAILURES=1*) : ;; *) return 1 ;; esac
+}
+
+@test "a behavioural WARN counts toward the rectify grade without failing validate" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger agent fixture-reviewer
+  ledger skill fixture-clean \
+    "WARN [fixture-clean]: efficiency — body loads on every invocation" \
+    "WARN [fixture-clean]: efficiency — two headings say the same thing" \
+    "WARN [fixture-clean]: compliance — the example contradicts the rule"
+  run bash "$GATE_SH" validate
+  assert_success
+  run bash "$GATE_SH" rectify
+  [ "$status" -eq 1 ]
+  case "$output" in *BELOW_A=*) : ;; *) return 1 ;; esac
+}
+
+@test "the walk answers from cache when nothing changed" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger_all_clean
+  run bash "$GATE_SH" validate
+  assert_success
+  case "$output" in *CACHED=0*) : ;; *) return 1 ;; esac
+  run bash "$GATE_SH" validate
+  assert_success
+  case "$output" in *CACHED=2*) : ;; *) return 1 ;; esac
+}
+
+@test "editing one component invalidates only that component's entry" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger_all_clean
+  bash "$GATE_SH" validate >/dev/null 2>&1
+  printf '\nAn added line.\n' >> "$INIT_TARGET/skills/fixture-clean/SKILL.md"
+  run bash "$GATE_SH" validate
+  case "$output" in *CACHED=1*) : ;; *) return 1 ;; esac
+}
+
+@test "adding a file to a component invalidates it, even with every file unchanged" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger_all_clean
+  bash "$GATE_SH" validate >/dev/null 2>&1
+  printf 'stray\n' > "$INIT_TARGET/skills/fixture-clean/NOTES.md"
+  run bash "$GATE_SH" validate
+  case "$output" in *CACHED=1*) : ;; *) return 1 ;; esac
+}
+
+@test "INIT_CACHE=off walks everything and reports no cache hits" {
+  fixture_clean_skill
+  fixture_fixed_agent
+  ledger_all_clean
+  bash "$GATE_SH" validate >/dev/null 2>&1
+  INIT_CACHE=off run bash "$GATE_SH" validate
+  case "$output" in *CACHED=0*) : ;; *) return 1 ;; esac
+}
+
+# ---------------------------------------------------------------------------
+# validate_all.sh --unless — the duplicate sweep phase 4 used to run.
+# ---------------------------------------------------------------------------
+
+@test "validate_all --unless skips when the target IS the plugin tree" {
+  run bash "$ROOT/scripts/validate_all.sh" --unless "$ROOT"
+  assert_success
+  case "$output" in *SKIPPED*) : ;; *) return 1 ;; esac
+}
+
+@test "validate_all --unless still runs when the target is elsewhere" {
+  run bash "$ROOT/scripts/validate_all.sh" --unless "$INIT_TARGET"
+  case "$output" in *SKIPPED*) return 1 ;; esac
+  case "$output" in *components*) : ;; *) return 1 ;; esac
+}
+
+@test "phase-4 doc passes INIT_TARGET to the sweep rather than running it blind" {
+  grep -q 'validate_all.sh" --unless "\$INIT_TARGET"' "$INIT_DIR/phases/phase-4.md"
 }
