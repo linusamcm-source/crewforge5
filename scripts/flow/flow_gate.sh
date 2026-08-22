@@ -54,13 +54,22 @@ ROOT="$(cd "$ROOT/.." && pwd -P)"
 # phases.json is either the bare array or {status_source, phases} — flow_next.sh
 # documents both. Normalise before looking anything up, so a manifest that grew
 # the object form does not silently stop resolving every phase in it.
-NORM="$(jq 'if type == "array" then {phases: .} else . end' "$MANIFEST")"
+# Checked, and empty is a failure: a malformed phases.json makes jq write
+# nothing, FOUND then comes back empty rather than "0", and a `= "0"` guard
+# would let an unknown phase through to be recorded PASS with no gate run. A
+# gate that cannot read its own manifest must fail closed.
+if ! NORM="$(jq 'if type == "array" then {phases: .} else . end' "$MANIFEST")" || [ -z "$NORM" ]; then
+  printf 'flow_gate.sh: %s is not valid JSON\n' "$MANIFEST" >&2
+  exit 1
+fi
 
 # Counting, not `.gate`: this distinguishes an absent phase from one whose gate
-# is legitimately empty.
+# is legitimately empty. `!= "1"` rather than `= "0"`, so an empty or duplicated
+# answer is rejected too.
 FOUND="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | length')"
-if [ "$FOUND" = "0" ]; then
-  printf 'flow_gate.sh: no phase "%s" in %s\n' "$PHASE" "$MANIFEST" >&2
+if [ "$FOUND" != "1" ]; then
+  printf 'flow_gate.sh: %s does not name exactly one phase "%s" (found: %s)\n' \
+    "$MANIFEST" "$PHASE" "${FOUND:-none}" >&2
   exit 1
 fi
 
@@ -69,9 +78,16 @@ fi
 # the manifest for the same reason; the two must agree or a `when`-excluded
 # phase could be marked pass and confuse a later resume.
 WHEN="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | .[0].when // ""')"
-if [ -n "$WHEN" ] && ! ( cd "$ROOT" && bash -c "$WHEN" ) >/dev/null 2>&1; then
-  printf 'flow_gate.sh: phase %s is excluded from this run by its when clause\n' "$PHASE" >&2
-  exit 1
+if [ -n "$WHEN" ]; then
+  ( cd "$ROOT" && bash -c "$WHEN" ) >/dev/null 2>&1
+  WHEN_RC=$?
+  case "$WHEN_RC" in
+    0) ;;
+    1) printf 'flow_gate.sh: phase %s is excluded from this run by its when clause\n' "$PHASE" >&2
+       exit 1 ;;
+    *) printf 'flow_gate.sh: the when clause for phase %s could not run: %s\n' "$PHASE" "$WHEN" >&2
+       exit 1 ;;
+  esac
 fi
 
 GATE="$(printf '%s' "$NORM" | jq -r --arg id "$PHASE" '.phases | map(select(.id == $id)) | .[0].gate // ""')"

@@ -41,8 +41,11 @@ offered. A gate announced in prose and never run did not happen.
 State lives at `<repo>/.crewforge5/<flow>/<subject>/state.json` — **keyed by the
 thing the run is about**, not by the flow alone, so a second plan or a second
 sprint in one repo starts at phase 0 instead of resuming into the first one's
-verdicts. `flow_state.sh <flow> list` names the runs a repo holds, `use` switches
-between them, and `reset` discards one to start it over.
+verdicts. Each flow claims its own subject in phase 0 —
+`flow_state.sh <flow> use --from "<goal | config root | plan path>"` derives a
+slug from what the run is about — so this is not something you have to do by
+hand. `flow_state.sh <flow> list` names the runs a repo holds, `use <subject>`
+switches between them, and `reset` discards one to start it over.
 
 A manifest may also name a `status_source` — a command that answers how far the
 run has got — and give a phase a `when` that decides whether it is in this run at

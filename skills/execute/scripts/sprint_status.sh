@@ -4,6 +4,8 @@
 # Usage:
 #   sprint_status.sh              PHASE=<id> [DONE=1] for the sprint under way
 #   sprint_status.sh --mode       graph | sequential — the scheduling this run walks
+#   sprint_status.sh --mode-is <m>  exit 0 when the mode IS <m>, 1 when it is not,
+#                                 2 when it could not be resolved at all
 # stdout is KEY=VALUE; anything explanatory goes to stderr.
 #
 # WHY THIS EXISTS. `execute` wraps team-sprint, and team-sprint has tracked
@@ -35,7 +37,7 @@ ROOT="${CREWFORGE5_ROOT:-$(cd "$HERE/../../.." && pwd -P)}"
 RESOLVE="$ROOT/scripts/flow/subskill_resolve.sh"
 FLOW_STATE="$ROOT/scripts/flow/flow_state.sh"
 
-usage() { sed -n '4,8p' "$0" | sed 's/^# //' >&2; exit 2; }
+usage() { sed -n '4,10p' "$0" | sed 's/^# //' >&2; exit 2; }
 
 command -v jq >/dev/null 2>&1 || exit 1
 
@@ -72,8 +74,12 @@ if [ "${1:-}" = "--mode" ]; then
   mode=""
   PLAN="$(bash "$FLOW_STATE" execute get plan 2>/dev/null)" || PLAN=""
   if [ -n "$PLAN" ]; then
-    STATE="$(bash "$TS/scripts/state.sh" art-dir "$PLAN" 2>/dev/null)/state.json"
-    if [ -f "$STATE" ]; then
+    # Captured before `/state.json` is appended: a failed art-dir would otherwise
+    # build the absolute path "/state.json" and probe a file outside the repo.
+    ART="$(bash "$TS/scripts/state.sh" art-dir "$PLAN" 2>/dev/null)" || ART=""
+    STATE=""
+    [ -n "$ART" ] && STATE="$ART/state.json"
+    if [ -n "$STATE" ] && [ -f "$STATE" ]; then
       if [ "$(jq -r '.current_phase // empty' "$STATE" 2>/dev/null)" = "execute" ]; then
         mode="graph"
       else
@@ -93,13 +99,34 @@ if [ "${1:-}" = "--mode" ]; then
   exit 0
 fi
 
+# --mode-is — the form a phases.json `when` calls. It exists for its exit codes:
+# a `when` that answers 0/1 decides whether a phase is in the run, and anything
+# above 1 stops the driver instead. Without that third answer, an environment
+# where this script cannot run at all made every mode-gated phase drop out
+# together, and `execute` walked from phase 2 to phase 7 with no implementation
+# phase offered — a broken run that looked like a short one.
+if [ "${1:-}" = "--mode-is" ]; then
+  [ $# -eq 2 ] || usage
+  case "$2" in graph|sequential) ;; *) usage ;; esac
+  ts_dir >/dev/null 2>&1 || exit 2
+  mode="$("$0" --mode)" || exit 2
+  [ -n "$mode" ] || exit 2
+  [ "$mode" = "$2" ]
+  exit $?
+fi
+
 [ $# -eq 0 ] || usage
 
 PLAN="$(bash "$FLOW_STATE" execute get plan 2>/dev/null)" || exit 1
 [ -n "$PLAN" ] || exit 1
 
 TS="$(ts_dir)" || exit 1
-STATE="$(bash "$TS/scripts/state.sh" art-dir "$PLAN" 2>/dev/null)/state.json"
+# Same guard as --mode: a failed art-dir must read as "no opinion", not as the
+# absolute path "/state.json", which on some hosts is a real file whose contents
+# would then drive every phase this flow offers.
+ART="$(bash "$TS/scripts/state.sh" art-dir "$PLAN" 2>/dev/null)" || exit 1
+[ -n "$ART" ] || exit 1
+STATE="$ART/state.json"
 [ -f "$STATE" ] || exit 1
 
 CUR="$(jq -r '.current_phase // empty' "$STATE" 2>/dev/null)" || exit 1

@@ -22,10 +22,17 @@
 # object here, so a flow that needs neither new field changes nothing.
 #
 # `when` (per phase) — a command deciding whether the phase is in this run at
-# all. Non-zero exit drops it from the manifest entirely, for this call and for
-# flow_gate.sh alike. It exists because `execute` walks a different phase list
+# all. Exit 0 includes it, exit 1 drops it from the manifest entirely (for this
+# call and for flow_gate.sh alike), and ANY OTHER exit is the probe failing to
+# answer, which stops the driver rather than quietly shortening the flow. It exists because `execute` walks a different phase list
 # under `scheduling: graph` than under `sequential`, and one mode-aware manifest
 # beats two manifests that drift.
+#
+# A recorded FAIL outranks the status source. Phase docs advance their own state
+# as the LAST step of the phase, so a source can already be pointing past a phase
+# whose gate then fails; without this the failed phase would sit below the
+# source's index and be treated as passed, and the driver would offer the next
+# one. "A failed gate is re-offered, not advanced past" is the whole contract.
 #
 # `status_source` (per manifest) — a command answering who owns phase progress.
 # It prints `PHASE=<id>` for the phase in progress and optionally `DONE=1` when
@@ -71,16 +78,67 @@ if [ -n "$ROOT" ]; then ROOT="$(cd "$ROOT/.." && pwd -P)"; else ROOT="$PWD"; fi
 # so the later jq passes need no re-normalising.
 NORM="$(mktemp "${TMPDIR:-/tmp}/flow_next.XXXXXX")"
 trap 'rm -f "$NORM"' EXIT
-jq 'if type == "array" then {phases: .} else . end' "$MANIFEST" > "$NORM"
+# Checked, because the failure is silent otherwise: a malformed phases.json makes
+# jq write nothing, every later pass then reads an empty manifest, and an empty
+# manifest answers STATUS=DONE — a broken flow would report itself finished.
+if ! jq 'if type == "array" then {phases: .} else . end' "$MANIFEST" > "$NORM" || [ ! -s "$NORM" ]; then
+  printf 'flow_next.sh: %s is not valid JSON\n' "$MANIFEST" >&2
+  exit 1
+fi
 
 # --- `when`: drop the phases this run does not walk ---------------------------
 # Evaluated before anything else reads the list, so an excluded phase is absent
 # from the ordering `status_source` is interpreted against as well.
+# Memoised by command text: `execute` gives five phases the same `when`, and
+# without this the driver spawns the same probe five times per call to get the
+# same answer. Scoped to this one invocation, so nothing is cached across calls
+# and the answer stays as fresh as it ever was.
+#
+# Parallel arrays and a linear scan, NOT an associative array: macOS ships bash
+# 3.2, which has none, and this driver runs wherever the plugin is installed.
+# The list is one entry per DISTINCT `when` in a manifest, so the scan is over a
+# handful of strings.
+WHEN_CMDS=()
+WHEN_VERDICTS=()
+
+# Echoes in|out, or nothing when this command has not been probed yet. The
+# explicit `return 0` matters: a bare fall-through returns the failed loop test,
+# and under `set -e` that non-zero status kills the script at the assignment
+# rather than reading as "not memoised yet".
+_when_verdict() { # $1 command
+  local i=0
+  while [ "$i" -lt "${#WHEN_CMDS[@]}" ]; do
+    if [ "${WHEN_CMDS[$i]}" = "$1" ]; then printf '%s\n' "${WHEN_VERDICTS[$i]}"; return 0; fi
+    i=$((i + 1))
+  done
+  return 0
+}
+
 KEEP=()
 while IFS=$'\t' read -r pid pwhen; do
   [ -n "$pid" ] || continue
   if [ -n "$pwhen" ]; then
-    ( cd "$ROOT" && bash -c "$pwhen" ) >/dev/null 2>&1 || continue
+    verdict="$(_when_verdict "$pwhen")"
+    if [ -z "$verdict" ]; then
+      # `|| when_rc=$?`, not a bare call then `$?`: this script runs under
+      # `set -e`, which would kill it at the subshell the moment a `when`
+      # legitimately answers 1 — the case statement would never be reached.
+      when_rc=0
+      ( cd "$ROOT" && bash -c "$pwhen" ) >/dev/null 2>&1 || when_rc=$?
+      case "$when_rc" in
+        0) verdict=in ;;
+        1) verdict=out ;;
+        # Above 1 the probe did not answer — it could not run. Excluding on that
+        # is how `execute` walked from phase 2 to phase 7 with no implementation
+        # phase offered when CREWFORGE5_ROOT was unset: every mode-gated phase
+        # dropped out at once and the flow looked shorter rather than broken.
+        *) printf 'flow_next.sh: the when clause for phase %s could not run: %s\n' "$pid" "$pwhen" >&2
+           exit 1 ;;
+      esac
+      WHEN_CMDS+=( "$pwhen" )
+      WHEN_VERDICTS+=( "$verdict" )
+    fi
+    [ "$verdict" = "in" ] || continue
   fi
   KEEP+=( "$pid" )
 done < <(jq -r '.phases[] | "\(.id)\t\(.when // "")"' "$NORM")
@@ -118,9 +176,11 @@ ANSWER="$(jq -r \
   | ($live | map(.id) | index($src)) as $srcix
   | [ $live | to_entries[]
       | .key as $ix | .value as $p
+      | (($ph[$p.id].status // "") | ascii_downcase) as $st
       | select(
-          ( (($ph[$p.id].status // "") | ascii_downcase) != "pass" )
-          and ( $srcix == null
+          $st != "pass"
+          and ( $st == "fail"
+                or $srcix == null
                 or $ix > $srcix
                 or ($ix == $srcix and ($srcdone | . != "1" and . != "true")) )
         )

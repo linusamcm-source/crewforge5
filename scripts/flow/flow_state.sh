@@ -57,7 +57,7 @@ log()  { printf '%s\n' "$*" >&2; }
 fail() { printf '[fail] %s\n' "$*" >&2; exit 1; }
 
 usage() {
-  sed -n '5,12p' "$0" | sed 's/^# //' >&2
+  sed -n '5,14p' "$0" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -118,8 +118,11 @@ _migrate_legacy() {
   target="$dir/default/state.json"
   [ -f "$legacy" ] || return 0
   [ -e "$target" ] && return 0
-  mkdir -p "$dir/default"
-  mv "$legacy" "$target"
+  # Checked: a failed move leaves the run reading a state.json that is not there,
+  # which restarts an in-flight flow from phase 0 — the exact loss this migration
+  # exists to prevent, and silent if the mv is not tested.
+  mkdir -p "$dir/default" || fail "flow_state.sh: could not create $dir/default"
+  mv "$legacy" "$target"  || fail "flow_state.sh: could not move $legacy to $target"
   log "flow_state.sh: moved pre-subject state to $target"
 }
 
@@ -297,13 +300,19 @@ _cmd_get() {
 # Truncated to 48 chars: the slug is a directory name, and a whole goal sentence
 # makes an unreadable one without making it more unique in practice.
 _slugify() {
-  local out
-  out="$(printf '%s' "$1" \
+  local full out
+  full="$(printf '%s' "$1" \
     | tr '[:upper:]' '[:lower:]' \
-    | sed -e 's/[^a-z0-9]\{1,\}/-/g' -e 's/^-*//' -e 's/-*$//' \
-    | cut -c1-48 \
-    | sed -e 's/-*$//')"
-  [ -n "$out" ] || out="default"
+    | sed -e 's/[^a-z0-9]\{1,\}/-/g' -e 's/^-*//' -e 's/-*$//')"
+  out="$(printf '%s' "$full" | cut -c1-40 | sed -e 's/-*$//')"
+  [ -n "$out" ] || { printf 'default\n'; return 0; }
+  # A TRUNCATED slug is no longer unique, and two subjects that collide is
+  # precisely the bug subject keying exists to stop: `execute` slugifies a plan
+  # path, so every plan already shares the `docs-plans-` prefix and only the tail
+  # distinguishes them. Carry a digest of the full text whenever anything was cut.
+  if [ "$full" != "$out" ]; then
+    out="$out-$(printf '%s' "$full" | cksum | cut -d' ' -f1)"
+  fi
   printf '%s\n' "$out"
 }
 

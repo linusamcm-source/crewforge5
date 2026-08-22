@@ -62,9 +62,16 @@ anything is measured or rewritten.
    audited from one repo need two of them:
 
    ```bash
+   : "${INIT_TARGET:=$(git rev-parse --show-toplevel)}"
+   export INIT_TARGET
    bash "${CREWFORGE5_ROOT}/scripts/flow/flow_state.sh" init use --from "$INIT_TARGET"
    bash "${CREWFORGE5_ROOT}/scripts/flow/flow_state.sh" init set target "$INIT_TARGET"
    ```
+
+   Resolve the default before claiming anything. `INIT_TARGET` unset means the
+   repo root, but leaving it unset here would slugify an empty string into the
+   shared `default` subject and record an empty `target` — the subject would no
+   longer name what is under audit.
 
    `flow_state.sh init list` shows the audits this repo already holds;
    `flow_state.sh init reset` discards the current one to start it over.

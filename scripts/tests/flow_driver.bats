@@ -555,3 +555,104 @@ JSON
   run "$FLOW_NEXT" init
   printf '%s\n' "$output" | grep -q '^PHASE=2$'
 }
+
+# --- fail-closed paths -------------------------------------------------------
+#
+# Each of these was a way the driver answered confidently while it could not
+# actually see what it was answering about. They are grouped because they share
+# one shape: a failure that produced an EMPTY value, which every later step then
+# read as a valid, benign one.
+
+@test "a recorded FAIL is re-offered even when the status source has moved past it" {
+  # Phase docs advance their own state as the last step of the phase, so a
+  # source can point past a phase whose gate then fails.
+  _object_manifest "echo PHASE=2" "true"
+  "$FLOW_STATE" init set phase.1.status FAIL
+  run "$FLOW_NEXT" init
+  [ "$status" -eq 0 ]
+  printf '%s\n' "$output" | grep -q '^PHASE=1$'
+}
+
+@test "a passed phase below the source index still counts passed" {
+  _object_manifest "echo PHASE=2" "true"
+  "$FLOW_STATE" init set phase.1.status PASS
+  run "$FLOW_NEXT" init
+  printf '%s\n' "$output" | grep -q '^PHASE=2$'
+}
+
+@test "flow_next refuses a manifest that is not valid JSON" {
+  printf '{ not json' > "$FLOW_DIR/phases.json"
+  _split_run "$FLOW_NEXT" init
+  [ "$RC" -ne 0 ]
+  [ -z "$STDOUT" ]
+}
+
+@test "flow_gate refuses a manifest that is not valid JSON rather than recording PASS" {
+  printf '{ not json' > "$FLOW_DIR/phases.json"
+  _split_run "$FLOW_GATE" init 0
+  [ "$RC" -ne 0 ]
+  # The bug this guards: an unreadable manifest yielded an empty gate, which was
+  # then recorded as a pass for a phase nobody ran.
+  case "$STDOUT" in *PASS*) return 1 ;; esac
+}
+
+@test "a when that cannot answer stops the driver instead of dropping the phase" {
+  _object_manifest "" "exit 2"
+  _split_run "$FLOW_NEXT" init
+  [ "$RC" -ne 0 ]
+  [ -z "$STDOUT" ]
+  case "$STDERR" in *"could not run"*) ;; *) return 1 ;; esac
+}
+
+@test "a when that answers 1 still excludes its phase" {
+  _object_manifest "" "exit 1"
+  "$FLOW_STATE" init set phase.0.status PASS
+  run "$FLOW_NEXT" init
+  [ "$status" -eq 0 ]
+  printf '%s\n' "$output" | grep -q '^PHASE=2$'
+}
+
+@test "one when is probed once however many phases share it" {
+  cat > "$FLOW_DIR/phases.json" <<JSON
+{"phases": [
+  {"id": "0", "doc": "phases/phase-0.md", "gate": "", "when": "echo probed >> $TMP/probes; true"},
+  {"id": "1", "doc": "phases/phase-0.md", "gate": "", "when": "echo probed >> $TMP/probes; true"},
+  {"id": "2", "doc": "phases/phase-0.md", "gate": "", "when": "echo probed >> $TMP/probes; true"}
+]}
+JSON
+  : > "$TMP/probes"
+  "$FLOW_NEXT" init >/dev/null
+  [ "$(wc -l < "$TMP/probes" | tr -d ' ')" = "1" ]
+}
+
+@test "a failed legacy migration stops rather than restarting the run from phase 0" {
+  mkdir -p "$TMP/repo/.crewforge5/init"
+  printf '{"flow":"init","started_at":"x","phase":{"0":{"status":"PASS"}}}\n' \
+    > "$TMP/repo/.crewforge5/init/state.json"
+  # A plain file where default/ must be created: the mkdir cannot succeed.
+  printf 'blocker\n' > "$TMP/repo/.crewforge5/init/default"
+  _split_run "$FLOW_STATE" init get phase.0.status
+  [ "$RC" -ne 0 ]
+  [ -f "$TMP/repo/.crewforge5/init/state.json" ]
+}
+
+@test "usage lists every command main dispatches" {
+  _split_run "$FLOW_STATE"
+  [ "$RC" -eq 2 ]
+  local c
+  for c in path manifest get set subject use list reset; do
+    case "$STDERR" in *"$c"*) ;; *) return 1 ;; esac
+  done
+}
+
+@test "two subjects sharing a long prefix do not collide" {
+  local a b
+  a="$("$FLOW_STATE" init use --from "docs/plans/epic-1-a-very-long-shared-prefix-alpha.md")"
+  b="$("$FLOW_STATE" init use --from "docs/plans/epic-1-a-very-long-shared-prefix-beta.md")"
+  [ "$a" != "$b" ]
+}
+
+@test "a short subject is not given a digest it does not need" {
+  run "$FLOW_STATE" init use --from "fix the api"
+  [ "$output" = "SUBJECT=fix-the-api" ]
+}
