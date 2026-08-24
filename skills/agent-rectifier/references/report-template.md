@@ -9,7 +9,8 @@ Load this file when writing the rectification report.
 **Agent Path:** {path}
 **Source Validation Report:** {path-to-validation-report}
 **Grade Before:** {original grade}
-**Grade After:** {expected grade after fixes}
+**Grade After:** {grade from the re-validation round if it has run, otherwise "pending re-validation (round N)" — never predict a grade}
+**Round:** {N} of max 5
 
 ## Summary
 
@@ -43,9 +44,16 @@ Load this file when writing the rectification report.
 
 {Results of post-fix validation script run}
 
+## Round History
+
+| Round | Grade | Fixes applied | FAIL+WARN remaining |
+|-------|-------|---------------|---------------------|
+| 1 | X | X | X |
+
 ## Next Steps
 
 - [ ] Review deferred items manually
-- [ ] Re-run agent-validator to confirm grade improvement
 - [ ] Test agent with a real prompt to verify behavioral compliance
 ```
+
+(Re-validation is not a next step — Step 8 of the rectify loop owns it.)

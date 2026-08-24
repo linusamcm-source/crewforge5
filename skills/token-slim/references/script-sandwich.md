@@ -33,8 +33,6 @@ boundary is in the wrong place.
 
 ## Worked examples in this repo
 
-- `skills/humanise/scripts/` — sniff (router), packs (loader), invariants + tells +
-  au-check (gates), deliver + feedback (log/learn loop). Model does one rewrite between them.
 - `skills/skill-validator/scripts/` — validate_structure + functional + efficiency +
   baseline-drift (gates feeding a ledger), grade.sh (deterministic scorer). Model does
   compliance diagnosis and agent simulation between them.

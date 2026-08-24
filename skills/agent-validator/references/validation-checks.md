@@ -13,8 +13,11 @@ verbatim from SKILL.md.
 
 **Skill invocation analysis:**
 - Scan for `/skill-name` patterns and `Skill tool` references in the body
-- Verify each referenced skill exists in `$HOME/.claude/skills/` or `.claude/skills/`
-- WARN if a referenced skill doesn't exist on disk
+- Verify each referenced skill resolves:
+  `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --probe <name>` — it
+  searches the plugin tree, then `.claude/skills/`, then `$HOME/.claude/skills/`, the
+  same order everything else uses. A `$HOME`-only check false-WARNs every plugin skill.
+- WARN if a referenced skill doesn't resolve
 
 **Agent spawning analysis:**
 - If the body references spawning subagents (Agent tool), verify that `Agent` is accessible

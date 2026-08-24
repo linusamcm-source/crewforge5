@@ -62,7 +62,9 @@ Determine which agent to validate. The user will provide one of:
 - An agent name (search `.claude/agents/` for it)
 - "this agent" or "the one I just made" (use the most recently modified agent file)
 
-Confirm the path with the user before proceeding.
+State the resolved path explicitly before proceeding; if multiple candidates match,
+pick the most recently modified one and record that assumption in the report. (This
+skill runs forked — there is no user to confirm with.)
 
 ### Step 1: Structural Validation
 
@@ -70,9 +72,13 @@ Create the findings ledger first — every later step, scripts and your own judg
 alike, appends to it, and Step 6's grade is computed from it mechanically:
 
 ```bash
-LEDGER=$(mktemp)
-bash ${CREWFORGE5_ROOT}/skills/agent-validator/scripts/validate_agent.sh <agent-file-path> | tee -a "$LEDGER"
+LEDGER="$(mktemp "${TMPDIR:-/tmp}/agent-validator-ledger.XXXXXX")"; echo "LEDGER=$LEDGER"
+bash "${CREWFORGE5_ROOT}/skills/agent-validator/scripts/validate_agent.sh" <agent-file-path> | tee -a "$LEDGER"
 ```
+
+Each Bash call is a fresh shell: `$LEDGER` does not survive between tool calls. Note
+the `LEDGER=` path this step prints and substitute it literally wherever a later step
+says `"$LEDGER"`.
 
 Treat the script's FAIL/WARN lines as findings verbatim — do not re-derive them by hand. Its
 `INFO` lines never count toward the grade; they are there to be read, not scored.
@@ -164,9 +170,10 @@ evaluate against the Step 4a instruction list, and record results.
 Test procedure and spawn-prompt template: [references/validation-checks.md](references/validation-checks.md) — load when running this step.
 
 Append each skipped or misinterpreted instruction to the ledger
-(`FAIL [simulation]: ...` / `WARN [simulation]: ...`). If subagents are not available, append
-`SKIPPED [simulation]: no subagents` and move on — a SKIPPED phase does not block grade A,
-but must be listed next to the grade.
+(`FAIL [simulation]: ...` / `WARN [simulation]: ...`). Subagents are unavailable only when
+the `Agent` tool is absent from your own tool list — that is the test. When it is absent,
+append `SKIPPED [simulation]: no subagents` and move on — a SKIPPED phase does not block
+grade A, but must be listed next to the grade.
 
 ### Step 6: Generate Report
 
@@ -191,7 +198,8 @@ Full report template, including summary table and grade scale: [references/repor
 round (the invoking prompt contains "report-only" or "re-validation"), stop after Step 6.
 Return the report path and overall grade, and do not invoke agent-rectifier — the rectifier
 already owns the fix-and-revalidate loop, and invoking it from here nests a second loop
-inside the first.
+inside the first. If you cannot tell whether the rectifier invoked you, do not hand off —
+end with the report.
 
 Otherwise, show the user the summary table and overall grade. Then:
 
@@ -208,7 +216,9 @@ Otherwise, show the user the summary table and overall grade. Then:
    lines worth the most tokens are usually the ones worth keeping:
 
    ```bash
-   bash "${CREWFORGE5_ROOT}/scripts/retention_gate.sh" <agent-file> /tmp/agent-proposed.md
+   P="$(mktemp "${TMPDIR:-/tmp}/agent-proposed.XXXXXX")"   # per-run proposal file — a
+   # fixed name races when init fans out one rectification per agent
+   bash "${CREWFORGE5_ROOT}/scripts/retention_gate.sh" <agent-file> "$P"
    ```
 
    It fails the proposal if any `never`/`always`/`must` line, backticked command, path,

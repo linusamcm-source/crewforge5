@@ -25,8 +25,18 @@ Two rules keep this from turning into drift:
   component, say so in the report and leave it — a suppressed check is a lie
   the next run inherits.
 
+The rectifier loop is bounded: grade A, a 5-round cap, zero-fix rounds, or
+no-progress rounds — the last three all **escalate** rather than spin. An
+escalated component is a legitimate outcome, not a retry: record it with
+`flow_state.sh init set rectify_escalated.<component> <report-path>`, stop
+working that component, and carry it forward.
+
 ## Gate
 
 `init_gate.sh rectify` — every component grades **A** on `grade.sh`'s scale:
 0 FAIL and at most 2 WARN. That is the same scale `skill-validator` grades on,
-so the stopping condition is the validator's, not this flow's.
+so the stopping condition is the validator's, not this flow's. A run holding an
+escalated component therefore ends here, gate FAIL, by design: report the
+escalation report path(s) to the user and stop — the flow's verdict is "needs
+human judgment on <components>", which is a real answer. Do not loop phases 4-5
+hoping for a different grade, and do not suppress the check.

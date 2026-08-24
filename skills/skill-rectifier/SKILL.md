@@ -1,7 +1,7 @@
 ---
 name: skill-rectifier
 model: sonnet
-description: Use when the user says "fix this skill", "rectify the validation failures", "apply the recommended fixes", "repair the skill issues", or "make this skill pass validation", or when a skill-validator report shows failures or warnings. Re-validates in a loop until grade A.
+description: Fixes a skill from a skill-validator report, re-validating in a bounded loop until grade A. Use on "fix this skill", "repair the skill issues", "make this skill pass validation"
 disable-model-invocation: true
 ---
 

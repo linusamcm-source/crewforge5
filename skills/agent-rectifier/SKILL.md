@@ -1,7 +1,7 @@
 ---
 name: agent-rectifier
 model: sonnet
-description: Use when an agent-validator report shows failures or warnings, or the user says "fix this agent", "repair the agent issues", "rectify the agent validation failures", "make this agent pass validation", or "apply the recommended agent fixes". Fixes and re-validates in a loop until grade A.
+description: Fixes an agent from an agent-validator report, re-validating in a bounded loop until grade A. Use on "fix this agent", "repair the agent issues", "make this agent pass validation"
 disable-model-invocation: true
 ---
 

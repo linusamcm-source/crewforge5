@@ -1,6 +1,6 @@
 ---
 name: context-hygiene
-description: Audit and refactor the Claude environment (CLAUDE.md, skills, agents, hooks, MCP config) to Claude 5-generation context-engineering rules. Use on "clean up my Claude config", "slim CLAUDE.md", "refactor my skills", "audit context load", or "rightsize the environment".
+description: Context-engineering passes over CLAUDE.md, rules, hooks and MCP config — /crewforge5:init drives it in phase 2. Use directly on "slim CLAUDE.md" or "apply context-engineering rules"
 disable-model-invocation: true
 ---
 
@@ -48,7 +48,9 @@ rigid rules. Every instruction file in the environment should be re-audited agai
 
 ## Refactor Workflow
 
-Run these passes over the target environment (usually `$HOME/.claude` and project `.claude/`):
+Run these passes over the target environment — the config root under audit: `INIT_TARGET`
+when `/crewforge5:init` drives this skill, otherwise whatever root the user named
+(typically their user config plus the project's `.claude/`):
 
 **Audit the principles, not surface patterns.** Judge each file against the principle, don't pattern-match for keywords. Read the context the way Claude receives it - what loads always, what loads on demand - and ask per shift: is this workspace still living in the THEN column? The smells below are illustrations, not definitions; something can smell fine and still break the principle, and vice versa.
 
@@ -61,8 +63,13 @@ Run these passes over the target environment (usually `$HOME/.claude` and projec
 
 
 ### Pass 1 — Measure
-- Run `claude doctor` to rightsize skills and CLAUDE.md files.
-- Inventory per-session token load: CLAUDE.md (+ every `@`-included file), always-on hooks output, MCP server instructions, skill descriptions. The frontmatter `description` of every skill loads every session — that list is part of the budget.
+- Measure mechanically, not by impression:
+  `python3 "${CREWFORGE5_ROOT}/skills/token-slim/scripts/baseline.py" --skills-dir <config-root>/skills --report`
+  prints per-skill description and body sizes. Record its output plus `wc -c` on
+  CLAUDE.md and each rules file — that is the before-picture Pass 5 compares against.
+- Inventory the rest of the per-session load the script cannot see: CLAUDE.md's
+  `@`-included files, always-on hooks output, MCP server instructions. The frontmatter
+  `description` of every skill loads every session — that list is part of the budget.
 
 ### Pass 2 — CLAUDE.md
 - Flag every line that is (a) inferable from the repo, (b) generic best practice, or (c) a rigid rule compensating for a weaker model. Propose deletion or judgment-level rewrite.
@@ -70,16 +77,21 @@ Run these passes over the target environment (usually `$HOME/.claude` and projec
 - **Never apply a trim without running the retention gate over it.** Write the proposal to a scratch file and check it against the original:
 
   ```bash
-  bash "${CREWFORGE5_ROOT}/scripts/retention_gate.sh" CLAUDE.md /tmp/claude-md-proposed.md
+  P="$(mktemp "${TMPDIR:-/tmp}/claude-md-proposed.XXXXXX")"   # per-run scratch — a fixed
+  # name collides when two hygiene passes run concurrently
+  bash "${CREWFORGE5_ROOT}/scripts/retention_gate.sh" CLAUDE.md "$P"
   ```
 
   A trim is measured by how much shorter it got, and the lines worth the most tokens are usually the ones worth keeping — an absolute directive nobody re-derives, the one exact command that works, a version somebody bled for. The gate fails the proposal if any `never`/`always`/`must` line, backticked command, path, version or quoted error string stopped appearing anywhere. It reads two files and returns a verdict; it cannot edit anything, so the decision to apply stays with the user.
 
 ### Pass 3 — Skills
-- Merge overlapping skills; delete dead ones.
-- Trim descriptions to trigger phrases plus one line of purpose — descriptions are the always-loaded surface, the body is the on-demand surface.
-- Split any long SKILL.md into entry point + reference files.
-- Remove usage examples that an expressive interface makes redundant.
+- Merge overlapping skills. Deleting a skill is gated the same way a CLAUDE.md trim is:
+  a skill is "dead" only when nothing references it, its triggers duplicate another
+  skill's, and the user confirms — propose the deletion with that evidence, never apply
+  it silently.
+- For the trim-and-split mechanic (descriptions to trigger phrases plus one line,
+  long SKILL.md into entry point + references, redundant usage examples out), drive
+  `token-slim` — it owns that procedure and its verification; do not restate it here.
 
 ### Pass 4 — Tools, hooks, MCP
 - Prefer deferred tool loading over always-loaded schemas.
@@ -88,7 +100,8 @@ Run these passes over the target environment (usually `$HOME/.claude` and projec
 
 ### Pass 5 — Verify
 - Confirm no trigger phrase, gotcha, or hard constraint was lost in trimming.
-- Re-run `claude doctor` and compare token load before/after.
+- Re-run the Pass 1 measurement commands and compute the before/after delta — the same
+  instruments both times, so the delta is a number, not an impression.
 - Report the delta and every deletion with its justification; anything uncertain gets flagged for the user rather than silently removed.
 
 ## What NOT to cut
