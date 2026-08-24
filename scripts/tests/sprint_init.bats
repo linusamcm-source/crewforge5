@@ -109,3 +109,14 @@ _rule_count() { find "$RULES" -maxdepth 1 -name '*.md' | wc -l | tr -d ' '; }
   run bash "$INIT" frobnicate --project "$REPO"
   [ "$status" -eq 2 ]
 }
+
+@test "install reports failure (exit 1) when a link cannot be created" {
+  # Regression: the install loop used to run in a pipeline subshell, so a
+  # failed ln could never reach the exit code and every install claimed success.
+  mkdir -p "$REPO/.claude"
+  # A rules PATH that is a dangling symlink: mkdir -p inside install succeeds
+  # nowhere and ln fails for every rule.
+  ln -s /nonexistent-crewforge5-target "$REPO/.claude/rules"
+  run bash "$INIT" install --project "$REPO" --yes
+  [ "$status" -eq 1 ]
+}

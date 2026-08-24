@@ -110,13 +110,14 @@ hidden_skills() {
   [ -z "$missing" ]
 }
 
-@test "README names exactly three slash commands and no fourth" {
+@test "README names the three workflow commands plus the rules-install utility, no others" {
   # A hidden skill is still reachable by slash, so it is easy to document one
-  # as if it were an entry point. The catalogue shape says otherwise.
+  # as if it were an entry point. The catalogue shape says otherwise. The one
+  # non-workflow slash surface is the rules installer shipped in commands/.
   local named
   named="$(grep -oE '/crewforge5:[a-z_-]+' "$README" | sed 's|/crewforge5:||' \
            | sort -u | tr '\n' ' ')"
-  [ "$named" = "execute init plan " ]
+  [ "$named" = "execute init plan rules-install " ]
 }
 
 # --- AC: CHANGELOG records before/after always-loaded totals ----------------
