@@ -85,17 +85,11 @@ bash scripts/validate_all.sh      # 32 components structurally clean
 There is no coverage, typecheck or build command for this stack; the manifest
 records those slots as empty rather than inventing them.
 
-### The aggregate runner is currently red — and it is not your change
+### The aggregate runner
 
-```bash
-bash skills/team-sprint/scripts/tests/run-all.sh   # exits 1
-```
+The historical step-3 red (a dead `$REF/config-reference.md` citation in
+`SKILL.md`) was fixed in 0.4.2; `lint_skill.sh` now exits 0.
 
-Steps 1 (shellcheck) and 2 (bats, 654/654) pass. Step 3 fails because
-`skills/team-sprint/SKILL.md:72` cites `$REF/config-reference.md`, which is not
-on disk and not committed. This predates the crew. Confirm it still reproduces
-on a clean checkout before spending time on it.
-
-`run-all.sh` step 3 also re-runs the **entire** bats suite nested inside
-`lint_skill.sh`, so the aggregate runner executes all 654 tests twice and takes
-minutes. Run `bats` directly while iterating.
+`run-all.sh` step 3 re-runs the **entire** bats suite nested inside
+`lint_skill.sh`, so the aggregate runner executes the full suite twice and
+takes minutes. Run `bats` directly while iterating.

@@ -69,7 +69,8 @@ bash skills/team-sprint/scripts/tests/run-all.sh   # exited 1 at commit 1fa2245
 Steps 1 (shellcheck) and 2 (bats, 654/654 at survey time) passed; step 3 failed because
 `SKILL.md` cited `$REF/config-reference.md`, a file that had been created and
 then removed during a slim while the citation stayed behind. `lint_skill.sh`
-check2 caught it.
+check2 caught it. (Fixed in 0.4.2 — the aggregate runner is green now; this
+paragraph records the survey-time observation.)
 
 **Worth knowing why it survived as long as it did:** the bats cases all pass and
 only `lint_skill.sh` fails, *after* them — so anyone counting `ok` / `not ok`

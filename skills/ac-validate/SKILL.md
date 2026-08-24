@@ -85,14 +85,16 @@ Detect how to start the dev server. Look for a `dev` script in `package.json`, a
 | Wails desktop | `wails dev` | `http://localhost:34115` |
 | Expo web | `npx expo start --web` | `http://localhost:8081` |
 
-If you can't infer it, ask the user.
+If you can't infer it, report `BLOCKED REASON=unknown-dev-command` with what you
+tried and stop — this skill runs forked, so there is no user to ask; the caller
+supplies the command on the next run.
 
 1. Check if dev server is already running on the expected port: `curl -s <url> > /dev/null 2>&1`
 2. If not running, start it as a background process; record the PID
 3. Wait for the app to be ready (poll `curl` every 2 seconds, timeout 60s)
 4. If it doesn't start, report the error and stop
 
-If the server was already running, don't kill it at the end. If the skill started it, offer to stop it when done.
+If the server was already running, don't kill it at the end. If the skill started it, stop it when done — a forked run has no user to leave it for, and a leaked dev server outlives the agent.
 
 ### Phase 4: Validate UI-Testable ACs
 
@@ -134,7 +136,7 @@ Use the report template in [`references/report-template.md`](references/report-t
 
 1. Save the report
 2. Print summary table to user
-3. If skill started the dev server, ask if user wants to stop it
+3. If the skill started the dev server, stop it (never a server it found already running)
 4. If FAILs exist, recommend a fix agent with the report path
 
 ## Screenshot Storage

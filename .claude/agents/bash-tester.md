@@ -45,12 +45,10 @@ bash scripts/name_check.sh                     # PASS
 bash scripts/validate_all.sh                   # PASS, 32 components
 ```
 
-`bash skills/team-sprint/scripts/tests/run-all.sh` currently exits 1 at step 3
-for a reason that predates this crew — `skills/team-sprint/SKILL.md:72` cites
-`$REF/config-reference.md`, which is absent from the tree. Steps 1 and 2 pass.
-Do not treat that red as caused by your change; confirm it still reproduces on a
-clean checkout before spending time on it. That script also re-runs the whole
-bats suite nested inside step 3, so prefer `bats` directly while iterating.
+`bash skills/team-sprint/scripts/tests/run-all.sh` is green — the historical
+step-3 red (a dead `$REF/config-reference.md` citation) was fixed in 0.4.2.
+The script re-runs the whole bats suite nested inside step 3, so prefer
+`bats` directly while iterating.
 
 There is no coverage instrument for this repo's own shell. `coverage_check.sh`
 measures target projects a sprint runs against, not this codebase.

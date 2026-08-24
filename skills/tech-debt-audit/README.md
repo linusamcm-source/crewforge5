@@ -4,27 +4,14 @@ Human-facing documentation for the `tech-debt-audit` Claude Code skill. The exec
 
 ## Installation
 
-Personal install (available across all your projects):
-
-```bash
-mkdir -p $HOME/.claude/skills/tech-debt-audit
-```
-
-```bash
-curl -o $HOME/.claude/skills/tech-debt-audit/SKILL.md https://raw.githubusercontent.com/ksimback/tech-debt-skill/main/SKILL.md
-```
-
-Or for a project-only install (just this repo):
-
-```bash
-mkdir -p .claude/skills/tech-debt-audit && cp /path/to/SKILL.md .claude/skills/tech-debt-audit/SKILL.md
-```
-
-Verify it loaded:
-
-```bash
-echo "/skills" | claude
-```
+This copy ships inside the **crewforge5** plugin and needs no separate install —
+`/crewforge5:plan` phase 4 (and `master-plan`) spawn it through
+`scripts/flow/subskill_resolve.sh`, which prefers the plugin tree. Do **not**
+copy it into `$HOME/.claude/skills/` or a project's `.claude/skills/`: this fork
+has diverged from the upstream (`ksimback/tech-debt-skill`) — plugin-relative
+script paths, `context: fork` spawning, `disable-model-invocation` — and a
+hand-installed copy is never preferred by the resolver, so it would sit unused
+or, worse, shadow nothing while looking installed.
 
 ## Usage
 
@@ -96,7 +83,7 @@ The system is a [...]
 
 ## Adaptation notes
 
-**Project-level overrides.** A `.claude/skills/tech-debt-audit/SKILL.md` in a specific repo overrides the global one. Useful when a project needs custom dimensions — e.g., an agent codebase might add "prompt injection surface area" or "tool-call cost per turn" as audit categories.
+**Project-level overrides.** Under crewforge5's resolver the **plugin copy wins** — a same-named skill in a repo's `.claude/skills/` is never preferred (see `scripts/flow/subskill_resolve.sh`). To customise dimensions for one project, edit the plugin copy or add project-specific categories via the audit's scoping argument, rather than shadow-copying the skill.
 
 **Mid-audit course correction.** After Phase 1 completes, you can interrupt with: *"Before Phase 2, tell me what surprised you in Phase 1 and what you want to investigate that isn't in the dimensions list."* The best findings often come from things the prompt didn't anticipate. Worth doing on first run for any new codebase.
 
