@@ -10,7 +10,25 @@ The plan must already be adversarial-clean. Reviewing it is `crewforge5:plan`'s 
 ## Path aliases
 
 - `$FLOW` — `${CREWFORGE5_ROOT}/scripts/flow/`, the shared driver: `flow_next.sh`, `flow_gate.sh`, `flow_state.sh`, `subskill_resolve.sh`.
-- `$SKILL` — this skill's install dir, holding `phases.json` and `scripts/phase_gate.sh`.
+- `$EXEC` — this skill's install dir (`${CREWFORGE5_ROOT}/skills/execute`), holding `phases.json` and `scripts/phase_gate.sh`.
+
+Phases 0–7 load team-sprint's phase docs, and those docs speak team-sprint's own
+aliases. Resolve them once — `TS="$(dirname "$(bash $FLOW/subskill_resolve.sh team-sprint)")"` — and expand every occurrence as team-sprint's SKILL.md defines them:
+
+- `$SKILL` — `$TS` (the team-sprint install dir; **not** this skill's dir — the
+  workflow files at `$SKILL/references/workflows/*.workflow.js` live there)
+- `$SCRIPTS` — `$TS/scripts/`
+- `$REF` — `$TS/references/`
+- `$PHASES` — `$TS/references/phases/`
+- `$ART` — per-sprint artifact dir: `bash "$SCRIPTS/state.sh" art-dir <plan_path>`
+
+**Two state layers, by design.** This flow's own state — phase verdicts, the plan
+path, intake answers — lives at `.crewforge5/execute/state.json` via
+`$FLOW/flow_state.sh`. The sprint's inner state — stories, worktree, crew,
+iteration counters — lives at `.team-sprint/sprints/sprint-<slug>/state.json` via
+`$SCRIPTS/state.sh`, exactly as the phase docs say. They are wrapper and engine,
+not rivals: gate verdicts are never written to the sprint state, and sprint
+internals are never written to the flow state.
 
 ## Intake gate — ask before Phase 0
 

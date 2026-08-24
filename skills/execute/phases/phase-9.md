@@ -8,13 +8,13 @@ Phase 8 recorded `PASS` (or skipped). The run's learnings are already in the led
 
 ## Steps
 
-1. **Read the ledger.** `bash "$(dirname "$(bash $ROOT/scripts/flow/subskill_resolve.sh self-improve)")/scripts/ledger.sh" count` — zero entries means there is nothing to distil. Say so and stop; an empty ledger is a clean run, not an invitation to invent improvements.
+1. **Read the ledger.** `bash "$(dirname "$(bash $FLOW/subskill_resolve.sh self-improve)")/scripts/ledger.sh" count` — zero entries means there is nothing to distil. Say so and stop; an empty ledger is a clean run, not an invitation to invent improvements.
 2. **Load `self-improve`.** Resolve it (`--load-mode` reports `MODE=inline`) and follow its Run section: group entries by target, one agent per target, each edit net-neutral or smaller.
 3. **Pay for every lesson.** `scripts/ceiling.sh check` is the gate each agent has to pass. An agent that cannot land its lesson inside the target's byte budget returns the lesson unapplied and says so — that is a real answer, and the alternative is a file that grew.
 
 ## Gate
 
-`bash $ROOT/scripts/flow/flow_gate.sh execute 9`, which runs `scripts/phase_gate.sh 9`:
+`bash $FLOW/flow_gate.sh execute 9`, which runs `scripts/phase_gate.sh 9`:
 
 - Ledger empty → `SKIP REASON=ledger-empty`, exit 0. The phase passes and the flow completes.
 - Ledger non-empty → `ceiling.sh check` decides: within budget `PASS`, over it `FAIL REASON=ceiling-breach`, and the offending target goes back for tightening.

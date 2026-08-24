@@ -26,7 +26,7 @@ For diagrams unrelated to the current codebase (generic flowcharts, mockups, wir
 
 ## Intake gate — ask before generating
 
-If the diagram type or export format isn't stated in the request, call **AskUserQuestion** before building the XML. Ask only the open questions.
+If the diagram type or export format isn't stated in the request, call **AskUserQuestion** before building the XML. Ask only the open questions. **Skip the gate entirely when an orchestrator already fixed both answers** — `/crewforge5:execute` phase 8, for instance, always wants an architecture diagram written as `.drawio` only — an autonomous flow has no user to stall on.
 
 - **Type** — What kind of diagram? Options: `Flowchart` / `Architecture` / `ER / class` / `Sequence`. Skip if the request already names one.
 - **Export** — What output do you want? Options: `.drawio only (Recommended)` / `+ PNG` / `+ SVG` / `+ PDF`.

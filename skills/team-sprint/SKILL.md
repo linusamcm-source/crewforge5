@@ -8,7 +8,10 @@ You are running a team sprint: a structured, multi-agent pipeline that takes a m
 
 ## When to use
 
-Trigger on "run a team sprint", "kick off a sprint", "spawn a team to implement this plan", "/team-sprint <plan>", "execute this plan with an agent fleet", or "ship this story with TDD + reviews". Also fires on "agent team this", "team this PR", "drive this plan to merge", "sprint-execute", or any explicit /team-sprint invocation. Default to triggering whenever a planning artifact (story, spec, ADR, fix plan) is ready for implementation and the user wants the full review-test-merge pipeline rather than a single coding agent.
+This skill is hidden from the catalogue (`disable-model-invocation: true`), so it never
+triggers on its own. It runs two ways: explicitly, as `/team-sprint <plan>`, or wrapped —
+`/crewforge5:execute` drives phases 0–7 from these very phase docs and is the productised
+entry point for "run a sprint" / "execute this plan".
 
 ## Intake gate — ask before running
 
@@ -48,7 +51,7 @@ worktree_strategy: per-node                     # per-node (graph: worktree+bran
 dependency_source: hybrid                        # hybrid (declared `### Depends On:` + inferred `### Touches:` overlap) | declared | inferred
 infer_from_touches: true                         # whether `### Touches:` glob overlap contributes inferred edges
 max_parallel_agents: 4                           # cap on concurrent node worktrees (schedule.sh `next` honours it)
-adversarial_iterations: 3                       # soft cap on Phase 2 graph-review rounds (loop until zero findings)
+adversarial_iterations: 3                       # hard cap on Phase 2 graph-review rounds — at the cap, phase-2 prompts the user and stops looping
 adversarial_model: inherit                      # model for the Phase 2 graph-review spawn; inherit → session default
 review_fix_iterations: 3                        # max review→fix→re-review rounds (Phase 5 per story; Phase 7 fleet)
 max_wall_clock_minutes: 240                     # soft budget; sprint-watchdog WARNs, user decides
@@ -260,7 +263,8 @@ Defects a sprint surfaces about the toolchain itself (not about the code under t
 findings, and prose in a transcript loses them. `$REF/signal-ledger.md` defines the SQLite schema
 they persist to — categories, severity, the `dedupe_key` that counts recurrence instead of
 re-filing it, and the sweep loop that drains the ledger until two consecutive sweeps find nothing
-new. `$REF/signal-audit-brief.md` is the brief handed to an auditing agent to produce those
+new (capped at five sweeps — a ledger still producing new signals at sweep 5 goes to the user,
+not around again). `$REF/signal-audit-brief.md` is the brief handed to an auditing agent to produce those
 signals; its seven sweeps are derived from real defects, and sweep 6 (answer honesty — does a
 tool ever report "found nothing" when something exists) is the one that catches what fixtures
 cannot. Emit signals at Phase 7 alongside the fleet report; never let an agent repair a signal it
@@ -281,8 +285,8 @@ If you need the ADR index or design rationale behind this skill: load `$REF/arch
 
 Support files not cited above, so the bundle is self-describing. None of these load at runtime unless a phase doc says so.
 
-- **Scripts** (`scripts/`, called from the phase docs): `build_graph.sh`, `detect_language.sh`, `detect_commands.sh`, `recon_providers.sh` (provider adapters behind `recon.sh`), `findings_gate.sh`, `per_story_diff.sh`, `preflight_subskills.sh`, `run_subskill_hooks.sh`, `repomix_refresh.sh`, `validate_plan_path.sh`, `crew_check.sh`, `lint_skill.sh` (structural lint over this skill itself). Machine schemas live under `scripts/schemas/` — `crews.schema.json` (crew-manifest shape) beside `state.schema.json` (see Resume contract).
-- **Test suite** (`scripts/tests/`; entry point `run-all.sh` — shellcheck, then bats, then the lint; harness `lib/bats-fallback.sh` + `lib/workflow-harness.mjs` + `schedule_scenario.sh`; `README.md`; placeholder `fixtures/.gitkeep`): `art_dir.bats`, `bats_fallback_skip.bats`, `build_commit_msg.bats`, `build_graph.bats`, `coverage_check.bats`, `coverage_key_resolution.bats`, `crew_check.bats`, `detect_commands.bats`, `detect_language.bats`, `findings_gate.bats`, `graphify_ensure.bats`, `lib.bats`, `lint_skill.bats`, `parse_stories.bats`, `per_story_diff.bats`, `plan_contract.bats`, `preflight_subskills.bats`, `recon.bats`, `recon_config.bats`, `recon_distribution.bats`, `recon_guard.bats`, `recon_log.bats`, `recon_providers.bats`, `repomix_refresh.bats`, `resolve_agent_type.bats`, `run_gate.bats`, `run_subskill_hooks.bats`, `schedule.bats`, `schedule_contract.bats`, `state.bats`, `state_tmp_leak.bats`, `validate_plan_path.bats`, `wa3_demotion.bats`, `workflow_doc_drift.bats`, `workflow_smoke.bats`.
+- **Scripts** (`scripts/`, called from the phase docs): `build_graph.sh`, `detect_language.sh`, `detect_commands.sh`, `recon_providers.sh` (provider adapters behind `recon.sh`), `findings_gate.sh`, `per_story_diff.sh`, `preflight_subskills.sh`, `run_subskill_hooks.sh`, `repomix_refresh.sh`, `validate_plan_path.sh`, `crew_check.sh`, `rule_emit.sh` (crew-factory's rule-file emitter), `lint_skill.sh` (structural lint over this skill itself). Machine schemas live under `scripts/schemas/` — `crews.schema.json` (crew-manifest shape) beside `state.schema.json` (see Resume contract).
+- **Test suite** (`scripts/tests/`; entry point `run-all.sh` — shellcheck, then bats, then the lint; harness `lib/bats-fallback.sh` + `lib/workflow-harness.mjs` + `schedule_scenario.sh`; `README.md`): `art_dir.bats`, `bats_fallback_skip.bats`, `build_commit_msg.bats`, `build_graph.bats`, `coverage_check.bats`, `coverage_key_resolution.bats`, `crew_check.bats`, `detect_commands.bats`, `detect_language.bats`, `findings_gate.bats`, `graphify_ensure.bats`, `lib.bats`, `lint_skill.bats`, `parse_stories.bats`, `per_story_diff.bats`, `plan_contract.bats`, `preflight_subskills.bats`, `recon.bats`, `recon_config.bats`, `recon_distribution.bats`, `recon_guard.bats`, `recon_log.bats`, `recon_providers.bats`, `repomix_refresh.bats`, `resolve_agent_type.bats`, `run_gate.bats`, `run_subskill_hooks.bats`, `schedule.bats`, `schedule_contract.bats`, `state.bats`, `state_tmp_leak.bats`, `validate_plan_path.bats`, `wa3_demotion.bats`, `workflow_doc_drift.bats`, `workflow_smoke.bats`.
 - **Test fixtures** (`scripts/fixtures/`): `golden-template-1.md`, `happy.plan-final.md`, `happy.stories.json`, `single.plan-final.md`, `wide.stories.json`; recon fixtures under `scripts/fixtures/recon/`: `codegraph-affected.json`, `codegraph-affected-empty.json`, `codegraph-callees.json`, `codegraph-callers.json`, `codegraph-callers-empty.json`, `codegraph-explore.txt`, `codegraph-impact.json`, `codegraph-node.txt`, `codegraph-not-found.txt`, `codegraph-status-initialized.txt`, `codegraph-status-not-initialized.txt`, `codegraph-unknown-shape.json`, `gitignore-conventional`, `gitignore-no-trailing-newline`, `gitignore-whitelist`, `graphify-explain.txt`, `graphify-explain-defines-only.txt`, `graphify-explain-require-jq.txt`, `graphify-graph.json`, `graphify-python-stale`, `graphify-query.txt`, `pack-no-anchored-tags.xml`, `pack-phantom-tag.xml`, `pack-truncated.xml`, `pack-two-files.xml`, `rtk-grep-hits.txt`, `rtk-grep-hits-no-trailer.txt`, `rtk-grep-hits-phantom.txt`.
 - **Data**: `assets/data/vocab.json` — single source of truth for the severity/role/violation vocabularies (sprint-watchdog's hook-enforcement doc reads it too; never restate its lists inline).
 - **Phase doc**: `phase-execute.md` under `$PHASES/` — the graph-mode node-executor brief.

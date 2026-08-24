@@ -71,7 +71,7 @@ Phase 0 step 10.3 probes every entry in the merged `state.json.subskill_hooks` l
 bash "$SCRIPTS/preflight_subskills.sh" --probe-all "$plan_path"
 ```
 
-- **Default probe** is a pure-shell filesystem check: `test -f "$HOME/.claude/skills/<skill-name>/SKILL.md"`. Pure shell deliberately — bash scripts cannot invoke Claude's Agent/Skill tool, and the filesystem probe is portable, fast, and deterministic.
+- **Default probe** is a pure-shell filesystem check over the same three roots `subskill_resolve.sh` searches — plugin tree, project `.claude/skills/`, then `$HOME/.claude/skills/` (probing `$HOME` alone declared every plugin-shipped sub-skill absent; `preflight_subskills.sh` fixed that). Pure shell deliberately — bash scripts cannot invoke Claude's Agent/Skill tool, and the filesystem probe is portable, fast, and deterministic.
 - **`--probe-only <skill-name>`** — single-skill probe used for graceful-degrade flows (e.g. `integration_diagram: auto`). Exit 0 if present, exit 1 if absent.
 - **`--probe-fn <path-to-script>`** — injection point used by bats fixtures to supply canned verdicts without touching the filesystem. The script is invoked as `<probe-fn> <skill-name>`; exit 0 = present, non-zero = absent.
 

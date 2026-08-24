@@ -97,3 +97,34 @@ PY
   run cat "$TMP/err2"
   refute_output "WARN"
 }
+
+@test "regression: reset-orphans fails a node at TS_MAX_NODE_ATTEMPTS and cascade-blocks dependents" {
+  run env TS_WORKTREE_NAME=sprint-demo bash "$SCRIPTS/build_graph.sh" "$FIX/happy.stories.json" "$TMP/g.json"
+  assert_success
+  # First ready node: claim it, then orphan-reset it repeatedly.
+  first="$(bash "$SCRIPTS/schedule.sh" frontier "$TMP/g.json" | head -1)"
+  [ -n "$first" ]
+  run env TS_WORKTREE_PATH=/wt/repo-sprint-demo TS_MAX_NODE_ATTEMPTS=2 bash -c '
+    set -e
+    g="$1"; s="$2"; id="$3"
+    bash "$s/schedule.sh" claim "$g" "$id" >/dev/null
+    bash "$s/schedule.sh" reset-orphans "$g"      # attempts=1 -> pending again
+    bash "$s/schedule.sh" claim "$g" "$id" >/dev/null
+    bash "$s/schedule.sh" reset-orphans "$g"      # attempts=2 -> failed
+  ' _ "$TMP/g.json" "$SCRIPTS" "$first"
+  assert_success
+  echo "$output" | grep -q "failed 1 exhausted node(s): $first"
+  run python3 - "$TMP/g.json" "$first" <<'PY'
+import json, sys
+g = json.load(open(sys.argv[1])); nid = sys.argv[2]
+by = {n["id"]: n for n in g["nodes"]}
+n = by[nid]
+assert n["status"] == "failed", n
+assert n["attempts"] == 2, n
+assert "TS_MAX_NODE_ATTEMPTS" in n.get("failed_reason", ""), n
+deps = [m for m in g["nodes"] if nid in (m.get("deps") or [])]
+for m in deps:
+    assert m["status"] == "blocked" and m["blocked_by"] == nid, m
+PY
+  assert_success
+}

@@ -10,17 +10,17 @@ Phase 7 recorded `PASS` — the sprint is merged and the worktree is torn down, 
 
 ## Steps
 
-1. **Resolve the diagram skill.** `bash $ROOT/scripts/flow/subskill_resolve.sh drawio` — `--load-mode` reports `MODE=inline`, so read the body rather than spawning an agent. Nothing resolves → the gate records `SKIP REASON=no-diagram-tool` when the phase is optional, and fails when it is required.
+1. **Resolve the diagram skill.** `bash $FLOW/subskill_resolve.sh drawio` — `--load-mode` reports `MODE=inline`, so read the body rather than spawning an agent. Nothing resolves → the gate records `SKIP REASON=no-diagram-tool` when the phase is optional, and fails when it is required.
 2. **Ground the diagram in merged code.** `drawio`'s own "Diagramming a codebase" rule holds here and is the reason this phase exists at Phase 8 rather than Phase 0: derive every box and arrow from the sprint diff and the files it touched (`git diff --stat <base>..HEAD`, then the resolver's `use-repo-code` for anything the diff only references). Never from memory, never from the plan's prose.
 3. **Write the diagram** into the flow's artifact dir — `.crewforge5/execute/integration.drawio` — and record where it went:
    ```bash
-   bash $ROOT/scripts/flow/flow_state.sh execute set diagram_path .crewforge5/execute/integration.drawio
+   bash $FLOW/flow_state.sh execute set diagram_path .crewforge5/execute/integration.drawio
    ```
    The path is recorded relative to the repo root, which is where the gate runs.
 
 ## Gate
 
-`bash $ROOT/scripts/flow/flow_gate.sh execute 8`, which runs `scripts/phase_gate.sh 8`:
+`bash $FLOW/flow_gate.sh execute 8`, which runs `scripts/phase_gate.sh 8`:
 
 | Situation | `required: false` | `required: true` |
 | --- | --- | --- |
