@@ -13,7 +13,10 @@ check it.
    ```
 
    The resolver treats `-` and `_` as interchangeable, so `master-plan` reaches
-   the same file.
+   the same file. **Take its Phase 2 (impact map) only.** The rest of that body
+   is a standalone pipeline whose other phases are this flow's phases 4, 6 and 8
+   under different names — re-running them from here re-enters phases this flow
+   has already gated or will gate.
 2. Intersect the goal's touched surface (phase 1) with the audit's findings
    (phase 4). A finding outside the touched surface is not this plan's problem.
 3. Write `docs/plans/GOAL_IMPACT.md` with a disposition table — one row per

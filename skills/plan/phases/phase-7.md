@@ -16,8 +16,13 @@ claim about work done, not a formality.
    `<!-- FINDING <id> (<severity>): <recommendation> -->` marker → fold each
    marker into revised prose and delete it → re-review. The loop converges only
    because the markers are deleted; a plan that accumulates them ends up more
-   comment than content.
-3. When a round produces no new findings, stamp the plan on its own line:
+   comment than content. The round-exit decision is the reviewer's own
+   `round-gate.sh <findings-file> <round> 6` — hard cap 6 rounds; a
+   `verdict=escalate` means CRITICAL/HIGH findings survived the cap, and the
+   choice (extend, fix manually, or `status=user-override`) is the user's, not
+   another round's.
+3. When the gate says `done-clean` (or `stop-early` with the LOW/NIT polish
+   folded), stamp the plan on its own line:
 
    ```markdown
    <!-- adversarial-review: status=clean rounds=<N> date=<YYYY-MM-DD> reviewer=crewforge5:plan -->

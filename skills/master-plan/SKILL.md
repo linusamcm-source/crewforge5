@@ -15,6 +15,12 @@ Use when the user invokes /master_plan, asks for a "master plan", or wants a ful
 
 The goal arrives as the skill's arguments. If no goal was passed, stop and ask what to plan before doing anything.
 
+**When `/crewforge5:plan` phase 5 loads this body, run Phase 2 only.** That flow
+already owns the audit (its phase 4), the plan draft (phase 6) and the coverage
+check (phase 8) — this skill's Phases 1, 3 and 4 are those phases under other
+names, and re-running them from inside phase 5 re-enters a flow that is already
+gated.
+
 Finding IDs are the currency throughout: they flow audit → impact map → stories → coverage table without being re-described in prose, so nothing drifts between hops.
 
 Success criteria for the whole run: (1) `TECH_DEBT_AUDIT.md` exists and is current, (2) `docs/plans/GOAL_IMPACT.md` maps the goal against graph + audit findings with a disposition for every intersecting finding, (3) team-sprint-planner has produced a plan file with testable ACs, per-story DoD, and a Depends-On/Touches graph, (4) the plan's debt-coverage table accounts for every intersecting finding ID exactly once — verified mechanically in Phase 4.
@@ -51,9 +57,11 @@ Load team-sprint-planner — hidden from the catalogue, so resolve it: `bash "${
 Run the bundled coverage check — a mechanical diff, not a judgment call:
 
 ```bash
-bash <skill-dir>/scripts/check_coverage.sh docs/plans/GOAL_IMPACT.md <plan-file>
+bash "${CREWFORGE5_ROOT}/skills/master-plan/scripts/check_coverage.sh" docs/plans/GOAL_IMPACT.md <plan-file>
 ```
 
 It extracts finding IDs from GOAL_IMPACT.md's disposition table and the plan's debt-coverage table, then reports any ID missing from the plan or listed more than once. Fix the plan until the script reports CLEAN.
 
-Then report the plan file path and a 5-line summary. Offer to launch /team-sprint with the plan.
+Then report the plan file path and a 5-line summary. Name the next command —
+`/crewforge5:execute` — and stop; running it is the user's call, and the plan
+must carry an adversarial-review stamp before execute will accept it.
