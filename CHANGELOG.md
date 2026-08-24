@@ -1,5 +1,78 @@
 # Changelog
 
+## 0.4.3 — 2026-08-24
+
+Full dependency-graph audit and optimisation pass: every cycle bounded, dead
+files removed, duplicated instructions consolidated to one home.
+
+### Fixed
+
+- `/crewforge5:execute` now defines every path alias the wrapped team-sprint
+  phase docs use (`$SKILL`/`$SCRIPTS`/`$REF`/`$PHASES`/`$ART`) — previously
+  192 alias uses resolved to nothing or to the wrong tree, making phase 0's
+  first step unrunnable and the workflow files unreachable on the plugin's
+  main path. Execute's two state layers (flow vs sprint) are now documented
+  as wrapper and engine. Execute phases 8–9 used an undefined `$ROOT` alias;
+  now `$FLOW`.
+- `skill-validator`'s ledger plumbing was broken as written: an unresolved
+  `<skill-validator-dir>` placeholder and shell-local `$LEDGER` that died
+  between Bash calls guaranteed `grade=F`. Both validators now mint a named
+  ledger file and carry it between steps explicitly.
+- Every unbounded loop got a termination condition: `schedule.sh` fails a node
+  at `TS_MAX_NODE_ATTEMPTS` (default 3) instead of reclaiming it forever (with
+  a regression test); `round-gate.sh` takes the round number and emits
+  `verdict=escalate` at the cap; the watchdog's reopen loop is capped at two
+  per task; team-feature's verify loop at 4 rounds and one re-diverge per
+  decision; the signal-ledger sweep at 5 sweeps.
+- The rectifier fix catalogues prescribed description padding and `<example>`
+  blocks that the validators flag and `budget_check.sh` fails — a built-in
+  oscillation. They now prescribe exactly what the validators accept, and the
+  validator/rectifier pairs never rectify themselves.
+- `/crewforge5:init` phase 4 now spawns validators in report-only mode (its
+  own invariant said rectifiers must not run there), and phase 5 documents
+  escalation as a legitimate terminal verdict.
+- `/crewforge5:plan` no longer re-enters its own phases through sub-skill
+  bodies: master-plan and team-sprint-planner carry driven-mode guards, the
+  review stamp has one owner (`reviewer=crewforge5:plan`), and the two
+  contradictory review-cap docs now defer to the planner's hard cap.
+- `sprint_init.sh install` reported success even when every link failed (the
+  loop ran in a pipeline subshell); it now exits 1 on any failed link, with a
+  regression test.
+- The sprint-watchdog agent dropped its dead Gate 4 file
+  (`agent-prompts.md`), the retired SendMessage-required doctrine, and the
+  leftovers from a personal project (`just qg`, Wails, role names); the guard
+  hook resolves the shipped vocab via `CLAUDE_PLUGIN_ROOT` instead of
+  `$HOME/.claude`.
+- Four files cited a `repomix-prewarm.sh` that has never existed; they now
+  name the real regenerator (`use-repo-code`'s `pack.sh`). The duplicated
+  "codebase intelligence" block in three of them is now a pointer to its one
+  home in `use-repo-code/references/`.
+- `claude-config` was written against a different repo (justfile recipes,
+  `agents-parked/`, `hooks/tests/` — none exist here); it now names this
+  plugin's real gates. `tech-debt-audit`'s README no longer instructs a
+  shadow install that the resolver would ignore.
+
+### Removed
+
+- `team-sprint-pm-lense` and `team-sprint-sa-lense` (Azure-consulting
+  deliverables with no workflow, no references, and a misleading prefix),
+  `ui-polish-loop` (both its drive paths require MCP servers the plugin does
+  not ship or declare), `agents/scrum-master.md` (orphaned, describing a
+  phase structure that no longer exists), plus dead files:
+  `adversarial-review/references/self-audit.md` (orphaned duplicate),
+  `team-sprint-planner/references/plans/planner-contract-sync-1.md` and
+  `evals/evals.json` (stale, foreign-repo), `graphify/.graphify_version`
+  (read by nothing), a placeholder `.gitkeep`.
+
+### Changed
+
+- **Public interface:** the `/crewforge5:sprint-init` command is now
+  `/crewforge5:rules-install` — it installs rule files and has nothing to do
+  with sprints, and the old name collided with `/crewforge5:init`. The
+  underlying `scripts/sprint_init.sh` and its CLI are unchanged.
+- Always-loaded context after the removals: **~495 tok** across **11 entries**
+  (was ~543 tok across 12), headroom 105 tok of 600.
+
 ## 0.4.2 — 2026-08-15
 
 ### Fixed

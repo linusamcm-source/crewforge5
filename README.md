@@ -71,9 +71,6 @@ in the catalogue, so a flow reaches one through
 | `playwright-cli` | — | same, for frontend AC verification |
 | `plugin-forge` | — | nothing drives it; reachable by name only |
 | `graphify` | `/crewforge5:plan`, `/crewforge5:execute` | plan phase 1 and execute phase 0 — the knowledge-graph half of recon |
-| `ui-polish-loop` | — | crew-assignable, for the interactive UI pass on a running app |
-| `team-sprint-pm-lense` | — | crew-assignable, the project-management assurance lens |
-| `team-sprint-sa-lense` | — | crew-assignable, the solution-architecture rescue lens |
 
 ## What it costs you
 
@@ -84,10 +81,10 @@ them. That is the plugin's rent, and it is measured rather than asserted:
 bash "$CREWFORGE5_ROOT/scripts/budget_check.sh" --verbose
 ```
 
-The bundle is **~543 tokens** always-loaded across 12 catalogue entries, against
+The bundle is **~495 tokens** always-loaded across 11 catalogue entries, against
 a budget of **600** — one description's worth of headroom, so rewording a
 trigger phrase does not turn the build red, while a whole new listed surface
-still cannot slip in unpriced. The other **28 skills** carry
+still cannot slip in unpriced. The other **25 skills** carry
 `disable-model-invocation: true`, so they cost nothing until a flow resolves one
 or you call it by name. That discipline is the only reason a bundle this size is
 affordable, and `budget_check.sh` fails the build over the budget rather than
@@ -183,6 +180,11 @@ bash "$CREWFORGE5_ROOT/scripts/sprint_init.sh" report      # what exists, what c
 bash "$CREWFORGE5_ROOT/scripts/sprint_init.sh" install     # symlink into .claude/rules/
 bash "$CREWFORGE5_ROOT/scripts/sprint_init.sh" uninstall   # remove the links
 ```
+
+`/crewforge5:rules-install` is the same installer as a slash command — it runs
+`report` first and refuses to resolve a conflict by overwriting. It is a
+utility, not a fourth workflow: the three commands above remain the whole
+planning-and-execution surface.
 
 `report` reads your existing `CLAUDE.md` and rules and names contradictions
 before anything is linked — a rule of yours saying "stage with `git add -A`"
