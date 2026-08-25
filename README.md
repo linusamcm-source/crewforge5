@@ -98,7 +98,7 @@ bash "$CREWFORGE5_ROOT/scripts/budget_check.sh" --verbose
 ```
 
 The bundle is **~495 tokens** always-loaded across 11 catalogue entries, against
-a budget of **600** — one description's worth of headroom, so rewording a
+a budget of **550** — one description's worth of headroom, so rewording a
 trigger phrase does not turn the build red, while a whole new listed surface
 still cannot slip in unpriced. The other **25 skills** carry
 `disable-model-invocation: true`, so they cost nothing until a flow resolves one

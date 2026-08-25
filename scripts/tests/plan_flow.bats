@@ -442,10 +442,11 @@ MD
 
 # --- capability checklist (DoD: one line per absorbed skill) -----------------
 
-# The DoD names seven skills `plan` has to absorb. A table row is only a claim;
-# what makes it a checklist is that the name in it still resolves to a body the
-# flow can load — which is exactly what Story 6's hiding pass could break.
-@test "every skill the capability table names resolves, and all seven absorbed ones are listed" {
+# The DoD names the skills `plan` has to absorb — six since the dead
+# `team-feature` row was dropped. A table row is only a claim; what makes it a
+# checklist is that the name in it still resolves to a body the flow can load —
+# which is exactly what Story 6's hiding pass could break.
+@test "every skill the capability table names resolves, and all six absorbed ones are listed" {
   [ -f "$PLAN_DIR/SKILL.md" ]
   local named
   named="$(sed -n 's/^| [^|]* | `\([a-z_-]*\)` | .*/\1/p' "$PLAN_DIR/SKILL.md")"
@@ -457,8 +458,8 @@ MD
       || { printf 'capability table names an unresolvable skill: %s\n' "$s" >&2; return 1; }
   done
 
-  for s in grill-me adhd master_plan tech-debt-audit team-sprint-planner \
-           team-feature adversarial-review; do
+  for s in grill-me adhd master-plan tech-debt-audit team-sprint-planner \
+           adversarial-review; do
     printf '%s\n' "$named" | grep -qx "$s" \
       || { printf 'capability table is missing: %s\n' "$s" >&2; return 1; }
   done
