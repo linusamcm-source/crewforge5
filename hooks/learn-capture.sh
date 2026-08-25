@@ -21,6 +21,7 @@ exec 2>/dev/null
 ROOT="${CLAUDE_PLUGIN_ROOT:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}}"
 LEDGER="$ROOT/skills/self-improve/scripts/ledger.sh"
 [ -x "$LEDGER" ] || exit 0
+command -v python3 >/dev/null 2>&1 || exit 0
 
 payload="$(cat)" || exit 0
 [ -n "$payload" ] || exit 0

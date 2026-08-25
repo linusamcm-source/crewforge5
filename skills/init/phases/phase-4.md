@@ -25,7 +25,10 @@ first when they are the same tree and changes nothing when they differ.
 Then the behavioural half, one component at a time. Both validators declare
 `context: fork`, so the resolver answers `MODE=agent AGENT=general-purpose` for
 them — spawn each through the `Agent` tool with the resolved body as the prompt
-and never read it inline:
+and never read it inline. **Every spawn prompt must include the word
+"report-only"**: the validators hand off to their rectifiers by default, and this
+phase's whole point is that nothing gets repaired before phase 5 — the phrase is
+the validators' documented switch for suppressing the hand-off.
 
 ```bash
 RESOLVE="${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"

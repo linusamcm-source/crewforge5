@@ -25,6 +25,16 @@ Use this template:
 
 **Overall Grade:** {grade= value from grade.sh}
 
+```
+{verbatim grade.sh output: grade= fails= warns= skipped=}
+```
+
+<details><summary>Findings ledger</summary>
+
+{verbatim ledger contents}
+
+</details>
+
 The scale lives in one place only — the header of `scripts/grade.sh`, which is the code that
 applies it. Do not restate it here. A prose copy of this scale drifted a full grade away from
 the executable one and survived, because a reader checks the nearest copy and the nearest copy

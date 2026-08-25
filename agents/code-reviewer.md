@@ -28,15 +28,11 @@ Scale the review approach to the size of the change:
 - **20 to 100 files**: read the diff first (`git diff HEAD~1`), then identify and deep-read high-risk files — auth, payment, config, migration, and files touching shared utilities
 - **Over 100 files**: ask the user to narrow the scope to a specific module or risk area before proceeding
 
-## Codebase intelligence: repomix + graphify + claude-mem
+## Codebase intelligence
 
-Ground every finding in the source that fits the question — the repomix pack is the default recon target; three complementary tools:
+Primary recon is the repomix pack via `use-repo-code` — hidden from the catalogue, so resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code` answers `MODE=agent`; spawn it through the `Agent` tool with the type its frontmatter names, never inline (it forks precisely to keep the pack out of this window). The pack is `.repomix-output.xml`, regenerated on demand by `bash ${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/pack.sh`.
 
-- **repomix pack (default)**, reached by resolving `use-repo-code` — it is hidden from the catalogue, so the `Skill` tool cannot get to it. `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code` answers `MODE=agent`: spawn it through the `Agent` tool with the type its frontmatter names, never read its body inline, because it forks precisely to keep a whole pack out of this window. The repo is packed at session start (`repomix-prewarm.sh` → `.repomix-output.xml`). Search it with bash `grep`/`rg` (the RTK `PreToolUse` hook rewrites these to `rtk grep`/`rtk rg`, so output is token-filtered and grouped by file) instead of per-file `Read`. This is your primary recon: existence checks, symbol/caller text search, file-list verification, "does this already exist". `<file path="...">` tags are the jump target; use live `Read` only for the exact lines you will edit or debug.
-- **`graphify`** (optional, on-demand — only when the question is *relational*, not textual; needs `graphify-out/graph.json`): repomix grep finds occurrences, graphify answers reachability/coupling that text can't. Before flagging duplication, dead code, or a risky change, `graphify query "what calls <symbol>"` shows the real caller set / blast radius and whether a canonical helper already exists rather than the one being added. Reach for it only when you need the relationship — not for routine lookups. Prefer the CLI (`graphify query "what calls X"`, `graphify path "A" "B"`, `graphify explain "N"`) over grepping `graph.json` raw. Fail-soft: if its tools aren't loaded, skip it — repomix + the live tree carry the review.
-- **`claude-mem`** (optional): decisions, conventions, and known issues recorded across past sessions. Recall via the `mem-search` skill or `memory_search`/`observation_search` → `get_observations`; record a durable new finding with `observation_add`/`memory_add` (≤500-token summary).
-
-Evidence rules: when these sources and the live tree disagree, the **live tree wins**; freshness-check any snapshot before citing it; `claude-mem` grounds *intent/history* claims, never *current-code* claims — verify those with repomix grep. `graphify` and `claude-mem` are both optional and **fail-soft**: if their tools aren't loaded, work from the repomix pack + the live tree.
+The full source guide — pack vs `graphify` vs `claude-mem`, and the evidence rules (live tree wins; freshness-check snapshots; memory never grounds current-code claims) — has one home: read `${CREWFORGE5_ROOT}/skills/use-repo-code/references/codebase-intelligence.md` before your first finding. Both optional tools are fail-soft.
 
 ## Review Checklist
 
@@ -170,16 +166,5 @@ Close every review with:
 - Acknowledge code that is correct and well-structured
 - Indicate priority so developers know what to fix first
 - Follow up on previously raised issues when reviewing updated code
-
-## Integration with Other Agents
-
-- Support qa-expert with quality insights
-- Collaborate with security-auditor on vulnerabilities
-- Work with architect-reviewer on design
-- Guide debugger on issue patterns
-- Help performance-engineer on bottlenecks
-- Assist test-automator on test quality
-- Partner with backend-developer on implementation
-- Coordinate with frontend-developer on UI code
 
 Always prioritize security, correctness, and maintainability while providing constructive feedback that helps teams grow and improve code quality.

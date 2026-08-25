@@ -1,7 +1,7 @@
 ---
 name: plan
 model: opus
-description: Goal to an adversarial-clean, /team-sprint-ready plan file. Use on /crewforge5:plan, "plan this feature", "write a sprint plan"
+description: Goal to an adversarial-clean plan file ready for /crewforge5:execute. Use on /crewforge5:plan, "plan this feature", "write a sprint plan"
 ---
 
 # crewforge5:plan
@@ -76,9 +76,8 @@ bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" --load-mode use-re
 | Repo grounding from a pack | `use-repo-code` | phase 1 (Agent-spawned) |
 | Parallel divergent frames | `adhd` | phase 2 |
 | Relentless questioning loop | `grill-me` | phase 3 |
-| Interactive ratification front half | `team-feature` | phases 0–3 |
 | Existing-debt inventory | `tech-debt-audit` | phase 4 (Agent-spawned) |
-| Impact map and coverage check | `master_plan` | phases 5 and 8 |
+| Impact map and coverage check | `master-plan` | phases 5 and 8 |
 | Plan contract and story shape | `team-sprint-planner` | phase 6 |
 | Review-to-clean loop and stamp | `adversarial-review` | phase 7 (Agent-spawned rounds) |
 

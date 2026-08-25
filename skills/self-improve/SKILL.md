@@ -62,12 +62,18 @@ attempts on the same target means the lesson genuinely needs more room: stop,
 and put the `ceiling.sh record <target>` decision to the user with the diff.
 
 **5. Validate.** Skills go through `skill-validator`, agents through
-`agent-validator`; both have rectifier loops that run to grade A on their own.
-This step is where a distillation that broke structure gets caught.
+`agent-validator`; both have bounded rectifier loops (grade A, a 5-round cap, or
+escalation). This step is where a distillation that broke structure gets caught.
+Two outcomes need handling, not hope: if the rectifier **escalated** without
+grade A, revert that target's distillation and return the lesson unapplied with
+the escalation report; if the rectifier **edited** the target, re-run Step 4's
+`ceiling.sh check` over it — a fix that regrew the file past its ceiling goes
+back to Step 4's tighten-or-record path.
 
-**6. Archive.** `scripts/ledger.sh clear <target>` per distilled target. It moves
-entries to `ledger/archive/` rather than deleting them, because a distillation
-that turns out wrong needs the evidence that motivated it.
+**6. Archive.** `scripts/ledger.sh clear <target>` — but only for targets whose
+distillation survived Steps 4-5. A reverted target keeps its ledger entries; the
+evidence that motivated a failed distillation is exactly what the next attempt
+needs. Archiving moves entries to `ledger/archive/` rather than deleting them.
 
 ## Budgets
 
@@ -80,3 +86,6 @@ larger, which is room for one lesson without a same-breath rewrite.
 `scripts/ceiling.sh record <target>` moves a budget deliberately. It is the
 escape hatch, and it lands in a reviewable diff — never call it to make a failing
 check pass.
+
+Both scripts are covered by `scripts/tests/self-improve.bats`; run it after
+editing either.

@@ -136,6 +136,9 @@ decision), send that decision back to Phase 1 for a re-diverge with the new
 constraint folded into the prompt. New decisions surfaced by an answer enter
 the tree with correct `depends_on` edges. Tell the user when this happens —
 "your pick on X reopens Y, re-diverging" — so the pacing is legible.
+**Reopen budget: one re-diverge per decision.** A decision reopened a second
+time is oscillating (A invalidates B invalidates A) — stop, show the user the
+conflict, and let them pick the pair of answers that stand together.
 
 Record every ratification in the ledger as you go: decision, options
 considered, what the user chose, their stated reasoning if any, what was
@@ -155,7 +158,9 @@ Only when every decision is ratified. Two rounds of direct `Agent` tool calls:
    their real signatures, no section contradicts a convention Phase 0
    recorded. Each skeptic is prompted to REFUTE. Loop — another parallel
    round of skeptics — until two consecutive rounds find nothing
-   (loop-until-dry). Findings go back to the draft stage, not to the user.
+   (loop-until-dry), capped at 4 rounds; still finding at the cap means the
+   draft is fighting the repo — surface what remains open to the user instead
+   of spawning round 5. Findings go back to the draft stage, not to the user.
 
 If a verify finding invalidates a *ratified decision* (the repo contradicts
 an assumption the user's choice rested on), that is not a drafting fix —

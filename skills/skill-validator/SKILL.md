@@ -47,10 +47,15 @@ appends `FAIL [phase]: ...` / `WARN [phase]: ...` / `SKIPPED [phase]: ...` lines
 and Step 7's grade is computed from it mechanically:
 
 ```bash
-V=<skill-validator-dir>/scripts; LEDGER=$(mktemp)
-bash $V/validate_structure.sh <target-skill-path> | tee -a "$LEDGER"
-bash $V/baseline-drift.sh     <target-skill-path> | tee -a "$LEDGER"
+V="${CREWFORGE5_ROOT}/skills/skill-validator/scripts"
+LEDGER="$(mktemp "${TMPDIR:-/tmp}/skill-validator-ledger.XXXXXX")"; echo "LEDGER=$LEDGER"
+bash "$V/validate_structure.sh" <target-skill-path> | tee -a "$LEDGER"
+bash "$V/baseline-drift.sh"     <target-skill-path> | tee -a "$LEDGER"
 ```
+
+Each Bash call is a fresh shell: `$V` and `$LEDGER` do not survive between tool
+calls. Note the `LEDGER=` path this step prints and substitute it literally
+wherever a later step says `"$LEDGER"`; redefine `V` the same way in each block.
 
 `validate_structure.sh` covers the mechanical checks: SKILL.md existence, frontmatter
 fields, name format and directory match, description length, body/size limits,
@@ -78,7 +83,8 @@ Then supplement with the checks that need judgment:
 ### Step 2: Functional Validation
 
 ```bash
-bash $V/functional.sh <target-skill-path> | tee -a "$LEDGER"
+V="${CREWFORGE5_ROOT}/skills/skill-validator/scripts"
+bash "$V/functional.sh" <target-skill-path> | tee -a "$LEDGER"
 ```
 
 Covers what the structural script didn't: Python import/dependency dry-runs and
@@ -89,7 +95,8 @@ a sampled reference file to confirm it's navigable and current.
 ### Step 3: Efficiency Analysis
 
 ```bash
-bash $V/efficiency.sh <target-skill-path> | tee -a "$LEDGER"
+V="${CREWFORGE5_ROOT}/skills/skill-validator/scripts"
+bash "$V/efficiency.sh" <target-skill-path> | tee -a "$LEDGER"
 ```
 
 Emits the size/token metrics, directive counts, and progressive-disclosure findings
@@ -159,15 +166,17 @@ The most important test — does the skill actually work when an agent uses it?
    — and append each skipped/misinterpreted instruction to the ledger
    (`FAIL [simulation]: ...` / `WARN [simulation]: ...`).
 
-If subagents are not available, append `SKIPPED [simulation]: no subagents` to the
-ledger and move on.
+Subagents are unavailable only when the `Agent` tool is absent from your own tool
+list — that is the test, not an impression of the environment. When it is absent,
+append `SKIPPED [simulation]: no subagents` to the ledger and move on.
 
 ### Step 6: Generate Report
 
 Compute the grade mechanically — never tally or grade by hand:
 
 ```bash
-bash $V/grade.sh "$LEDGER"    # grade= fails= warns= skipped=
+V="${CREWFORGE5_ROOT}/skills/skill-validator/scripts"
+bash "$V/grade.sh" "$LEDGER"    # grade= fails= warns= skipped=
 ```
 
 Write a structured markdown report to `./docs/agent_reports/skill-validation-{skill-name}-{date}.md`
@@ -182,7 +191,11 @@ load when writing the report.
 re-validation round (the invoking prompt contains "report-only" or "re-validation"),
 stop after Step 6. Return the report path and overall grade, and do NOT invoke
 skill-rectifier — the rectifier already owns the fix-and-revalidate loop, and invoking
-it from here would nest a second loop inside the first.
+it from here would nest a second loop inside the first. If you cannot tell whether
+the rectifier invoked you, do not hand off — end with the report. And never hand off
+when the target is skill-validator, skill-rectifier, agent-validator or
+agent-rectifier itself: a rectifier editing the loop it is executing is not
+recoverable, so those four are always report-only.
 
 Otherwise, show the user the summary table and overall grade. Then:
 

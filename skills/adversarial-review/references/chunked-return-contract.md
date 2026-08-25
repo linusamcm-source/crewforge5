@@ -75,7 +75,9 @@ repair them, drop them.
 
 ### Loop semantics (informational)
 
-The orchestrator iterates rounds until `counts.CRITICAL == 0 AND counts.HIGH == 0`
-(post-validation). MEDIUM and LOW are surfaced but do not gate the loop.
-After a soft cap (default 6 rounds), the user is prompted with override /
-extend / abort options — the loop won't silently fail.
+The orchestrator's iteration policy is owned by
+`skills/team-sprint-planner/references/adversarial-review-loop.md` — gate is
+zero NEW CRITICAL/HIGH at close-out, **hard cap 2 close-out cycles**, then the
+user decides (extend / fix manually / `status=user-override`). MEDIUM and LOW
+are surfaced but do not gate the loop. This file describes only what you, the
+chunk reviewer, return; do not infer a round budget from it.

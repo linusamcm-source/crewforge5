@@ -194,7 +194,8 @@ sweep:
                        'failed', signal stays open. This is what stops a repair agent
                        marking its own homework
   6. CLOSE SWEEP       finished_at, counts, dry
-converged when two consecutive sweeps have dry=1
+converged when two consecutive sweeps have dry=1; hard cap 5 sweeps —
+still producing new signals at sweep 5 -> stop and hand the open set to the user
 ```
 
 **Rules the loop must not break:**

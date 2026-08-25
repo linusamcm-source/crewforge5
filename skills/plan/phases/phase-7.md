@@ -31,7 +31,9 @@ reads it**, which is the spawned agent.
      and follow the skill at `$R`; adversarially review the plan at
      `<plan_path>` against this repo; annotate each finding **into the plan
      file** as a `<!-- FINDING <id> (<severity>): <recommendation> -->` marker
-     line; return only the round's finding count and one line per finding.
+     line; write one severity-tagged line per finding
+     (`CRITICAL: <summary>`, `HIGH: ...`) to a findings file; return only the
+     round's finding count and that file's path.
    - **Block-collect** the agent's final return. Never end a turn with a live
      child.
    - **Fold** each marker yourself: apply the recommendation into revised
@@ -39,11 +41,20 @@ reads it**, which is the spawned agent.
      drafts criticism, the lead owns the plan. The loop converges only because
      markers are deleted; a plan that accumulates them ends up more comment
      than content.
-   - **Re-spawn** a fresh round over the folded plan. A fresh agent per round
-     is the point: it re-reads the plan as it now stands, with no memory of
-     what it meant to find.
+   - **Decide the round exit with the gate, never by eye:**
 
-3. When a round returns zero findings, stamp the plan on its own line:
+     ```bash
+     bash "$(dirname "$R")/scripts/round-gate.sh" <findings-file> <round> 6
+     ```
+
+     `continue` means **re-spawn** a fresh round over the folded plan — a fresh
+     agent per round is the point: it re-reads the plan as it now stands, with
+     no memory of what it meant to find. `escalate` means CRITICAL/HIGH
+     findings survived the hard cap of 6 rounds, and the choice (extend, fix
+     manually, or `status=user-override`) is the user's, not another round's.
+
+3. When the gate says `done-clean` (or `stop-early` with the LOW/NIT polish
+   folded), stamp the plan on its own line:
 
    ```markdown
    <!-- adversarial-review: status=clean rounds=<N> date=<YYYY-MM-DD> reviewer=crewforge5:plan -->

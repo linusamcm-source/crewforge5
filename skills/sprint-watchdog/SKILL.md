@@ -96,7 +96,7 @@ If you discover the protocol broke during the sprint (e.g. user reports "the rep
 1. `git status` and `git log --oneline -20` to see actual repo state.
 2. `TaskList` to see what's marked complete.
 3. For each `completed` task, run the appropriate verification above.
-4. Reopen any task that fails verification with a precise note: *"Reopened by watchdog: source file `src/foo.ts` does not exist; agent claimed creation in T-12."*
+4. Reopen any task that fails verification with a precise note: *"Reopened by watchdog: source file `src/foo.ts` does not exist; agent claimed creation in T-12."* Reopen a given task at most twice — a third failure is structural: mark it blocked, stop respawning, and put it to the user.
 5. Spawn replacement agents with the same role contract and explicit reference to what the previous agent missed.
 
 ## Optional: Hook-Based Enforcement

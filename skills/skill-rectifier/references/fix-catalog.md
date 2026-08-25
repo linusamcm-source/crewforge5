@@ -13,10 +13,14 @@ These are mechanical — apply them without asking.
 - Missing `description` → generate from SKILL.md body content (first paragraph + "Use when..." trigger list)
 - Empty body → leave a TODO comment (this needs human input)
 
-**Short description (< 30 words):**
+**Description missing trigger phrases:**
 - Read the skill body to understand what it does
-- Expand the description to include: what the skill does, when to trigger it, and 3-5 example user phrases
-- Because short descriptions cause undertriggering — agents never see the skill when they should
+- Rewrite the description as trigger phrases plus one line of purpose, staying under
+  ~200 chars — the house limit the validator enforces. Never pad toward a word count:
+  the description is always-loaded rent, and `scripts/budget_check.sh` can turn CI red
+  over a longer one. A missing trigger phrase causes undertriggering; a padded
+  description causes a validator WARN on the next round — the loop must not oscillate
+  between the two.
 
 **Dead references:**
 - File referenced in SKILL.md but doesn't exist on disk → two options:
@@ -26,7 +30,10 @@ These are mechanical — apply them without asking.
 
 **Orphan files:**
 - Files in the skill directory that SKILL.md never mentions
-- Add a reference to each orphan file in an appropriate section of SKILL.md
+- If the file is live (a script a step should run, a reference a step should load), link
+  it from the one section that uses it. If it is dead, delete it and say so in the
+  report. Never grow SKILL.md solely to silence the WARN — that trades an orphan for
+  always-loaded bloat the efficiency check flags next round.
 - Because orphan files confuse agents — they might read them expecting instructions that contradict the main skill
 
 **Sensitive files:**

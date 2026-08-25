@@ -18,7 +18,10 @@
 set -uo pipefail
 
 STATE_REL=".claude/scripts/sprint-watchdog/.sprint-active.json"
-VOCAB="${TEAM_SPRINT_VOCAB:-$HOME/.claude/skills/team-sprint/assets/data/vocab.json}"
+# Plugin tree first — the shipped vocab lives there; the user catalogue is the
+# fallback for a hand-installed copy. A wrong path degrades to the baked-in
+# lists below, silently, so the order matters.
+VOCAB="${TEAM_SPRINT_VOCAB:-${CLAUDE_PLUGIN_ROOT:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}}/skills/team-sprint/assets/data/vocab.json}"
 MAX_VIOLATIONS=200
 
 trap 'exit 0' ERR

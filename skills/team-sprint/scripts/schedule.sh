@@ -210,13 +210,31 @@ if cmd == "fail":
     print(f"failed {nid}; blocked {len(blocked)} dependent(s): {' '.join(blocked)}"); sys.exit(0)
 
 if cmd == "reset-orphans":
-    g = load(); reset = []
+    # attempts is the retry ledger this command both writes and enforces: a node
+    # whose executor has died MAX_ATTEMPTS times fails deterministically here
+    # instead of being reclaimed forever, and its dependents cascade-block just
+    # as `fail` would block them.
+    MAX_ATTEMPTS = int(os.environ.get("TS_MAX_NODE_ATTEMPTS", "3"))
+    g = load(); by = index(g); reset = []; exhausted = []
     for n in g["nodes"]:
         if n["status"] == "in_progress":
-            n["status"] = "pending"; n["phase"] = None
             n["attempts"] = n.get("attempts", 0) + 1
-            reset.append(n["id"])                      # branch + worktree + base_commit preserved for inspection
-    save(g); print(f"reset {len(reset)} orphan(s): {' '.join(reset)}"); sys.exit(0)
+            if n["attempts"] >= MAX_ATTEMPTS:
+                n["status"] = "failed"; n["done_at"] = now()
+                n["failed_reason"] = f"executor died {n['attempts']} times (TS_MAX_NODE_ATTEMPTS={MAX_ATTEMPTS})"
+                for dep in transitive_dependents(g, n["id"]):
+                    m = by[dep]
+                    if m["status"] not in ("done", "failed"):
+                        m["status"] = "blocked"; m["blocked_by"] = n["id"]
+                exhausted.append(n["id"])
+            else:
+                n["status"] = "pending"; n["phase"] = None
+                reset.append(n["id"])                  # branch + worktree + base_commit preserved for inspection
+    save(g)
+    msg = f"reset {len(reset)} orphan(s): {' '.join(reset)}"
+    if exhausted:
+        msg += f"; failed {len(exhausted)} exhausted node(s): {' '.join(sorted(exhausted))}"
+    print(msg); sys.exit(0)
 
 # ---- dry-run simulator -----------------------------------------------------
 if cmd == "simulate":

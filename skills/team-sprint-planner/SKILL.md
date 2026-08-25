@@ -18,6 +18,11 @@ right-sized, testable, dependency-ordered stories.
 
 You do **not** run `/team-sprint`. You produce the reviewed, stamped plan file and stop.
 
+**Driven mode:** when `/crewforge5:plan` phase 6 loads this body, run the drafting
+phases only — the caller owns recon, divergence, grill, review and the stamp
+(`reviewer=crewforge5:plan`). Do not re-run those phases and do not write this
+skill's stamp; a plan carrying two reviewer stamps has no provenance.
+
 ## When to use
 
 Use whenever the user wants to plan a feature, refactor, or migration that will be executed by
@@ -152,8 +157,10 @@ Leverage it efficiently — the skill costs ~10 Agent calls, so respect its own 
 run it only when **multiple viable story shapes survived the grill** (e.g. migrate-by-layer vs
 migrate-by-feature, big-bang vs strangler, split-by-module vs split-by-workflow). If the
 intake answers or the dependency graph already dictate one honest decomposition, skip it and
-say so — a closed shape gets the direct answer, exactly as the adhd gate prescribes. This is
-the one adhd invocation in the pipeline: grill-me resolves *decisions* with the user,
+say so — a closed shape gets the direct answer, exactly as the adhd gate prescribes. If the
+caller already ran a divergence pass (`/crewforge5:plan` phase 2, or `/team-feature` Phase 1),
+reuse its frames instead of re-running adhd — otherwise this is the one adhd invocation in
+the pipeline: grill-me resolves *decisions* with the user,
 adversarial review *refutes* claims; adhd's job is the divergent middle — generating the
 decomposition options worth deciding between — and it runs before the plan is written so its
 output is reviewable.

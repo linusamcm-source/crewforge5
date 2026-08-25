@@ -16,7 +16,9 @@ Tooling and reference material for thorough code review across multiple language
 - Phase 4 of `/team-sprint` as the `code-reviewer` role
 - Spot-checking a file the user is about to ship
 
-Includes automated code analysis, best-practice checking, security scanning, and review checklist generation. When invoked as part of a multi-agent review (e.g. `/team-sprint` Phase 4 or `/pre-commit-review-fleet`), the reviewer MUST deliver findings to team-lead via SendMessage — inline-only descriptions do not satisfy the review contract.
+Includes automated code analysis, best-practice checking, security scanning, and review checklist generation. When invoked as part of a multi-agent review (e.g. `/team-sprint` Phase 4 or `/pre-commit-review-fleet`), deliver findings per the sprint's delivery contract (`${CREWFORGE5_ROOT}/skills/team-sprint/references/sendmessage-protocol.md`): structured findings as your **final agent return** to your spawner, written into the story-keyed review artifact — inline-only descriptions that reach neither channel do not satisfy the review contract.
+
+This skill and the `code-reviewer` **agent** under `agents/` share a name on purpose: the agent is the spawnable reviewer identity (crew-factory's reuse candidate), this skill is the procedure either that agent or a crew-generated reviewer loads. When both are in play, the agent is spawned and this skill is what it follows.
 
 ## Workflow
 
@@ -78,15 +80,11 @@ Includes automated code analysis, best-practice checking, security scanning, and
 - Mocked vs integration coverage — are the integration boundaries actually exercised?
 - Test brittleness (over-coupled to implementation)
 
-## Codebase intelligence: repomix + graphify + claude-mem
+## Codebase intelligence
 
-Ground every finding in the source that fits the question — the repomix pack is the default recon target; three complementary tools:
+Primary recon is the repomix pack via `use-repo-code` — hidden from the catalogue, so resolve it: `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code` answers `MODE=agent`; spawn it through the `Agent` tool with the type its frontmatter names, never inline (it forks precisely to keep the pack out of this window). The pack is `.repomix-output.xml`, regenerated on demand by `bash ${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/pack.sh`.
 
-- **repomix pack (default)**, reached by resolving `use-repo-code` — it is hidden from the catalogue, so the `Skill` tool cannot get to it. `bash "${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh" --load-mode use-repo-code` answers `MODE=agent`: spawn it through the `Agent` tool with the type its frontmatter names, never read its body inline, because it forks precisely to keep a whole pack out of this window. The repo is packed at session start (`repomix-prewarm.sh` → `.repomix-output.xml`). Search it with bash `grep`/`rg` (the RTK `PreToolUse` hook rewrites these to `rtk grep`/`rtk rg`, so output is token-filtered and grouped by file) instead of per-file `Read`. This is your primary recon: existence checks, symbol/caller text search, file-list verification, "does this already exist". `<file path="...">` tags are the jump target; use live `Read` only for the exact lines you will edit or debug.
-- **`graphify`** (optional, on-demand — only when the question is *relational*, not textual; needs `graphify-out/graph.json`): repomix grep finds occurrences, graphify answers reachability/coupling that text can't. Before flagging duplication, dead code, or a risky change, `graphify query "what calls <symbol>"` shows the real caller set / blast radius and whether a canonical helper already exists rather than the one being added. Reach for it only when you need the relationship — not for routine lookups. Prefer the CLI (`graphify query "what calls X"`, `graphify path "A" "B"`, `graphify explain "N"`) over grepping `graph.json` raw. Fail-soft: if its tools aren't loaded, skip it — repomix + the live tree carry the review.
-- **`claude-mem`** (optional): decisions, conventions, and known issues recorded across past sessions. Recall via the `mem-search` skill or `memory_search`/`observation_search` → `get_observations`; record a durable new finding with `observation_add`/`memory_add` (≤500-token summary).
-
-Evidence rules: when these sources and the live tree disagree, the **live tree wins**; freshness-check any snapshot before citing it; `claude-mem` grounds *intent/history* claims, never *current-code* claims — verify those with repomix grep. `graphify` and `claude-mem` are both optional and **fail-soft**: if their tools aren't loaded, work from the repomix pack + the live tree.
+The full source guide — pack vs `graphify` vs `claude-mem`, and the evidence rules (live tree wins; freshness-check snapshots; memory never grounds current-code claims) — has one home: read `${CREWFORGE5_ROOT}/skills/use-repo-code/references/codebase-intelligence.md` before your first finding. Both optional tools are fail-soft.
 
 ## Anti-patterns to Avoid in Your Own Review
 

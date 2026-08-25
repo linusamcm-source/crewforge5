@@ -12,29 +12,15 @@ These are mechanical — apply without asking.
 - Missing `description` → generate from body content (role statement + "Use this agent when..." trigger list)
 - Empty body → leave a TODO comment (this needs human input)
 
-**Short description (< 30 words):**
+**Description missing trigger context:**
 - Read the agent body to understand what it does
-- Expand the description to include: what the agent does, when to trigger it, and 3-5 example user phrases
-- Short descriptions cause undertriggering — the Agent tool never selects this agent type when it should
-
-**Missing trigger context in description:**
-- Add "Use this agent whenever..." phrases based on the agent's role and instructions
-- Include both obvious triggers ("build a Go service") and non-obvious ones ("fix this error" when it's a Go error)
-
-**Missing `<example>` blocks in description:**
-- Generate 2-3 example blocks showing realistic user/assistant/commentary interactions
-- These dramatically improve triggering accuracy — the model pattern-matches on examples
-- Format:
-  ```
-  <example>
-  Context: Brief situation description
-  user: "Realistic user message"
-  assistant: "Brief response showing what the agent would do"
-  <commentary>
-  When to invoke this agent based on the example pattern.
-  </commentary>
-  </example>
-  ```
+- Rewrite the description as "Use when..." trigger phrases a user would plausibly type,
+  plus one line of purpose. Include both obvious triggers ("build a Go service") and
+  non-obvious ones ("fix this error" when it's a Go error).
+- Never pad toward a word count and never add `<example>` blocks — agent-validator
+  flags both, and `scripts/budget_check.sh` charges the description against the release
+  gate, so the "fix" would fail CI and be re-flagged next round. An expressive one-line
+  description carries the same triggering semantics for a fraction of the cost.
 
 **Name/filename mismatch:**
 - If `name:` doesn't match the filename (without `.md`), update `name:` to match

@@ -116,15 +116,22 @@ case "$MODE" in
       case "$ans" in y|Y|yes|YES) ;; *) echo "aborted"; exit 1 ;; esac
     fi
     mkdir -p "$DEST" || { echo "cannot create $DEST" >&2; exit 1; }
+    # No pipeline here: `listing | while` runs the loop in a subshell, where a
+    # failed ln can never reach the exit code — every install reported success.
     rc=0
-    listing | while read -r f; do
+    while read -r f; do
       n="$(basename "$f")"
       if [ -e "$DEST/$n" ] && [ ! -L "$DEST/$n" ]; then
         echo "  skipped   $n (a real file is already there)"
         continue
       fi
-      ln -sfn "$f" "$DEST/$n" && echo "  linked    $n"
-    done
+      if ln -sfn "$f" "$DEST/$n"; then
+        echo "  linked    $n"
+      else
+        echo "  FAILED    $n" >&2
+        rc=1
+      fi
+    done < <(listing)
     exit "$rc"
     ;;
 

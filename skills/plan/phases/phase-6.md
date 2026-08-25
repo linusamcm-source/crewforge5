@@ -11,6 +11,13 @@
    bash "${CREWFORGE5_ROOT:-.}/scripts/flow/subskill_resolve.sh" team-sprint-planner
    ```
 
+   **Take its drafting phases only** (plan contract, story decomposition,
+   acceptance criteria). Its recon, divergence, grill and adversarial-review
+   phases are this flow's phases 1, 2, 3 and 7 — already run or still to come —
+   and its review stamp is not written here: phase 7 stamps
+   `reviewer=crewforge5:plan`, and a plan carrying two reviewer stamps has no
+   provenance at all.
+
 2. Choose the filename before writing a line of it. It must carry a story or
    epic id — `epic-1-three-skill-condensation.md`, `bug-42-stale-lock.md`. Bare
    `plan.md` is rejected by the gate, because the sprint directory is derived

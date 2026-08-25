@@ -203,7 +203,7 @@ fi
 SUSPECT_FOUND=""
 while IFS= read -r f; do
   SUSPECT_FOUND="$SUSPECT_FOUND ${f#"$SKILL_DIR"/}"
-done < <(find "$SKILL_DIR" \
+done < <(find "$SKILL_DIR" -mindepth 1 \
   \( -iname '*secret*' -o -iname '*apikey*' -o -iname '*api_key*' -o -iname '*token*' \) \
   ! -name '*.md' -not -path '*/node_modules/*' 2>/dev/null)
 if [ -n "$SUSPECT_FOUND" ]; then

@@ -1,4 +1,4 @@
-**WHO READS THIS / WHEN:** The Phase 2 graph reviewer (mandatory under `scheduling: graph`) reads this before composing findings. The plan-review chunk reviewers that used to run in Phase 1 now run in `team-sprint-planner`'s adversarial review loop, which carries its own copy of this contract (`references/reviewer-contract.md` there).
+**WHO READS THIS / WHEN:** The Phase 2 graph reviewer (mandatory under `scheduling: graph`) reads this before composing findings. The plan-review chunk reviewers that used to run in Phase 1 now run in `team-sprint-planner`'s adversarial review loop, whose reviewer contract lives in that skill's `references/dynamic-review-workflow.md` and `references/adversarial-review-loop.md`.
 
 > **Canonical shape lives in team-sprint-planner's `references/dynamic-review-workflow.md`** (the
 > `FINDING` schema — the plan-review loop and its workflow moved planner-side). On the Workflow

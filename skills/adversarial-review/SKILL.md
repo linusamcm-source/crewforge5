@@ -327,11 +327,14 @@ If new findings appear, run another round. Otherwise, finish.
 - **The round-exit decision is mechanical, not yours.** Write each round's
   findings one per line (`CRITICAL: ...` / `HIGH: ...` / `MEDIUM: ...` /
   `LOW: ...` / `NIT: ...`) to a scratch file and run
-  `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/round-gate.sh <file>`.
-  Honour its verdict: `continue` = another round; `stop-early` = zero
-  CRITICAL/HIGH, batch remaining LOW/NIT into a final polish pass;
-  `done-clean` = finish. Never talk yourself into stopping while the gate
-  says `continue`, and never pad rounds after it says `stop-early`.
+  `bash ${CREWFORGE5_ROOT}/skills/adversarial-review/scripts/round-gate.sh <file> <round> <cap>`
+  — pass the current round number and the cap the intake gate chose (default 6),
+  so the cap is enforced by the script rather than remembered. Honour its
+  verdict: `continue` = another round; `stop-early` = zero CRITICAL/HIGH, batch
+  remaining LOW/NIT into a final polish pass; `done-clean` = finish;
+  `escalate` = the cap is reached with CRITICAL/HIGH open — stop looping and
+  put the open findings to the user. Never talk yourself into stopping while
+  the gate says `continue`, and never pad rounds after it says `stop-early`.
 
 Each round ends with a conversation summary block — template in [references/output-format.md](references/output-format.md).
 

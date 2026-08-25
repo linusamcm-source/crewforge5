@@ -21,8 +21,9 @@ question, or memory for a current-code question, is how reviews go wrong:
 
    It answers `MODE=agent`, so spawn it through the `Agent` tool with the type its
    frontmatter names. Never read its body inline: it forks to keep a whole pack out
-   of the caller's window, and inlining it puts the pack there instead. The repo is packed
-   at session start (`repomix-prewarm.sh` → `.repomix-output.xml`). Search it with
+   of the caller's window, and inlining it puts the pack there instead. The pack is
+   `.repomix-output.xml`, regenerated on demand by
+   `bash ${CREWFORGE5_ROOT}/skills/use-repo-code/scripts/pack.sh`. Search it with
    bash `grep`/`rg` on the pack — the RTK `PreToolUse` hook rewrites these to
    `rtk grep`/`rtk rg`, so output is token-filtered and grouped by file — instead
    of per-file `Read`. This is the primary recon for every lane: existence checks,
