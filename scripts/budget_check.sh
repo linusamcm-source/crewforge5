@@ -28,15 +28,17 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
-# The post-condensation tree measures 541 tok. The budget sits one description's
-# worth above that: enough that an honest rewording does not turn CI red, too
-# little to absorb a whole new listed surface without somebody noticing.
+# The tree measures ~495 tok. The budget sits one description's worth above
+# that: enough that an honest rewording does not turn CI red, too little to
+# absorb a whole new listed surface without somebody noticing. Shrinking the
+# tree means lowering this too — slack nobody bounds is just a bigger number,
+# and budget_check.bats asserts it from both sides.
 #
 # It was briefly pinned at the measured 541 with no slack at all. That reads
 # well and behaves badly — every edit to any description became a build break,
 # so the pressure was to raise the number rather than think about the cost,
 # which is the opposite of what the gate is for.
-BUDGET=600
+BUDGET=550
 VERBOSE=0
 
 while [ $# -gt 0 ]; do

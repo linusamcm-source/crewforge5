@@ -26,27 +26,30 @@ FLOW="${CREWFORGE5_ROOT}/scripts/flow"
 "$FLOW/flow_state.sh" init get <key>  # read anything a phase recorded
 ```
 
-**One thing runs before that driver.** The dependency check is step 0 of phase
-0 and is invoked directly, because `flow_next.sh` and `flow_gate.sh` both exit
-early when `jq` is missing — the flow cannot report its own missing tooling
-through machinery that needs the tooling:
+**One thing runs before that driver.** The dependency check is step 0 of phase 0
+and is invoked directly: `flow_next.sh` and `flow_gate.sh` both exit early when
+`jq` is missing, so the flow cannot report its own missing tooling through
+machinery that needs it:
 
 ```bash
 bash "${CREWFORGE5_ROOT}/skills/init/scripts/init_gate.sh" deps
 ```
 
 `phases.json` is the manifest — `{id, title, doc, gate, required}` per phase.
-Every gate is one subcommand of `scripts/init_gate.sh`, which reads the config
-root and returns `STATUS=OK` or `STATUS=FAIL` in `KEY=VALUE` on stdout. It
-never edits anything: a gate that could repair what it measures would always
-pass.
+Every gate is one subcommand of `scripts/init_gate.sh`, returning `STATUS=OK` or
+`STATUS=FAIL` as `KEY=VALUE` on stdout. It never edits anything: a gate that
+could repair what it measures would always pass.
 
 Two locations, both overridable:
 
 | Variable | Meaning | Default |
 | --- | --- | --- |
 | `INIT_TARGET` | config root under audit (holds `skills/`, `agents/`) | repo root |
-| `INIT_STATE` | where baseline, proposals and report live | `.crewforge5/init/` |
+| `INIT_STATE` | baseline, proposals, findings and report | `.crewforge5/init/` |
+
+Flow state is keyed by subject (`.crewforge5/init/<subject>/state.json`), claimed
+in phase 0 from `INIT_TARGET`: a second config root starts at phase 0 rather than
+resuming into the first audit's verdicts. `flow_state.sh init list` names them.
 
 ## Phases
 
@@ -56,13 +59,12 @@ Two locations, both overridable:
 | 1 | Measure | `phases/phase-1.md` | `baseline.json` exists and records skills |
 | 2 | Hygiene | `phases/phase-2.md` | `retention_gate.sh` per proposal pair |
 | 3 | Slim | `phases/phase-3.md` | token-slim `check.sh` per skill, then `sweep.py` |
-| 4 | Validate | `phases/phase-4.md` | zero FAIL across agents and skills |
+| 4 | Validate | `phases/phase-4.md` | a findings file per component, then zero FAIL |
 | 5 | Rectify | `phases/phase-5.md` | every component grades A |
 | 6 | Distil | `phases/phase-6.md` | `ceiling.sh check`, or an empty ledger |
 | 7 | Report | `phases/phase-7.md` | report carries the re-measured char delta |
 
-Read the phase doc before doing the phase. This file says what the machine is;
-the docs say what the work is.
+Read the phase doc before doing the phase.
 
 ## Loading a sub-skill
 
@@ -77,11 +79,9 @@ RESOLVE="${CREWFORGE5_ROOT}/scripts/flow/subskill_resolve.sh"
 ```
 
 Check `--load-mode` every time. `MODE=agent` means the skill declares
-`context: fork`, and it declares that precisely so its work stays out of the
-caller's context — spawn it through the `Agent` tool with the declared type.
-Reading such a body inline keeps the instructions and destroys the isolation,
-which is the opposite of what this flow is for. `skill-validator` and
-`agent-validator` are both `MODE=agent`.
+`context: fork` so its work stays out of the caller's context — spawn it through
+the `Agent` tool with the declared type; reading the body inline destroys that
+isolation. `skill-validator` and `agent-validator` are both `MODE=agent`.
 
 ## What each phase drives
 
@@ -97,7 +97,10 @@ which is the opposite of what this flow is for. `skill-validator` and
 | 7 | `token-slim` re-measure plus the bundle's own budget gate |
 
 Phases 2–6 fan out one agent per target: skill directories and agent files are
-disjoint, so nothing serialises that does not have to.
+disjoint, so nothing serialises. Phase 4's validators write
+`$INIT_STATE/findings/<kind>.<label>.md`, which the gate reads — that half no
+script can re-derive, and a missing file fails. The structural half is cached on
+content, so phase 5's re-walk costs only what changed.
 
 ## Stopping rules
 

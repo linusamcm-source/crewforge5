@@ -71,7 +71,9 @@ files removed, duplicated instructions consolidated to one home.
   with sprints, and the old name collided with `/crewforge5:init`. The
   underlying `scripts/sprint_init.sh` and its CLI are unchanged.
 - Always-loaded context after the removals: **~495 tok** across **11 entries**
-  (was ~543 tok across 12), headroom 105 tok of 600.
+  (was ~543 tok across 12). `BUDGET` drops 600 -> 550 with the tree, keeping
+  one description's worth of headroom (55 tok) rather than banking the removals
+  as slack the gate would stop noticing.
 
 ## 0.4.2 — 2026-08-15
 

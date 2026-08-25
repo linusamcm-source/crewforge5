@@ -16,7 +16,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install the declared base tooling
         run: |
@@ -43,7 +43,11 @@ jobs:
       - name: Plugin scripts — shellcheck and bats
         run: |
           set -euo pipefail
-          shellcheck scripts/*.sh
+          # `find -exec … +`, not a glob: `scripts/*.sh` is not recursive and the
+          # `find skills` step below never reaches scripts/, which left the
+          # shared flow driver — the thing init, plan and execute all run on —
+          # linted by nothing. find covers the next subdirectory on day one.
+          find scripts -name '*.sh' -exec shellcheck {} +
           bats scripts/tests/
 
       # run-all.sh lints only skills/team-sprint/scripts, and the step above only
@@ -73,7 +77,7 @@ jobs:
   degradation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install ONLY the declared base set
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
       - name: Every entry point reaches a verdict without the optional tools
@@ -82,7 +86,7 @@ jobs:
   gates:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # The release gate the Definition of Done names: always-loaded context.
       # A commit that adds an unhidden skill without paying for it fails here.

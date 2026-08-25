@@ -62,6 +62,11 @@ TARGET="${INIT_TARGET:-$REPO_ROOT}"
 STATE="${INIT_STATE:-$REPO_ROOT/.crewforge5/init}"
 DESC_CAP="${INIT_DESC_CAP:-300}"
 BASELINE="$STATE/baseline.json"
+# Where phase 4's spawned validators record what only a model can see, and where
+# this gate caches what only a script can. INIT_CACHE=off disables the cache.
+FINDINGS_DIR="${INIT_FINDINGS:-$STATE/findings}"
+CACHE_DIR="$STATE/validator-cache"
+CACHE_ON="${INIT_CACHE:-on}"
 
 # --- dependencies -----------------------------------------------------------
 # Phase 0 asks this before anything else: can the rest of the flow run at all?
@@ -297,6 +302,77 @@ check_slim() {
   emit OK slim "SKILLS=$n" "DESC_CAP=$DESC_CAP"
 }
 
+# --- the validator walk's cache ---------------------------------------------
+# WHY A CACHE. The walk is the same work twice over: phase 4 gates on it, then
+# phase 5 re-runs it after every repair — and phase 5 fans out one agent per
+# FAILING component while the gate re-validates all of them. On a 38-component
+# root that is ~6.5s per retry to learn that 37 components nobody touched are
+# still fine.
+#
+# The key is CONTENT, not time. mtime says a file was written, not that it
+# changed, and a rectifier that rewrites a component to what it already said
+# would invalidate an entry that is still true. The validators' own bytes go
+# into the key too, so editing a validator invalidates every entry rather than
+# leaving the next run grading against the previous rules.
+_hash_stdin() {
+  # shasum is the macOS base install, sha256sum is GNU. Same order team-sprint's
+  # state.sh uses for plan_of_record, for the same reason.
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+  else
+    sha256sum | awk '{print $1}'
+  fi
+}
+
+# VALIDATOR_SIG — set once per run by _walk, not at file scope: `--list` and the
+# dependency checks must answer on a machine where these scripts may be absent.
+_validator_sig() {
+  cat "$SKILL_V" "$AGENT_V" "$PLUGIN_ROOT/scripts/frontmatter_check.sh" 2>/dev/null | _hash_stdin
+}
+
+# _component_key — the cache key for one component, or nothing when caching is
+# off. The tree is read ONCE, through -print0 into a temp file, and hashed as
+# two things off that one read: the NUL-delimited path list (so a rename
+# invalidates) and the concatenated contents (so an edit does). NUL delimiters
+# make the list unambiguous whatever a filename holds, which is why there is no
+# newline guard here and no `sort -z` — BSD sort has neither.
+#
+# The list is NOT sorted. find's order is stable for an unchanged tree, and a
+# reordering can only ever cause a MISS, never a wrong hit: the contents are in
+# the hash too, so two different trees cannot key the same.
+_component_key() { # $1 kind  $2 path
+  [ "$CACHE_ON" != "off" ] || return 0
+  local kind="$1" path="$2" listing
+  if [ "$kind" = "agent" ]; then
+    { printf '%s\n%s\n' "${VALIDATOR_SIG:-none}" "$path"; cat "$path" 2>/dev/null; } | _hash_stdin
+    return 0
+  fi
+  listing="$(mktemp "${TMPDIR:-/tmp}/init_gate_key.XXXXXX")" || return 0
+  find "$path" -type f -print0 > "$listing" 2>/dev/null
+  {
+    printf '%s\n' "${VALIDATOR_SIG:-none}"
+    cat "$listing"
+    xargs -0 cat < "$listing" 2>/dev/null
+  } | _hash_stdin
+  rm -f "$listing"
+}
+
+# --- phase 4's behavioural half ---------------------------------------------
+# The two validators grade behaviour as well as structure — agent simulation,
+# instruction-compliance, efficiency — and only a model can run that half. Phase
+# 4 spawns one per component to do it. Until this merge existed the gate re-derived
+# the STRUCTURAL findings itself and ignored what the fleet reported, so 38 agent
+# spawns of behavioural review could not fail the gate: the expensive half was
+# ungated.
+#
+# The gate still re-derives the structural half rather than trusting the ledger
+# for it. That is deliberate, and the same call phase 2 makes by demanding a
+# `.orig` beside every `.proposed`: a bar the thing under test can write for
+# itself is not a bar. What the ledger adds is the half no script can reach, and
+# its ABSENCE fails — an unwritten ledger is a validator that did not run, and
+# "no findings recorded" must not read the same as "no findings".
+_behavioural_path() { printf '%s/%s.%s.md\n' "$FINDINGS_DIR" "$1" "$2"; }
+
 # Phases 4 and 5 — validate, then rectify. Same walk, same two validators,
 # different bar: phase 4 wants zero FAIL, phase 5 wants grade A per component
 # (skill-validator's own scale), so the rectifier loop has a stopping condition
@@ -342,19 +418,58 @@ _empty_target() { # $1 check name
 }
 
 # _walk — populates WALK_* and streams every finding to stderr.
+#
+# Each component's ledger is the STRUCTURAL findings this gate derives itself,
+# plus the BEHAVIOURAL findings phase 4's spawned validator recorded. Both feed
+# grade.sh, so a behavioural FAIL blocks exactly as a structural one does.
 _walk() {
   WALK_COMPONENTS=0
   WALK_FAILS=0
   WALK_WARNS=0
   WALK_BELOW_A=""
-  local tmp kind label path findings f w g
+  WALK_NO_LEDGER=""
+  WALK_CACHED=0
+  local tmp kind label path findings structural behavioural key cached f w g
   tmp="$(mktemp -d "${TMPDIR:-/tmp}/init_gate.XXXXXX")" || return 1
+  VALIDATOR_SIG="$(_validator_sig)"
+  [ "$CACHE_ON" = "off" ] || mkdir -p "$CACHE_DIR" 2>/dev/null || true
   while IFS="$(printf '\t')" read -r kind label path; do
     [ -n "$kind" ] || continue
     WALK_COMPONENTS=$((WALK_COMPONENTS + 1))
     findings="$tmp/$kind.$label.findings"
-    : > "$findings"
-    _findings "$kind" "$label" "$path" "$findings"
+    structural="$tmp/$kind.$label.structural"
+    : > "$structural"
+
+    # Structural half — cached on content, because phase 5 re-walks every
+    # component after repairing one and the other 37 have not moved.
+    cached=""
+    key="$(_component_key "$kind" "$path")"
+    [ -n "$key" ] && cached="$CACHE_DIR/$kind.$label.$key"
+    if [ -n "$cached" ] && [ -f "$cached" ]; then
+      cat "$cached" > "$structural"
+      WALK_CACHED=$((WALK_CACHED + 1))
+    else
+      _findings "$kind" "$label" "$path" "$structural"
+      if [ -n "$cached" ]; then
+        # Drop this component's stale entries before writing the fresh one, so
+        # the cache tracks the tree instead of growing a copy per edit.
+        rm -f "$CACHE_DIR/$kind.$label."* 2>/dev/null || true
+        cp "$structural" "$cached" 2>/dev/null || true
+      fi
+    fi
+
+    cat "$structural" > "$findings"
+
+    # Behavioural half — recorded by the phase-4 validator agent. Absent means
+    # the validator did not run for this component, which is a finding of its
+    # own rather than a clean bill of health.
+    behavioural="$(_behavioural_path "$kind" "$label")"
+    if [ -f "$behavioural" ]; then
+      grep -E '^(FAIL|WARN|SKIPPED) ' "$behavioural" >> "$findings" || true
+    else
+      WALK_NO_LEDGER="$WALK_NO_LEDGER $label"
+    fi
+
     [ -s "$findings" ] && cat "$findings" >&2
     f="$(grep -c '^FAIL' "$findings")"
     w="$(grep -c '^WARN' "$findings")"
@@ -364,21 +479,35 @@ _walk() {
     [ "$g" = "A" ] || WALK_BELOW_A="$WALK_BELOW_A $label=$g"
   done < <(_components)
   rm -rf "$tmp"
+  WALK_NO_LEDGER="${WALK_NO_LEDGER# }"
 }
 
 check_validate() {
   _walk || { emit FAIL validate "REASON=walk-failed"; return 1; }
   _empty_target validate && return 1
+  if [ -n "$WALK_NO_LEDGER" ]; then
+    note "validate: no behavioural findings recorded for —$WALK_NO_LEDGER"
+    note "validate: phase 4 spawns a validator per component; each must write $FINDINGS_DIR/<kind>.<label>.md"
+    emit FAIL validate "COMPONENTS=$WALK_COMPONENTS" "REASON=no-behavioural-findings" \
+                       "MISSING=${WALK_NO_LEDGER// /,}"
+    return 1
+  fi
   if [ "$WALK_FAILS" -gt 0 ]; then
     emit FAIL validate "COMPONENTS=$WALK_COMPONENTS" "FAILURES=$WALK_FAILS" "WARNINGS=$WALK_WARNS"
     return 1
   fi
-  emit OK validate "COMPONENTS=$WALK_COMPONENTS" "FAILURES=0" "WARNINGS=$WALK_WARNS"
+  emit OK validate "COMPONENTS=$WALK_COMPONENTS" "FAILURES=0" "WARNINGS=$WALK_WARNS" "CACHED=$WALK_CACHED"
 }
 
 check_rectify() {
   _walk || { emit FAIL rectify "REASON=walk-failed"; return 1; }
   _empty_target rectify && return 1
+  if [ -n "$WALK_NO_LEDGER" ]; then
+    note "rectify: no behavioural findings recorded for —$WALK_NO_LEDGER"
+    emit FAIL rectify "COMPONENTS=$WALK_COMPONENTS" "REASON=no-behavioural-findings" \
+                      "MISSING=${WALK_NO_LEDGER// /,}"
+    return 1
+  fi
   if [ -n "$WALK_BELOW_A" ]; then
     note "rectify: below grade A —$WALK_BELOW_A"
     emit FAIL rectify "COMPONENTS=$WALK_COMPONENTS" "FAILURES=$WALK_FAILS" \
