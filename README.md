@@ -118,14 +118,25 @@ the session actually carries, including the one line the root hook prints.
 ## `$CREWFORGE5_ROOT`
 
 Plugin skills document commands that live inside the plugin tree, and the
-install path contains a marketplace name and a version — nothing you would
-guess. A `SessionStart` hook prints the path once per session and writes it to
-`$XDG_STATE_HOME/crewforge5/root`. Expand `$CREWFORGE5_ROOT` to that path when a
-skill hands you a command:
+install path is one you would not guess. A `SessionStart` hook prints the path
+once per session and writes it to `$XDG_STATE_HOME/crewforge5/root`.
+
+Set it once, per install, and every session afterwards has it:
 
 ```bash
-export CREWFORGE5_ROOT="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/crewforge5/root")"
+bash "$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/crewforge5/root")/scripts/env_install.sh" install
 ```
+
+That writes `CREWFORGE5_ROOT` into `settings.json`'s `env` block, which is in
+the environment of both the Bash tool and every hook subprocess. `--project DIR`
+scopes it to one repo instead of the user config; `report` shows what is set
+without writing; `uninstall` removes only the keys it added.
+
+**Exporting it by hand does not work, and cannot.** Shell state does not survive
+a single tool call, so an `export` reaches the end of its own command and no
+further — which is why call sites still carry a `${CREWFORGE5_ROOT:-.}` fallback
+for the un-installed case, and why that fallback resolves to the wrong tree once
+the plugin lives anywhere but the repo you are standing in.
 
 ## The opinionated hooks are OFF by default
 
@@ -141,8 +152,14 @@ behaves without asking:
 All three exit immediately unless you opt in:
 
 ```bash
-export CREWFORGE5_HOOKS=1
+bash "$CREWFORGE5_ROOT/scripts/env_install.sh" install --hooks
 ```
+
+`--hooks` is the only thing that sets `CREWFORGE5_HOOKS=1`; installing the root
+alone leaves them off. Exporting the variable in a session has no effect at all
+here — hooks are spawned by the harness from `hooks.json`, so they never inherit
+anything a session set, which makes `settings.json` the only channel that can
+arm them. Re-run without `--hooks`, or `uninstall`, to turn them back off.
 
 A fourth hook, `sprint-watchdog-guard`, is always registered but inert: it does
 nothing until a sprint arms it with an activation file in the repo, and goes
