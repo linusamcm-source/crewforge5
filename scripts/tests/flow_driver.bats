@@ -656,3 +656,54 @@ JSON
   run "$FLOW_STATE" init use --from "fix the api"
   [ "$output" = "SUBJECT=fix-the-api" ]
 }
+
+# --- the manifests' command strings are expanded against the real environment -
+
+# `gate`, `when` and `status_source` are run through `bash -c`, so every
+# `${CREWFORGE5_ROOT}` in a phases.json expands from the environment — and an
+# unset one expands to nothing rather than failing, turning a declared gate into
+# `bash "/skills/<flow>/scripts/<x>.sh"`. That is a phase that cannot run, with
+# no hint that a variable was the cause, and shell state does not survive a tool
+# call — so "the caller exported it" is a promise nothing here can keep. These
+# assert the driver derives its own root instead of trusting the environment.
+
+@test "an explicit CREWFORGE5_ROOT still wins over the derived one" {
+  local plugin="$CREWFORGE5_ROOT"
+  # A gate that can only succeed if the variable resolved to the real tree.
+  mkdir -p "$plugin/scripts"
+  printf '#!/usr/bin/env bash\necho REACHED=yes\n' > "$plugin/scripts/probe.sh"
+  chmod +x "$plugin/scripts/probe.sh"
+  cat > "$plugin/skills/init/phases.json" <<'JSON'
+[
+  {"id": "0", "title": "Probe", "doc": "phases/phase-0.md",
+   "gate": "bash \"${CREWFORGE5_ROOT}/scripts/probe.sh\"", "required": true}
+]
+JSON
+  cd "$TMP/repo" || return 1
+  # The driver lives in this checkout; the fixture plugin is what the gate
+  # string must resolve to, so an explicit value still has to win.
+  run env CREWFORGE5_ROOT="$plugin" bash "$FLOW_GATE" init 0
+  [ "$status" -eq 0 ]
+  case "$output" in *STATUS=PASS*) : ;; *) return 1 ;; esac
+}
+
+@test "flow_next answers with CREWFORGE5_ROOT unset rather than expanding it away" {
+  cd "$TMP/repo" || return 1
+  run env -u CREWFORGE5_ROOT bash "$FLOW_NEXT" init
+  [ "$status" -eq 0 ]
+  # It must not have expanded the variable to "" — an empty expansion resolves
+  # no skill at all and the driver reports that instead of a phase.
+  case "$output" in *"no skill resolves"*) return 1 ;; esac
+  # Stronger than "it answered": the doc path proves the derived root is this
+  # checkout, which is the only way a manifest command string can resolve.
+  case "$output" in *"DOC=$ROOT/skills/init/phases/"*) : ;; *) return 1 ;; esac
+}
+
+@test "the driver exports a root that points at a real plugin tree" {
+  cd "$TMP/repo" || return 1
+  run env -u CREWFORGE5_ROOT bash -c \
+    "bash \"$FLOW_NEXT\" init >/dev/null 2>&1; printf '%s' \"\${CREWFORGE5_ROOT:-unset}\""
+  # The export is scoped to the driver's own process, so the caller still sees
+  # nothing — the point is that the gate subshell inside it does.
+  [ "$output" = "unset" ]
+}

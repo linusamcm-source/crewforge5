@@ -44,6 +44,20 @@ command -v jq >/dev/null 2>&1 || { printf '[fail] jq missing — install: brew i
 
 MANIFEST="$("$FLOW_STATE" "$FLOW" manifest)" || exit 1
 
+# The manifests' `gate`, `when` and `status_source` strings are expanded by
+# `bash -c` below, against the real environment — and an unset CREWFORGE5_ROOT
+# expands to nothing rather than failing, turning every declared gate into
+# `bash "/skills/<flow>/scripts/<x>.sh"`: "No such file or directory", a phase
+# that cannot run, and no hint that a variable was the cause. Shell state does
+# not survive a tool call, so relying on the caller to have exported it makes
+# all 38 manifest entries depend on remembering it in every single invocation.
+#
+# The driver knows where it lives. Deriving the plugin root from this script's
+# own path costs nothing and makes a flow independent of how it was reached; an
+# explicit CREWFORGE5_ROOT still wins, so a development checkout can override it.
+CREWFORGE5_ROOT="${CREWFORGE5_ROOT:-$(cd "$HERE/../.." && pwd -P)}"
+export CREWFORGE5_ROOT
+
 ROOT="$(git rev-parse --git-common-dir 2>/dev/null)"
 if [ -z "$ROOT" ]; then
   printf 'flow_gate.sh: not inside a git repository\n' >&2
