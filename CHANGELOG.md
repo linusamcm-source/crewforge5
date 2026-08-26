@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.4.4 — 2026-08-26
+
+### Added
+
+- `scripts/env_install.sh` — publishes `CREWFORGE5_ROOT`, and on `--hooks`
+  `CREWFORGE5_HOOKS=1`, through `settings.json`'s `env` block. `report`,
+  `install` and `uninstall`, `--user` (default) or `--project DIR`. The merge
+  is key-wise: every other setting, and every other `env` key, survives it, and
+  an unparseable settings file is refused rather than clobbered.
+
+### Fixed
+
+- **Every gate in all three flows depended on an environment variable nothing
+  guaranteed.** The manifests' `gate`, `when` and `status_source` strings run
+  through `bash -c`, so each `${CREWFORGE5_ROOT}` in a `phases.json` expands
+  from the real environment — and unset, it expands to nothing rather than
+  failing, turning a declared gate into
+  `bash "/skills/init/scripts/init_gate.sh"`. That is 38 manifest entries
+  across `init`, `plan` and `execute`, every one a phase that cannot run with
+  no hint that a variable was the cause. Shell state does not survive a tool
+  call, so the caller could not keep that promise either. `flow_gate.sh` and
+  `flow_next.sh` now derive the plugin root from their own location — they sit
+  at `<plugin>/scripts/flow/` — so a flow no longer depends on how it was
+  reached. An explicit `CREWFORGE5_ROOT` still wins.
+
+- Both variables were documented as shell exports, and neither could work that
+  way. Shell state does not survive a single tool call, so `export
+  CREWFORGE5_ROOT=...` reached the end of its own command and no further — the
+  reason 28 call sites across 11 files still carry a `${CREWFORGE5_ROOT:-.}`
+  fallback whose `.` silently resolves to the user's own repo once the plugin
+  is installed elsewhere. `CREWFORGE5_HOOKS` was worse than merely transient:
+  hooks are spawned by the harness from `hooks.json`, so they never inherit
+  anything a session exported, and no `export` could arm a hook in any session.
+  `settings.json`'s `env` block reaches both the Bash tool and hook
+  subprocesses; README now says so and gives the one-time command.
+
+  That the `env` block reaches hook subprocesses is not documented anywhere, so
+  it was verified rather than assumed: a hook probe reads the value under an
+  `env` block and `<UNSET>` under an otherwise identical settings file without
+  one, on Claude Code 2.1.246. `env_install.sh`'s header records the version
+  the claim was proven against.
+
+- The hooks opt-in stays opt-in: `install` writes the root alone, and only
+  `--hooks` sets `CREWFORGE5_HOOKS=1`. `bash-guard` denies commands, so arming
+  it is the user's decision, and `env_install.bats` asserts the key is absent
+  — not merely zero — after a plain install.
+
 ## 0.4.3 — 2026-08-24
 
 Full dependency-graph audit and optimisation pass: every cycle bounded, dead
