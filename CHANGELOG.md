@@ -12,6 +12,19 @@
 
 ### Fixed
 
+- **Every gate in all three flows depended on an environment variable nothing
+  guaranteed.** The manifests' `gate`, `when` and `status_source` strings run
+  through `bash -c`, so each `${CREWFORGE5_ROOT}` in a `phases.json` expands
+  from the real environment — and unset, it expands to nothing rather than
+  failing, turning a declared gate into
+  `bash "/skills/init/scripts/init_gate.sh"`. That is 38 manifest entries
+  across `init`, `plan` and `execute`, every one a phase that cannot run with
+  no hint that a variable was the cause. Shell state does not survive a tool
+  call, so the caller could not keep that promise either. `flow_gate.sh` and
+  `flow_next.sh` now derive the plugin root from their own location — they sit
+  at `<plugin>/scripts/flow/` — so a flow no longer depends on how it was
+  reached. An explicit `CREWFORGE5_ROOT` still wins.
+
 - Both variables were documented as shell exports, and neither could work that
   way. Shell state does not survive a single tool call, so `export
   CREWFORGE5_ROOT=...` reached the end of its own command and no further — the
